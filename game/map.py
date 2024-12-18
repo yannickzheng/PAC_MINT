@@ -1,5 +1,4 @@
 import pygame
-import random
 pygame.init()
 
 height = 800
