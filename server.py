@@ -17,10 +17,11 @@ except socket.error as e:
     str(e)
 
 #Nombre de connexions simultanées maximales (ici 5)
-s.listen(5)
+s.listen(2)
 print("En attente de connexion, serveur démarré")
 
 def threaded_client(connexion):
+    connexion.send(str.encode("Connecté"))
     response = ""
     run = True
     while run :
@@ -38,7 +39,8 @@ def threaded_client(connexion):
             connexion.sendall(str.encode(response))
         except:
             break
-
+    print("Connexion perdue")
+    connexion.close()
 
 while True:
     #Acceptation de la connexion
