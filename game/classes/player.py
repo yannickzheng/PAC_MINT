@@ -28,9 +28,9 @@ class Player :
 
 
 #Il faut convertir la position d'un joueur (tuple) en string pour pouvoir l'envoyer via le réseau et vice versa
-def convert_pos_to_str(pos):
-    return str(pos[0]) + "," + str(pos[1])
+def tuple_to_str(couple):
+    return str(couple[0]) + "," + str(couple[1])
 
-def convert_str_to_pos(string):
-    s = string.split(",")
-    return int(s[0]),int(s[1])
+def str_to_tuple(s):
+    s = s.split(",")
+    return int(s[0]), int(s[1])
