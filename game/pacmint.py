@@ -34,8 +34,8 @@ def main():
         player.move()
         player2.move()
         screen.fill((0, 0, 0))
-        screen.blit(MAP_SURFACE, (0, 0))  # Blitte la carte pré-dessinée
-        player.draw(screen)
+        screen.blit(MAP_SURFACE, (0, 0))
+        player.spawn(screen, player.get_img())
         player2.draw(screen)
         pygame.display.flip()
         clock.tick(60)

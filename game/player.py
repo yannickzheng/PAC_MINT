@@ -1,6 +1,8 @@
 import pygame
 from global_variable import WIDTH, HEIGHT, CELL_SIZE
 from map import MAP_DATA
+
+
 class Player :
     def __init__(self,x,y):
         self.x = x
@@ -9,6 +11,22 @@ class Player :
         self.color = (255,0,0)
         self.size = 10
 
+    def get_img(self):
+        keys = pygame.key.get_pressed()
+        img = pygame.image.load("images/pacman - right.png")
+        if keys[pygame.K_LEFT]:
+            img = pygame.image.load("images/pacman - left.png")
+            return img
+        if keys[pygame.K_RIGHT]:
+            img = pygame.image.load("images/pacman - right.png")
+            return img
+        if keys[pygame.K_UP]:
+            img = pygame.image.load("images/pacman - up.png")
+            return img
+        if keys[pygame.K_DOWN]:
+            img = pygame.image.load("images/pacman - down.png")
+            return img
+        return img
     def move(self):
         #il faut que le joueur ne puisse se déplacer que dans les cases de la map qui sont des chemins
         keys = pygame.key.get_pressed()
@@ -38,6 +56,8 @@ class Player :
     def draw(self,screen):
         pygame.draw.circle(screen,self.color,(self.x,self.y),self.size//2)
 
+    def spawn(self, screen, img):
+        screen.blit(img,(self.x,self.y))
 
 #Il faut convertir la position d'un joueur (tuple) en string pour pouvoir l'envoyer via le réseau et vice versa
 def tuple_to_str(couple):
