@@ -1,12 +1,19 @@
-from map import *
-from classes.player import Player, tuple_to_str, str_to_tuple
+import pygame
+from global_variable import  WIDTH, HEIGHT
 from reseaux import Network
+from player import Player, str_to_tuple, tuple_to_str
+from map import MAP_SURFACE
 
-screen = pygame.display.set_mode((width, height))
+
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PacMint")
+
+#Permet d'avoir la map sous forme de variable globale pour les autres fichiers
+
+
 def main():
     clock = pygame.time.Clock()
-    map = generate_map_inside(create_map())
     n = Network()
 
     position_debut = str_to_tuple(n.get_pos())
@@ -15,7 +22,6 @@ def main():
 
     run = True
     while run:
-
         coord_player2 = str_to_tuple(n.send(tuple_to_str((player.x, player.y))))
         player2.x = coord_player2[0]
         player2.y = coord_player2[1]
@@ -28,7 +34,7 @@ def main():
         player.move()
         player2.move()
         screen.fill((0, 0, 0))
-        drawing_map(screen, map)
+        screen.blit(MAP_SURFACE, (0, 0))  # Blitte la carte pré-dessinée
         player.draw(screen)
         player2.draw(screen)
         pygame.display.flip()
