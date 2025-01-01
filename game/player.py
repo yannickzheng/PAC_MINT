@@ -10,23 +10,22 @@ class Player :
         self.coord = (x,y)
         self.color = (255,0,0)
         self.size = 10
+        self.image1 = pygame.image.load("images/pacman - right.png")
+        self.image2 = pygame.image.load("images/pacman - left.png")
+        self.image3 = pygame.image.load("images/pacman - up.png")
+        self.image4 = pygame.image.load("images/pacman - down.png")
 
     def get_img(self):
         keys = pygame.key.get_pressed()
-        img = pygame.image.load("images/pacman - right.png")
         if keys[pygame.K_LEFT]:
-            img = pygame.image.load("images/pacman - left.png")
-            return img
+            return self.image2
         if keys[pygame.K_RIGHT]:
-            img = pygame.image.load("images/pacman - right.png")
-            return img
+            return self.image1
         if keys[pygame.K_UP]:
-            img = pygame.image.load("images/pacman - up.png")
-            return img
+            return self.image3
         if keys[pygame.K_DOWN]:
-            img = pygame.image.load("images/pacman - down.png")
-            return img
-        return img
+            return self.image4
+        return self.image1
     def move(self):
         #il faut que le joueur ne puisse se déplacer que dans les cases de la map qui sont des chemins
         keys = pygame.key.get_pressed()
