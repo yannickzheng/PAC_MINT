@@ -4,7 +4,7 @@ from map import MAP_DATA
 
 
 class Player :
-    def __init__(self,x,y):
+    def __init__(self,x,y, role):
         self.x = x
         self.y = y
         self.coord = (x,y)
@@ -14,6 +14,9 @@ class Player :
         self.image2 = pygame.image.load("images/pacman - left.png")
         self.image3 = pygame.image.load("images/pacman - up.png")
         self.image4 = pygame.image.load("images/pacman - down.png")
+        self.is_pacman = role == "PacMan"
+
+
 
     def get_img(self):
         keys = pygame.key.get_pressed()
@@ -53,7 +56,10 @@ class Player :
         self.coord = (self.x,self.y)
 
     def draw(self,screen):
-        pygame.draw.circle(screen,self.color,(self.x,self.y),self.size//2)
+        if self.is_pacman:
+            self.spawn(screen, self.get_img())
+        else:
+            pygame.draw.circle(screen,self.color,(self.x,self.y),self.size//2)
 
     def spawn(self, screen, img):
         screen.blit(img,(self.x,self.y))
@@ -62,6 +68,9 @@ class Player :
 def tuple_to_str(couple):
     return str(couple[0]) + "," + str(couple[1])
 
+def triple_to_str(triple):
+    return str(triple[0]) + "," + str(triple[1]) + "," + str(triple[2])
 def str_to_tuple(s:str):
     s = s.split(",")
     return int(s[0]), int(s[1])
+

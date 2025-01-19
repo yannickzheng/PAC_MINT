@@ -9,7 +9,7 @@ class Network:
         - Récupération de la position initiale du joueur
         """
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #Socket TCP/IP
-        self.server = "192.168.31.143" #Adresse IP du serveur (ici le serveur est sur la même machine que le client, à l'avenir il devra avoir une adresse IP fixe)
+        self.server = "192.168.1.13" #Adresse IP du serveur (ici le serveur est sur la même machine que le client, à l'avenir il devra avoir une adresse IP fixe)
         self.port = 5555 #Port de communication
         self.address = (self.server, self.port)
         self.pos = self.connect() #Permet d'établir une connexion avec le serveur et de récupérer la position initiale du joueur
