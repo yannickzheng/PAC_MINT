@@ -29,6 +29,7 @@ class Player :
         if keys[pygame.K_DOWN]:
             return self.image4
         return self.image1
+
     def move(self):
         #il faut que le joueur ne puisse se déplacer que dans les cases de la map qui sont des chemins
         keys = pygame.key.get_pressed()
