@@ -1,8 +1,9 @@
 import socket
 from _thread import start_new_thread
 import json
+
 # Adresse IP locale du serveur (ici le serveur est sur la même machine que le client, il doit être modifiable)
-server = "192.168.1.13" # J'ai pris mon adresse IP wifi, il faudra mettre celle du serveur plus tard
+server = "localhost" # J'ai pris mon adresse IP wifi, il faudra mettre celle du serveur plus tard
 port = 5555 # Port de communication
 
 # Création d'un socket pour la communication sur IPV4 en utilisant le protocole TCP
@@ -13,9 +14,11 @@ try:
     s.bind((server, port))
 except socket.error as e:
     str(e)
+
 # Nombre de connexions simultanées maximales (ici 5)
 s.listen(5)
 print("En attente de connexion, serveur démarré")
+
 # position initale des 5 joueurs
 datas = {
     "players": [
@@ -46,6 +49,7 @@ def threaded_client(connexion, joueur_actuel):
             if not raw_data:
                 print("Déconnexion")
                 break
+
             # Reçoit les données du client et met à jour uniquement les informations du joueur correspondant.
             all_players_updated = json.loads(raw_data)
             datas["players"][joueur_actuel] = all_players_updated["players"][joueur_actuel]
