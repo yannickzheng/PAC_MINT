@@ -1,7 +1,7 @@
 import pygame
 from global_variable import WIDTH, HEIGHT
-from reseaux import Network
-from player import Player, str_to_tuple, tuple_to_str
+from server.reseaux import Network
+from player import Player
 from map import MAP_SURFACE
 import json
 
