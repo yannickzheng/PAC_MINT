@@ -31,5 +31,13 @@ def create_map_surface(map):
                 pygame.draw.rect(map_surface, DEFAULT_COLOR, (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
     return map_surface
 
-MAP_SURFACE = create_map_surface(generate_map_inside(create_map()))
-MAP_DATA = generate_map_inside(create_map())
+#  fonction pour générer des murs continus dans la map
+def generate_map_walls(map):
+    for y in range(10, 20):
+        map[y][5] = 1
+    return map
+
+
+
+MAP_SURFACE = create_map_surface((generate_map_walls(generate_map_inside(create_map()))))
+MAP_DATA = generate_map_walls(generate_map_inside(create_map()))

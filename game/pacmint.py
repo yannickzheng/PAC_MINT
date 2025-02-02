@@ -12,23 +12,32 @@ pygame.display.set_caption("PacMint")
 def main():
     clock = pygame.time.Clock()
     n = Network()
+
     # On va récupérer les données de tous les joueurs (par exemple leur position et leur rôle)
     all_players_data = json.loads(n.get_pos())
     current_player_id = all_players_data["current_player"]
     positions_and_roles = all_players_data["players"]
+
     # création de la liste des joueurs
     players = []
     for data in positions_and_roles:
         player = Player(data["pos"][0], data["pos"][1], data["roles"])
         players.append(player)
+
+    # Initialisation de la police pour afficher le score
+    pygame.font.init()
+    font = pygame.font.SysFont("Arial", 24)
+
     run = True
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
         current_player = players[current_player_id]
-        current_player.move()
+        current_player.move(players)
+
         all_players_data["players"][current_player_id] = { # Mettre à jour les données pour tous les joueurs
             "pos": current_player.coord,
             "roles": "PacMan" if current_player.is_pacman else "Fantôme"
@@ -46,10 +55,13 @@ def main():
         screen.blit(MAP_SURFACE, (0, 0))
         for player in players:
             player.draw(screen)
+
+        # Afficher le score du joueur actuel
+        score_text = font.render(f"Score: {current_player.score}", True, (255, 255, 255))
+        screen.blit(score_text, (10, 10))
+
         pygame.display.flip()
         clock.tick(60)
-
     pygame.quit()
-
 if __name__ == "__main__":
     main()
