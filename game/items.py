@@ -12,6 +12,7 @@ class Items:
         self.type = type
         self.color = color
 
+
     def traitement_objet(self):
         if self == "super_pouvoir":
             pass

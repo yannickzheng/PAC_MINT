@@ -45,4 +45,3 @@ class Network:
             return self.client.recv(2048*4).decode()
         except socket.error as e:
             print(e)
-

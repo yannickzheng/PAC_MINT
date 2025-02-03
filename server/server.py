@@ -22,11 +22,11 @@ print("En attente de connexion, serveur démarré")
 # position initale des 5 joueurs
 datas = {
     "players": [
-        {"pos": [100, 100], "roles": "PacMan"},
-        {"pos": [200, 200], "roles": "Fantôme"},
-        {"pos": [300, 300], "roles": "Fantôme"},
-        {"pos": [400, 400], "roles": "Fantôme"},
-        {"pos": [500, 500], "roles": "Fantôme"}
+        {"pos": [150, 150], "roles": "PacMan"},
+        {"pos": [950, 450], "roles": "Fantôme"},
+        {"pos": [920, 450], "roles": "Fantôme"},
+        {"pos": [950, 420], "roles": "Fantôme"},
+        {"pos": [920, 420], "roles": "Fantôme"}
     ],
     "current_player": 0 # Permet d'identifier quel joueur est en train de se connecter
 }

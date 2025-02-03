@@ -32,11 +32,54 @@ def create_map_surface(map):
     return map_surface
 
 #  fonction pour générer des murs continus dans la map
-def generate_map_walls(map):
-    for y in range(10, 20):
-        map[y][5] = 1
-    return map
 
+def generate_map_walls(map):
+    # Génération de plusieurs murs continus tout en laissant des ouvertures
+    for y in range(5, 30):
+        if y != 17:
+            map[y][10] = 1  # Mur vertical avec ouverture
+
+    for x in range(10, 50):
+        if x != 30:
+            map[15][x] = 1  # Mur horizontal avec ouverture
+
+    for y in range(10, 25):
+        if y != 18:
+            map[y][30] = 1  # Mur vertical avec ouverture
+
+    for x in range(5, 40):
+        if x != 20:
+            map[5][x] = 1  # Mur horizontal avec ouverture
+
+    for y in range(20, 35):
+        if y != 28:
+            map[y][50] = 1  # Mur vertical avec ouverture
+
+    for x in range(20, 60):
+        if x != 45:
+            map[25][x] = 1  # Mur horizontal avec ouverture
+
+    for y in range(5, 20):
+        if y != 12:
+            map[y][60] = 1  # Mur vertical avec ouverture
+
+    for x in range(15, 55):
+        if x != 35:
+            map[10][x] = 1  # Mur horizontal avec ouverture
+
+    for y in range(8, 28):
+        if y != 22:
+            map[y][40] = 1  # Mur vertical avec ouverture
+
+    for x in range(10, 45):
+        if x != 25:
+            map[30][x] = 1  # Mur horizontal avec ouverture
+
+    for y in range(12, 34):
+        if y != 27:
+            map[y][20] = 1  # Mur vertical avec ouverture
+
+    return map
 
 
 MAP_SURFACE = create_map_surface((generate_map_walls(generate_map_inside(create_map()))))
