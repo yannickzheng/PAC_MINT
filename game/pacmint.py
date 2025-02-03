@@ -49,18 +49,39 @@ def main_menu():
                     if 200 <= y <= 250:
                         main_game()
                     elif 300 <= y <= 350:
-                        pass
+                        join_game()
                     elif 400 <= y <= 450:
                         run = False
                         pygame.quit()
                         sys.exit()
         pygame.display.flip()
 
+
+
+def join_game():
+    screen.fill(WHITE)
+    run = True
+    while run :
+        draw_button("Entrez le code", 540, 200, 200, 50, GREEN)
+        draw_button("Retour", 540, 300, 200, 50, RED)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                # Vérifier si un bouton est cliqué
+                if 540 <= x <= 740:
+                    if 200 <= y <= 250:
+                        pass
+                    elif 300 <= y <= 350:
+                        main_menu()
+        pygame.display.flip()
 def main_game():
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
-
-
 
     clock = pygame.time.Clock()
     n = Network()
@@ -75,13 +96,9 @@ def main_game():
     for data in positions_and_roles:
         player = Player(data["pos"][0], data["pos"][1], data["roles"])
         players.append(player)
-
     # Initialisation de la police pour afficher le score
-
-
     run = True
     while run:
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -111,6 +128,7 @@ def main_game():
         # Afficher le score du joueur actuel
         score_text = font.render(f"Score: {current_player.score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
+
 
         pygame.display.flip()
         clock.tick(60)
