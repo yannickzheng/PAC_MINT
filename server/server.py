@@ -1,6 +1,14 @@
 import socket
+import sys
 from _thread import start_new_thread
 import json
+
+
+#Gestion de l'arrêt du serveur
+def server_shutdown():
+    print("Arrêt du serveur...")
+    s.close()
+    sys.exit(0)
 
 # Adresse IP locale du serveur (ici le serveur est sur la même machine que le client, il doit être modifiable)
 server = "localhost" # J'ai pris mon adresse IP wifi, il faudra mettre celle du serveur plus tard
@@ -62,8 +70,16 @@ def threaded_client(connexion, joueur_actuel):
     print(f"Connexion fermée pour le joueur {joueur_actuel}")
     connexion.close()
 
-joueur_actuel = 0
+
+MAX_PLAYERS = 5 # Limite de joueurs
+joueur_actuel = 0 # Initialisation du compteur de joueurs
+
 while True:
+
+    if joueur_actuel >= MAX_PLAYERS: # Si la limite de joueurs est atteinte
+        print("Limite de joueurs atteinte.")
+        break
+
     connexion, address = s.accept() # En attente d'une connexion
     print("Connecté à:", address)
     # Création d'un nouveau thread pour gérer la connexion de chaque client
