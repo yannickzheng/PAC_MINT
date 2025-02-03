@@ -5,11 +5,63 @@ from player import Player
 from map import MAP_SURFACE
 import json
 
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PacMint")
 
-def main():
+#COLORS
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+font = pygame.font.SysFont("Arial", 24)
+def draw_button(text, x, y, width, height, color):
+    pygame.draw.rect(screen, color, (x, y, width, height))
+    text_surface = font.render(text, True, (255, 255, 255))
+    text_rect = text_surface.get_rect(center=(x + width / 2, y + height / 2))
+    screen.blit(text_surface, text_rect)
+
+
+def main_menu():
+    run = True
+    while run:
+        screen.fill(WHITE)
+        draw_button("Créer une partie", 540, 200, 200, 50, GREEN)
+        draw_button("Rejoindre une partie", 540, 300, 200, 50, BLUE)
+        draw_button("Quitter", 540, 400, 200, 50, RED)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                # Vérifier si un bouton est cliqué
+                if 540 <= x <= 740:
+                    if 200 <= y <= 250:
+                        main_game()
+                    elif 300 <= y <= 350:
+                        pass
+                    elif 400 <= y <= 450:
+                        run = False
+                        pygame.quit()
+                        sys.exit()
+        pygame.display.flip()
+
+def main_game():
+    pygame.font.init()
+    font = pygame.font.SysFont("Arial", 24)
+
+
+
     clock = pygame.time.Clock()
     n = Network()
 
@@ -25,11 +77,11 @@ def main():
         players.append(player)
 
     # Initialisation de la police pour afficher le score
-    pygame.font.init()
-    font = pygame.font.SysFont("Arial", 24)
+
 
     run = True
     while run:
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -64,4 +116,4 @@ def main():
         clock.tick(60)
     pygame.quit()
 if __name__ == "__main__":
-    main()
+    main_menu()

@@ -13,6 +13,7 @@ class Player:
         self.image2 = pygame.image.load("images/pacman - left.png")
         self.image3 = pygame.image.load("images/pacman - up.png")
         self.image4 = pygame.image.load("images/pacman - down.png")
+        self.image5 = pygame.image.load("images/red_ghost.png")
         self.is_pacman = role == "PacMan"
         self.is_phantom = role == "Fantôme"
         self.is_coin = role == "Pièce"
@@ -84,7 +85,7 @@ class Player:
         Met à jour les coordonnées du joueur
         """
         self.coord = (self.x, self.y)
-    def get_img(self):
+    def get_img_pacman(self):
         """
         Renvoie l'image du joueur en fonction de la direction
         """
@@ -99,15 +100,20 @@ class Player:
             return self.image4
         return self.image1
 
+    def get_img_phantom(self):
+        """
+        Renvoie l'image du joueur
+        """
+        return self.image5
     def draw(self, screen):
         """
         Dessine le joueur à l'écran
         :param screen: Surface d'affichage du jeu
         """
         if self.is_pacman:
-            self.spawn(screen, self.get_img())
+            self.spawn(screen, self.get_img_pacman())
         elif self.is_phantom:
-            pygame.draw.circle(screen, self.color, (self.x, self.y), self.size // 2)
+            self.spawn(screen,self.get_img_phantom())
         else:
             pygame.draw.rect(screen, self.color, (self.x, self.y, self.size, self.size))
 
@@ -119,10 +125,10 @@ class Player:
         """
         screen.blit(img, (self.x, self.y))
 
-def tuple_to_str(couple):
-    return str(couple[0]) + "," + str(couple[1])
-def triple_to_str(triple):
-    return str(triple[0]) + "," + str(triple[1]) + "," + str(triple[2])
-def str_to_tuple(s: str):
-    s = s.split(",")
-    return int(s[0]), int(s[1])
+# def tuple_to_str(couple):
+#     return str(couple[0]) + "," + str(couple[1])
+# def triple_to_str(triple):
+#     return str(triple[0]) + "," + str(triple[1]) + "," + str(triple[2])
+# def str_to_tuple(s: str):
+#     s = s.split(",")
+#     return int(s[0]), int(s[1])
