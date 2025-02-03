@@ -1,4 +1,5 @@
 import socket
+import time
 import sys
 from _thread import start_new_thread
 import json
@@ -9,6 +10,16 @@ def server_shutdown():
     print("Arrêt du serveur...")
     s.close()
     sys.exit(0)
+
+#Gestion des joueurs inactifs
+timeout = 240 #temps en seconde pour considérer un joueur inactif
+last_activity_time = time.time()
+
+def check_inactive_players():
+    global last_activity_time
+    if time.time() - last_activity_time > timeout:
+        print("Joueur inactif")
+        server_shutdown()
 
 # Adresse IP locale du serveur (ici le serveur est sur la même machine que le client, il doit être modifiable)
 server = "localhost" # J'ai pris mon adresse IP wifi, il faudra mettre celle du serveur plus tard
