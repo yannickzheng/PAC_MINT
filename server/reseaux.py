@@ -22,14 +22,19 @@ class Network:
         self.server = "localhost" #Adresse IP du serveur (ici le serveur est sur la même machine que le client, à l'avenir il devra avoir une adresse IP fixe)
         self.port = 5555 #Port de communication
         self.address = (self.server, self.port)
-        self.pos = self.connect() #Permet d'établir une connexion avec le serveur et de récupérer la position initiale du joueur
+        #self.client.connect(self.address)  # Connexion au serveur
         self.game_code = ""
+        self.pos = ""
+        self.connect()
+
 
     def get_pos(self):
         """
         Renvoie la position actuelle du joueur
         """
-        return self.pos
+        self.client.send(str.encode("GET_POS"))
+        data = self.client.recv(2048).decode()
+        return data
 
     def connect(self):
         """
@@ -38,10 +43,17 @@ class Network:
         -En cas d'échec, la connexion est fermée
         Renvoie les données reçues du serveur après la connexion (décodées en chaîne de caractères)
         """
-
-        self.client.connect(self.address) #Connexion au serveur
-        return self.client.recv(2048).decode() #Récupération des données initiales du serveur (taille max = 2048 octets)
-
+        try:
+            (self.client.connect(self.address)) #Connexion au serveur
+            """
+            data = self.client.recv(2048).decode() #Récupération des données initiales du serveur (taille max = 2048 octets)
+            if data:
+                self.pos = data
+            else:
+                print("Aucune donnée reçue lors de la connexion initiale")
+            """
+        except Exception as e:
+            print(f"Erreur lors de la connexion {e}")
 
     def send(self, data):
         """
@@ -59,7 +71,7 @@ class Network:
     def create_party(self):
         """Crée une nouvelle partie"""
         code = generate_unique_code()
-        self.send(json.dumps({"action":"create_party", "code": code})) #
+        response = self.send(json.dumps({"action":"create_party", "code": code})) #
         self.game_code = code
         return code
 

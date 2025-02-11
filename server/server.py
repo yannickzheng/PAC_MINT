@@ -61,7 +61,7 @@ def threaded_game_client(connexion, joueur_actuel, game_code):
     """
 
     try:
-        if game_code in game_sessions:
+        if game_code not in game_sessions:
             print("Partie introuvable")
             connexion.close()
             return
@@ -91,7 +91,12 @@ def threaded_game_client(connexion, joueur_actuel, game_code):
                     print(f"Déconnexion du joueur {joueur_actuel}")
                     break
 
-                # Reçoit les données du client et met à jour uniquement les informations du joueur correspondant.
+                # Si le client envoie la commande GET_POS, on renvoie l'état actuel
+                if raw_data == "GET_POS":
+                    connexion.sendall(json.dumps(datas).encode())
+                    continue
+
+                # Sinon, on considère que le client envoie des données JSON pour mettre à jour sa position
                 all_players_updated = json.loads(raw_data)
                 datas["players"][joueur_actuel] = all_players_updated["players"][joueur_actuel]
 
@@ -142,7 +147,6 @@ def threaded_client(connexion):
                 # Démarrer un thread pour ce joueur
                 start_new_thread(threaded_game_client, (connexion, joueur_actuel, code))
 
-                connexion.send(str.encode(json.dumps({"status": "ok", "player_id": joueur_actuel})))
                 return
             else:
                 connexion.send(str.encode(json.dumps({"status": "full" if code in game_sessions else "not_found"})))
