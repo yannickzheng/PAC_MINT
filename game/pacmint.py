@@ -28,6 +28,36 @@ def draw_button(text, x, y, width, height, color):
     screen.blit(text_surface, text_rect)
 
 
+def generate_code():
+    pass
+
+def create_game():
+    screen.fill((172,172,0))
+    run = True
+    while run:
+        draw_button("Générer un code", 540, 200, 200, 50, GREEN)
+        draw_button("Lancer la partie", 540, 300, 200, 50, BLUE)
+
+        draw_button("Retour", 540, 400, 200, 50, RED)
+
+
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+                sys.exit()
+
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                # Vérifier si un bouton est cliqué
+                if 540 <= x <= 740:
+                    if 200 <= y <= 250:
+                        generate_code()
+                    elif 400 <= y <= 450:
+                        main_menu()
+        pygame.display.flip()
 def main_menu():
     run = True
     while run:
@@ -47,7 +77,7 @@ def main_menu():
                 # Vérifier si un bouton est cliqué
                 if 540 <= x <= 740:
                     if 200 <= y <= 250:
-                        main_game()
+                        create_game()
                     elif 300 <= y <= 350:
                         join_game()
                     elif 400 <= y <= 450:
@@ -79,6 +109,11 @@ def join_game():
                     elif 300 <= y <= 350:
                         main_menu()
         pygame.display.flip()
+
+
+
+
+
 def main_game():
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
@@ -135,3 +170,6 @@ def main_game():
     pygame.quit()
 if __name__ == "__main__":
     main_menu()
+
+
+    #Mettre le graphe de nos modèles avec Django extensions
