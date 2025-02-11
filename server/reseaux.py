@@ -1,7 +1,17 @@
+import json
 import socket
+import random
+import string
+
+def generate_unique_code():
+    """Génère un code aléatoire unique pour une nouvelle partie"""
+    while True:
+        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        return code
 
 class Network:
     def __init__(self):
+        # La classe pour une partie
         """
         Initialisation de la classe :
         - Création d'un socket
@@ -13,10 +23,11 @@ class Network:
         self.port = 5555 #Port de communication
         self.address = (self.server, self.port)
         self.pos = self.connect() #Permet d'établir une connexion avec le serveur et de récupérer la position initiale du joueur
+        self.game_code = ""
 
     def get_pos(self):
         """
-        Renvoie la position actuellke du joueur
+        Renvoie la position actuelle du joueur
         """
         return self.pos
 
@@ -27,11 +38,10 @@ class Network:
         -En cas d'échec, la connexion est fermée
         Renvoie les données reçues du serveur après la connexion (décodées en chaîne de caractères)
         """
-        try:
-            self.client.connect(self.address) #Connexion au serveur
-            return self.client.recv(2048).decode() #Récupération des données initiales du serveur (taille max = 2048 octets)
-        except:
-            pass
+
+        self.client.connect(self.address) #Connexion au serveur
+        return self.client.recv(2048).decode() #Récupération des données initiales du serveur (taille max = 2048 octets)
+
 
     def send(self, data):
         """
@@ -45,3 +55,16 @@ class Network:
             return self.client.recv(2048*4).decode()
         except socket.error as e:
             print(e)
+
+    def create_party(self):
+        """Crée une nouvelle partie"""
+        code = generate_unique_code()
+        self.send(json.dumps({"action":"create_party", "code": code})) #
+        self.game_code = code
+        return code
+
+    def join_party(self, code):
+        """Rejoint une partie existante"""
+        self.send(json.dumps({"action":"join_party", "code": code}))
+        self.game_code = code
+        return True

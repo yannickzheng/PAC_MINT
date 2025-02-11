@@ -12,6 +12,18 @@ pygame.display.set_caption("PacMint")
 def main():
     clock = pygame.time.Clock()
     n = Network()
+    print("Hello, world !")
+
+    # Demander à l'utilisateur de créer ou rejoindre une partie
+    game_code = n.create_party()
+    print(f"Partie créée avec le code : {game_code}")
+
+    """
+    game_code = input("Entrez le code de la partie : ").strip().upper()
+    if not n.join_party(game_code):
+        print("Impossible de rejoindre la partie. Vérifiez le code.")
+        return
+    """
 
     # On va récupérer les données de tous les joueurs (par exemple leur position et leur rôle)
     all_players_data = json.loads(n.get_pos())

@@ -1,6 +1,9 @@
 import pygame
 from global_variable import WIDTH, HEIGHT, CELL_SIZE
 from map import MAP_DATA
+import random
+import string
+
 class Player:
     def __init__(self, x, y, role):
         self.x = x
@@ -17,6 +20,7 @@ class Player:
         self.is_phantom = role == "Fantôme"
         self.is_coin = role == "Pièce"
         self.score = 0
+        self.game_code = ""
 
     def check_collision(self, players):
         """
