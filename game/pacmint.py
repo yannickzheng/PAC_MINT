@@ -24,14 +24,12 @@ image = pygame.image.load("images/background2.png")
 
 mixer.init()
 
-
 mixer.music.load("sound/background_sound.mp3")
 mixer.music.set_volume(0.3)
 mixer.music.play(-1)
 
 button_click = mixer.Sound("sound/button_click.mp3")
 button_click.set_volume(5)
-
 
 
 def draw_button(text, x, y, width, height, base_color, glow_color, screen):
@@ -68,8 +66,6 @@ def generate_code():
 
 
 def create_game():
-
-
     run = True
 
     while run:
@@ -83,8 +79,6 @@ def create_game():
                 pygame.quit()
                 sys.exit()
 
-
-
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 button_click.play()
@@ -96,7 +90,6 @@ def create_game():
                         pass
                     elif 850 <= x <= 1050:
                         main_menu()
-
 
         pygame.display.flip()
 
@@ -131,7 +124,6 @@ def main_menu():
                         sys.exit()
         pygame.display.flip()
 
-
 def join_game():
     run = True
     while run:
@@ -154,7 +146,6 @@ def join_game():
                     elif 550 <= y <= 750:
                         main_menu()
         pygame.display.flip()
-
 
 def main_game():
     pygame.font.init()
@@ -210,7 +201,6 @@ def main_game():
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
-
 
 if __name__ == "__main__":
     main_menu()
