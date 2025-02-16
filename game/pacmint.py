@@ -4,6 +4,9 @@ from global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
 from server.reseaux import Network
 from player import Player
 from map import MAP_SURFACE
+
+from pygame import mixer
+
 import json
 
 import sys
@@ -18,6 +21,18 @@ pygame.display.set_caption("PacMint")
 font = pygame.font.SysFont("Arial", 24)
 
 image = pygame.image.load("images/background2.png")
+
+mixer.init()
+
+
+mixer.music.load("sound/background_sound.mp3")
+mixer.music.set_volume(0.3)
+mixer.music.play(-1)
+
+button_click = mixer.Sound("sound/button_click.mp3")
+button_click.set_volume(5)
+
+
 
 def draw_button(text, x, y, width, height, base_color, glow_color, screen):
     # permet de vérifier la position de la souris sur le bouton
@@ -53,13 +68,10 @@ def generate_code():
 
 
 def create_game():
-    screen.fill((172, 172, 0))
-    active = False
+
+
     run = True
-    user_text = ""
-    color_inactive = pygame.Color('lightskyblue3')
-    color_active = pygame.Color('dodgerblue2')
-    # def draw_button(text, x, y, width, height, base_color, glow_color, screen):
+
     while run:
         screen.blit(image, (0, 0))
         draw_button("Générer un code", 250, 600, 200, 50, BLUE, CYAN, screen)
@@ -75,6 +87,7 @@ def create_game():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
+                button_click.play()
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
@@ -105,6 +118,7 @@ def main_menu():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
+                button_click.play()
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
@@ -132,6 +146,7 @@ def join_game():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
+                button_click.play()
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
