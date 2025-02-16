@@ -1,6 +1,5 @@
 import pygame
 import sys
-import math
 
 # Initialisation de Pygame
 pygame.init()
@@ -16,22 +15,39 @@ PURPLE = (128, 0, 255)
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Bouton Futuriste")
+pygame.display.set_caption("PACM'INT Futuriste")
 
-# Police d'écriture futuriste
-font = pygame.font.Font(None, 36)  # Remplacez par une police futuriste si disponible
+# Police d'écriture futuriste (remplacez par une police de style high-tech si disponible)
+font = pygame.font.Font(None, 100)  # Taille de police augmentée pour un effet plus impactant
 
+def draw_futuristic_text(text, x, y, base_color, glow_color, screen):
+    """
+    Dessine un texte futuriste avec un effet de lumière (glow) et un dégradé.
+    :param text: Texte à afficher
+    :param x: Position x du texte
+    :param y: Position y du texte
+    :param base_color: Couleur de base du texte
+    :param glow_color: Couleur de la lumière autour du texte
+    :param screen: Surface Pygame où dessiner le texte
+    """
+    # Effet de lumière autour du texte (glow)
+    for i in range(10):
+        glow_radius = i * 2
+        glow_surface = font.render(text, True, (*glow_color, 50 - i * 5))
+        screen.blit(glow_surface, (x - glow_radius, y - glow_radius))
 
-def main_menu():
+    # Dessiner le texte avec un dégradé
+    text_surface = font.render(text, True, base_color)
+    screen.blit(text_surface, (x, y))
+
+def main():
     run = True
     while run:
         # Fond d'écran (noir pour un style futuriste)
         screen.fill(BLACK)
 
-        # Dessiner un bouton futuriste
-        draw_futuristic_button("Jouer", 300, 200, 200, 50, BLUE, CYAN, screen)
-        draw_futuristic_button("Options", 300, 300, 200, 50, BLUE, CYAN, screen)
-        draw_futuristic_button("Quitter", 300, 400, 200, 50, BLUE, PURPLE, screen)
+        # Dessiner le texte "PACM'INT" avec un style futuriste
+        draw_futuristic_text("PACM'INT", 200, 250, CYAN, BLUE, screen)
 
         # Gestion des événements
         for event in pygame.event.get():
@@ -40,21 +56,8 @@ def main_menu():
                 pygame.quit()
                 sys.exit()
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = event.pos
-                # Vérifier si un bouton est cliqué
-                if 300 <= x <= 500:
-                    if 200 <= y <= 250:
-                        print("Bouton 'Jouer' cliqué !")
-                    elif 300 <= y <= 350:
-                        print("Bouton 'Options' cliqué !")
-                    elif 400 <= y <= 450:
-                        run = False
-                        pygame.quit()
-                        sys.exit()
-
         # Mettre à jour l'affichage
         pygame.display.flip()
 
-# Lancer le menu principal
-main_menu()
+# Lancer le programme
+main()

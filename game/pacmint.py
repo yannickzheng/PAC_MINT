@@ -1,6 +1,6 @@
 import pygame
 
-from global_variable import WIDTH, HEIGHT
+from global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
 from server.reseaux import Network
 from player import Player
 from map import MAP_SURFACE
@@ -15,31 +15,11 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PacMint")
 
-# COLORS
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
-GREEN = (0, 255, 0)
-CYAN = (0, 255, 255)
-PURPLE = (128, 0, 255)
 font = pygame.font.SysFont("Arial", 24)
 
 image = pygame.image.load("images/background2.png")
 
-
 def draw_button(text, x, y, width, height, base_color, glow_color, screen):
-    """
-    Dessine un bouton futuriste avec un effet de lumière et un dégradé.
-    :param text: Texte du bouton
-    :param x: Position x du bouton
-    :param y: Position y du bouton
-    :param width: Largeur du bouton
-    :param height: Hauteur du bouton
-    :param base_color: Couleur de base du bouton
-    :param glow_color: Couleur de la lumière autour du bouton
-    :param screen: Surface Pygame où dessiner le bouton
-    """
     # permet de vérifier la position de la souris sur le bouton
     mouse_pos = pygame.mouse.get_pos()
     hover = (x <= mouse_pos[0] <= x + width) and (y <= mouse_pos[1] <= y + height)
@@ -60,10 +40,8 @@ def draw_button(text, x, y, width, height, base_color, glow_color, screen):
         color = (*base_color, alpha)
         pygame.draw.line(button_surface, color, (0, i), (width, i))
     screen.blit(button_surface, (x, y))
-
     # ajoute un contour de lumière autour du bouton
     pygame.draw.rect(screen, glow_color, (x, y, width, height), 3, border_radius=10)
-
     # permet de centrer le texte dans le bouton
     text_surface = font.render(text, True, WHITE)
     text_rect = text_surface.get_rect(center=(x + width // 2, y + height // 2))
@@ -84,45 +62,28 @@ def create_game():
     # def draw_button(text, x, y, width, height, base_color, glow_color, screen):
     while run:
         screen.blit(image, (0, 0))
-        draw_button("Générer un code", 540, 200, 200, 50, BLUE, CYAN, screen)
-        draw_button("Entrez un code ", 540, 300, 200, 50, BLUE, CYAN, screen)
-        draw_button("Retour", 540, 400, 200, 50, BLUE, PURPLE, screen)
+        draw_button("Générer un code", 250, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Entrez un code", 550, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
                 sys.exit()
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if pygame.Rect(100, 100, 140, 32).collidepoint(event.pos):
-                    active = True
-                else:
-                    active = False
-                color = color_active if active else color_inactive
 
-            if event.type == pygame.KEYDOWN:
-                if active:
-                    if event.key == pygame.K_RETURN:
-                        print(user_text)
-                        user_text = ""
-                    elif event.key == pygame.K_BACKSPACE:
-                        user_text = user_text[:-1]
-                    else:
-                        user_text += event.unicode
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 # Vérifier si un bouton est cliqué
-                if 540 <= x <= 740:
-                    if 200 <= y <= 250:
+                if 600 <= y <= 650:
+                    if 250 <= x <= 450:
                         generate_code()
-                    elif 300 <= y <= 350:
+                    elif 550 <= x <= 750:
                         pass
-                    elif 400 <= y <= 450:
+                    elif 850 <= x <= 1050:
                         main_menu()
-        # pygame.draw.rect(screen, color, (100, 100, 140, 32))
-        # text_surface = font.render(user_text, True, (255, 255, 255))
-        # screen.blit(text_surface, (100, 100))
+
 
         pygame.display.flip()
 
@@ -131,9 +92,9 @@ def main_menu():
     run = True
     while run:
         screen.blit(image, (0, 0))
-        draw_button("Créer une partie", 540, 200, 200, 50, BLUE, CYAN, screen)
-        draw_button("Rejoindre une partie", 540, 300, 200, 50, BLUE, CYAN, screen)
-        draw_button("Quitter", 540, 400, 200, 50, BLUE, PURPLE, screen)
+        draw_button("Créer une partie", 250, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Rejoindre une partie", 550, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Quitter", 850, 600, 200, 50, BLUE, PURPLE, screen)
 
         for event in pygame.event.get():
 
@@ -145,12 +106,12 @@ def main_menu():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 # Vérifier si un bouton est cliqué
-                if 540 <= x <= 740:
-                    if 200 <= y <= 250:
+                if 600 <= y <= 650:
+                    if 250 <= x <= 450:
                         create_game()
-                    elif 300 <= y <= 350:
+                    elif 550 <= x <= 750:
                         join_game()
-                    elif 400 <= y <= 450:
+                    elif 850 <= x <= 1050:
                         run = False
                         pygame.quit()
                         sys.exit()
@@ -161,8 +122,8 @@ def join_game():
     run = True
     while run:
         screen.blit(image, (0, 0))
-        draw_button("Entrez le code", 540, 200, 200, 50, BLUE, CYAN, screen)
-        draw_button("Retour", 540, 300, 200, 50, BLUE, PURPLE, screen)
+        draw_button("Entrez le code", 250, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Retour", 550, 600, 200, 50, BLUE, PURPLE, screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -172,10 +133,10 @@ def join_game():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 # Vérifier si un bouton est cliqué
-                if 540 <= x <= 740:
-                    if 200 <= y <= 250:
+                if 600 <= y <= 650:
+                    if 250 <= x <= 450:
                         pass
-                    elif 300 <= y <= 350:
+                    elif 550 <= y <= 750:
                         main_menu()
         pygame.display.flip()
 
