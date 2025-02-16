@@ -22,6 +22,8 @@ font = pygame.font.SysFont("Arial", 24)
 
 image = pygame.image.load("images/background2.png")
 
+
+# musique
 mixer.init()
 
 mixer.music.load("sound/background_sound.mp3")
@@ -71,7 +73,7 @@ def create_game():
     while run:
         screen.blit(image, (0, 0))
         draw_button("Générer un code", 250, 600, 200, 50, BLUE, CYAN, screen)
-        draw_button("Entrez un code", 550, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Lancer la partie", 550, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -87,7 +89,7 @@ def create_game():
                     if 250 <= x <= 450:
                         generate_code()
                     elif 550 <= x <= 750:
-                        pass
+                        main_game()
                     elif 850 <= x <= 1050:
                         main_menu()
 

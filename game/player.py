@@ -124,11 +124,3 @@ class Player:
         :param img: Image du joueur
         """
         screen.blit(img, (self.x, self.y))
-
-# def tuple_to_str(couple):
-#     return str(couple[0]) + "," + str(couple[1])
-# def triple_to_str(triple):
-#     return str(triple[0]) + "," + str(triple[1]) + "," + str(triple[2])
-# def str_to_tuple(s: str):
-#     s = s.split(",")
-#     return int(s[0]), int(s[1])
