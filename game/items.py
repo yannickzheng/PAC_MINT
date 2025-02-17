@@ -6,16 +6,70 @@
     #il est boost),
     #Pour le système de super pouvoir, on peut utiliser un système de tick, quand PacMan ramasse un super
     #pouvoir, on va attribuer la possibilité à pacman de manger les fantômes pendant un certain nombre de ticks
-class Items:
-    def __init__(self, nom, type, color):
-        self.nom = nom
-        self.type = type
-        self.color = color
+import pygame
+import os
+from global_variable import CELL_SIZE
+from map import MAP_DATA, MAP_SURFACE
+small_size = CELL_SIZE // 4  # Taille des pièces
+cherry_size = CELL_SIZE // 2  # ✅ Augmente la taille des cerises
+
+# Définir la taille réduite des images AVANT de charger les sprites
+small_size = CELL_SIZE // 4  # Taille des pièces
+
+# Chargement des images des pièces et des cerises
+coin_image = pygame.image.load(os.path.join("images", "coin.jpg"))
+coin_image = pygame.transform.scale(coin_image, (small_size, small_size))
+
+cherry_image = pygame.image.load(os.path.join("images", "cerise.png"))
+cherry_size = int(CELL_SIZE * 0.8)  # ✅ Ajustement à 80% de la taille d'une case
+cherry_image = pygame.transform.scale(cherry_image, (cherry_size, cherry_size))
 
 
-    def traitement_objet(self):
-        if self == "super_pouvoir":
-            pass
 
 
+class ItemManager:
+    def __init__(self):
+        self.coins = []
+        self.cherries = []
+        self.load_items()
 
+    def load_items(self):
+        """Initialise les pièces et les cerises sur la carte."""
+        for y in range(len(MAP_DATA)):
+            for x in range(len(MAP_DATA[y])):
+                if MAP_DATA[y][x] == 2:
+                    self.coins.append((x * CELL_SIZE, y * CELL_SIZE))
+                elif MAP_DATA[y][x] == 4:
+                    self.cherries.append((x * CELL_SIZE, y * CELL_SIZE))
+
+    def draw_items(self, screen):
+        """Affiche les pièces et les cerises sur la carte."""
+        coin_offset = (CELL_SIZE - small_size) // 2
+        cherry_offset = (CELL_SIZE - cherry_size) // 2  # ✅ Ajusté pour la nouvelle taille
+
+        for coin in self.coins:
+            screen.blit(coin_image, (coin[0] + coin_offset, coin[1] + coin_offset))
+        for cherry in self.cherries:
+            screen.blit(cherry_image, (cherry[0] + cherry_offset , cherry[1] + cherry_offset))
+            print(f"Taille originale de la cerise : {cherry_image.get_size()}")
+
+    def check_collision(self, player):
+        """Gère la collecte des pièces et l'activation du mode super-pacman."""
+        player_rect = pygame.Rect(player.x, player.y, CELL_SIZE, CELL_SIZE)
+
+        # Vérification pour les pièces
+        for coin in self.coins[:]:
+            coin_rect = pygame.Rect(coin[0], coin[1], CELL_SIZE, CELL_SIZE)
+            if player_rect.colliderect(coin_rect):
+                self.coins.remove(coin)
+                player.score += 10
+                MAP_DATA[coin[1] // CELL_SIZE][coin[0] // CELL_SIZE] = 0  # Supprime la pièce
+
+        # Vérification pour les cerises
+        for cherry in self.cherries[:]:
+            cherry_rect = pygame.Rect(cherry[0], cherry[1], CELL_SIZE, CELL_SIZE)
+            if player_rect.colliderect(cherry_rect):
+                self.cherries.remove(cherry)
+                player.score += 20  # Les cerises donnent plus de points
+                player.activate_super_pacman()  # Active le mode super-pacman
+                MAP_DATA[cherry[1] // CELL_SIZE][cherry[0] // CELL_SIZE] = 0  # Supprime la cerise

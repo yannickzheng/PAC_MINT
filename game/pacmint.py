@@ -4,7 +4,7 @@ from global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
 from server.reseaux import Network
 from player import Player
 from map import MAP_SURFACE
-
+from items import ItemManager
 from pygame import mixer
 
 import json
@@ -75,23 +75,27 @@ def create_game():
         draw_button("Générer un code", 250, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Lancer la partie", 550, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False
-                pygame.quit()
-                sys.exit()
+                run = False  # On arrête seulement la boucle, sans quitter pygame
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 button_click.play()
+
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
                         generate_code()
                     elif 550 <= x <= 750:
-                        main_game()
+                        main_game()  # Vérifier que main_game() ne ferme pas pygame
                     elif 850 <= x <= 1050:
                         main_menu()
+
+        if not pygame.get_init():
+            print("⚠ ERREUR: Pygame s'est arrêté avant l'affichage.")
+            return
 
         pygame.display.flip()
 
@@ -122,8 +126,11 @@ def main_menu():
                         join_game()
                     elif 850 <= x <= 1050:
                         run = False
+                        print("🔴 Pygame est en train de se fermer dans main_menu()")
                         pygame.quit()
                         sys.exit()
+
+
         pygame.display.flip()
 
 def join_game():
@@ -167,9 +174,9 @@ def main_game():
         player = Player(data["pos"][0], data["pos"][1], data["roles"])
         players.append(player)
     # Initialisation de la police pour afficher le score
+    item_manager = ItemManager()  # ✅ Création d'un objet ItemManager
     run = True
     while run:
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -193,6 +200,8 @@ def main_game():
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
+        item_manager.draw_items(screen)  # ✅ Appel sur l'objet créé
+
         for player in players:
             player.draw(screen)
 
@@ -202,7 +211,9 @@ def main_game():
 
         pygame.display.flip()
         clock.tick(60)
-    pygame.quit()
+    print("🔴 Retour au menu principal depuis main_game()")
+    return  # ✅ On revient au menu sans fermer Pygame
+
 
 if __name__ == "__main__":
     main_menu()

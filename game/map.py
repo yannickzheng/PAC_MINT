@@ -1,5 +1,6 @@
 from global_variable import WIDTH, HEIGHT, CELL_SIZE, MAP_WIDTH, MAP_HEIGHT, WALL_COLOR, PATH_COLOR, DEFAULT_COLOR
 import pygame
+import random
 
 def create_map():
     map = [[0] * MAP_WIDTH for _ in range(MAP_HEIGHT)]
@@ -81,6 +82,18 @@ def generate_map_walls(map):
 
     return map
 
+def generate_items(map):
+    """Ajoute des pièces (2) et des cerises (4) sur les chemins de la carte."""
+    for y in range(len(map)):
+        for x in range(len(map[y])):
+            if map[y][x] == 0:  # On place des objets seulement sur les chemins
+                if random.random() < 0.1:  # 10% de chance de générer une cerise
+                    map[y][x] = 4
+                else:
+                    map[y][x] = 2  # Sinon on place une pièce par défaut
+    return map
+
+
 
 MAP_SURFACE = create_map_surface((generate_map_walls(generate_map_inside(create_map()))))
-MAP_DATA = generate_map_walls(generate_map_inside(create_map()))
+MAP_DATA = generate_items(generate_map_walls(generate_map_inside(create_map())))
