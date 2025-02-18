@@ -5,7 +5,7 @@ import os
 from global_variable import CELL_SIZE
 from map import MAP_DATA, MAP_SURFACE
 small_size = CELL_SIZE // 4  # Taille des pièces
-cherry_size = CELL_SIZE // 2  # ✅ Augmente la taille des cerises
+cherry_size = CELL_SIZE // 2  #  Augmente la taille des cerises
 
 # Définir la taille réduite des images AVANT de charger les sprites
 small_size = CELL_SIZE // 4  # Taille des pièces
@@ -15,7 +15,7 @@ coin_image = pygame.image.load(os.path.join("images", "coin.jpg"))
 coin_image = pygame.transform.scale(coin_image, (small_size, small_size))
 
 cherry_image = pygame.image.load(os.path.join("images", "cerise.png"))
-cherry_size = int(CELL_SIZE * 0.8)  # ✅ Ajustement à 80% de la taille d'une case
+cherry_size = int(CELL_SIZE * 0.8)  #  Ajustement à 80% de la taille d'une case
 cherry_image = pygame.transform.scale(cherry_image, (cherry_size, cherry_size))
 
 
@@ -39,7 +39,7 @@ class ItemManager:
     def draw_items(self, screen):
         """Affiche les pièces et les cerises sur la carte."""
         coin_offset = (CELL_SIZE - small_size) // 2
-        cherry_offset = (CELL_SIZE - cherry_size) // 2  # ✅ Ajusté pour la nouvelle taille
+        cherry_offset = (CELL_SIZE - cherry_size) // 2  #  Ajusté pour la nouvelle taille
 
         for coin in self.coins:
             screen.blit(coin_image, (coin[0] + coin_offset, coin[1] + coin_offset))
@@ -47,31 +47,31 @@ class ItemManager:
         for cherry in self.cherries:
             screen.blit(cherry_image, (cherry[0] + cherry_offset, cherry[1] + cherry_offset))
 
-            # ✅ Dessiner un rectangle rouge autour des cerises pour visualiser la hitbox
+            #  Dessiner un rectangle rouge autour des cerises pour visualiser la hitbox
             #pygame.draw.rect(screen, (255, 0, 0),(cherry[0], cherry[1], CELL_SIZE, CELL_SIZE), 2)
 
     def check_collision(self, player):
         """Gère la collecte des pièces et des cerises uniquement pour Pac-Man."""
 
-        # ✅ Si le joueur est un fantôme, il ne collecte rien
+        #  Si le joueur est un fantôme, il ne collecte rien
         if player.is_phantom:
             return
 
         player_rect = pygame.Rect(player.x, player.y, CELL_SIZE, CELL_SIZE)
 
         # Vérification pour les pièces
-        for coin in self.coins[:]:  # ✅ Faire une copie de la liste pour éviter les erreurs
+        for coin in self.coins[:]:  #  Faire une copie de la liste pour éviter les erreurs
             coin_rect = pygame.Rect(coin[0], coin[1], CELL_SIZE, CELL_SIZE)
             if player_rect.colliderect(coin_rect):
-                self.coins.remove(coin)  # ✅ Supprime la pièce
+                self.coins.remove(coin)  #  Supprime la pièce
                 player.score += 10
-                MAP_DATA[coin[1] // CELL_SIZE][coin[0] // CELL_SIZE] = 0  # ✅ Supprime la pièce de la map
+                MAP_DATA[coin[1] // CELL_SIZE][coin[0] // CELL_SIZE] = 0  #  Supprime la pièce de la map
 
         # Vérification pour les cerises
         for cherry in self.cherries[:]:
             cherry_rect = pygame.Rect(cherry[0], cherry[1], CELL_SIZE, CELL_SIZE)
             if player_rect.colliderect(cherry_rect):
-                self.cherries.remove(cherry)  # ✅ Supprime la cerise immédiatement
+                self.cherries.remove(cherry)  #  Supprime la cerise immédiatement
                 player.score += 50
-                MAP_DATA[cherry[1] // CELL_SIZE][cherry[0] // CELL_SIZE] = 0  # ✅ Supprime la cerise de la map
+                MAP_DATA[cherry[1] // CELL_SIZE][cherry[0] // CELL_SIZE] = 0  #  Supprime la cerise de la map
 
