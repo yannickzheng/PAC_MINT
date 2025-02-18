@@ -5,7 +5,13 @@ import random
 import string
 
 class Player:
-    def __init__(self, x, y, role):
+    def __init__(self, x, y, role, ip, tcp_port, udp_port):
+        self.ip = ip
+        self.tcp_port = int(tcp_port)
+        self.udp_port = int(udp_port)
+        self.tcp_addr = (self.ip, self.tcp_port)
+        self.udp_addr = (self.ip, self.udp_port)
+
         self.x = x
         self.y = y
         self.coord = (x, y)
