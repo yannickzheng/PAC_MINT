@@ -126,6 +126,9 @@ def main_menu():
                         sys.exit()
         pygame.display.flip()
 
+
+def lobby():
+    pass
 def join_game():
     run = True
     while run:
