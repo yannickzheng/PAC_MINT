@@ -4,7 +4,7 @@ from global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
 from server.reseaux import Network
 from player import Player
 from map import MAP_SURFACE
-
+from items import ItemManager
 from pygame import mixer
 
 import json
@@ -27,7 +27,7 @@ image = pygame.image.load("images/background2.png")
 mixer.init()
 
 mixer.music.load("sound/background_sound.mp3")
-mixer.music.set_volume(0.3)
+mixer.music.set_volume(0.9)
 mixer.music.play(-1)
 
 button_click = mixer.Sound("sound/button_click.mp3")
@@ -78,9 +78,6 @@ def create_game():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-                pygame.quit()
-                sys.exit()
-
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 button_click.play()
@@ -92,7 +89,6 @@ def create_game():
                         main_game()
                     elif 850 <= x <= 1050:
                         main_menu()
-
         pygame.display.flip()
 
 
@@ -126,7 +122,6 @@ def main_menu():
                         sys.exit()
         pygame.display.flip()
 
-
 def lobby():
     pass
 def join_game():
@@ -158,8 +153,6 @@ def main_game():
     mixer.music.load("sound/game_sound.mp3")
     mixer.music.set_volume(0.3)
     mixer.music.play(-1)
-
-
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
 
@@ -177,9 +170,9 @@ def main_game():
         player = Player(data["pos"][0], data["pos"][1], data["roles"])
         players.append(player)
     # Initialisation de la police pour afficher le score
+    item_manager = ItemManager()
     run = True
     while run:
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -187,6 +180,7 @@ def main_game():
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
         current_player = players[current_player_id]
         current_player.move(players)
+        item_manager.check_collision(current_player)
 
         all_players_data["players"][current_player_id] = {  # Mettre à jour les données pour tous les joueurs
             "pos": current_player.coord,
@@ -203,16 +197,20 @@ def main_game():
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
+        item_manager.draw_items(screen)
+
         for player in players:
-            player.draw(screen)
+            player.draw(screen, current_player)
 
         # Afficher le score du joueur actuel
         score_text = font.render(f"Score: {current_player.score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
+        lives_text = font.render(f"Vies: {current_player.lives}", True, (0, 0, 255))
+        screen.blit(lives_text, (WIDTH - 180, 1))
 
         pygame.display.flip()
         clock.tick(60)
-    pygame.quit()
+    return
 
 if __name__ == "__main__":
     main_menu()
