@@ -150,6 +150,13 @@ def join_game():
         pygame.display.flip()
 
 def main_game():
+    mixer.init()
+
+    mixer.music.load("sound/game_sound.mp3")
+    mixer.music.set_volume(0.3)
+    mixer.music.play(-1)
+
+
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
 
