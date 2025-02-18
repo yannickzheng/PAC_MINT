@@ -87,7 +87,7 @@ def generate_items(map):
     for y in range(len(map)):
         for x in range(len(map[y])):
             if map[y][x] == 0:  # On place des objets seulement sur les chemins
-                if random.random() < 0.1:  # 10% de chance de générer une cerise
+                if random.random() < 0.01:  # 1% de chance de générer une cerise
                     map[y][x] = 4
                 else:
                     map[y][x] = 2  # Sinon on place une pièce par défaut

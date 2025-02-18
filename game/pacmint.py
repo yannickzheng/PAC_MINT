@@ -26,8 +26,9 @@ image = pygame.image.load("images/background2.png")
 # musique
 mixer.init()
 
-mixer.music.load("sound/background_sound.mp3")
-mixer.music.set_volume(0.3)
+#mixer.music.load("sound/background_sound.mp3")
+mixer.music.load("sound/Rick Astley.mp3")
+mixer.music.set_volume(0.10)
 mixer.music.play(-1)
 
 button_click = mixer.Sound("sound/button_click.mp3")
@@ -184,6 +185,7 @@ def main_game():
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
         current_player = players[current_player_id]
         current_player.move(players)
+        item_manager.check_collision(current_player)  # ✅ Vérifie si Pac-Man mange une pièce
 
         all_players_data["players"][current_player_id] = {  # Mettre à jour les données pour tous les joueurs
             "pos": current_player.coord,
