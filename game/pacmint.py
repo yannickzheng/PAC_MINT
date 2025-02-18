@@ -26,9 +26,8 @@ image = pygame.image.load("images/background2.png")
 # musique
 mixer.init()
 
-#mixer.music.load("sound/background_sound.mp3")
-mixer.music.load("sound/Rick Astley.mp3")
-mixer.music.set_volume(0.10)
+mixer.music.load("sound/background_sound.mp3")
+mixer.music.set_volume(0.9)
 mixer.music.play(-1)
 
 button_click = mixer.Sound("sound/button_click.mp3")
@@ -76,28 +75,20 @@ def create_game():
         draw_button("Générer un code", 250, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Lancer la partie", 550, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen)
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False  # On arrête seulement la boucle, sans quitter pygame
-
+                run = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 button_click.play()
-
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
                         generate_code()
                     elif 550 <= x <= 750:
-                        main_game()  # Vérifier que main_game() ne ferme pas pygame
+                        main_game()
                     elif 850 <= x <= 1050:
                         main_menu()
-
-        if not pygame.get_init():
-            print("⚠ ERREUR: Pygame s'est arrêté avant l'affichage.")
-            return
-
         pygame.display.flip()
 
 
@@ -127,13 +118,12 @@ def main_menu():
                         join_game()
                     elif 850 <= x <= 1050:
                         run = False
-                        print("🔴 Pygame est en train de se fermer dans main_menu()")
                         pygame.quit()
                         sys.exit()
-
-
         pygame.display.flip()
 
+def lobby():
+    pass
 def join_game():
     run = True
     while run:
@@ -158,6 +148,11 @@ def join_game():
         pygame.display.flip()
 
 def main_game():
+    mixer.init()
+
+    mixer.music.load("sound/game_sound.mp3")
+    mixer.music.set_volume(0.3)
+    mixer.music.play(-1)
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
 
@@ -175,7 +170,7 @@ def main_game():
         player = Player(data["pos"][0], data["pos"][1], data["roles"])
         players.append(player)
     # Initialisation de la police pour afficher le score
-    item_manager = ItemManager()  # ✅ Création d'un objet ItemManager
+    item_manager = ItemManager()
     run = True
     while run:
         for event in pygame.event.get():
@@ -185,7 +180,7 @@ def main_game():
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
         current_player = players[current_player_id]
         current_player.move(players)
-        item_manager.check_collision(current_player)  # ✅ Vérifie si Pac-Man mange une pièce
+        item_manager.check_collision(current_player)
 
         all_players_data["players"][current_player_id] = {  # Mettre à jour les données pour tous les joueurs
             "pos": current_player.coord,
@@ -202,7 +197,7 @@ def main_game():
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
-        item_manager.draw_items(screen)  # ✅ Appel sur l'objet créé
+        item_manager.draw_items(screen)
 
         for player in players:
             player.draw(screen)
@@ -210,14 +205,12 @@ def main_game():
         # Afficher le score du joueur actuel
         score_text = font.render(f"Score: {current_player.score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
-        # ✅ Affichage du nombre de vies en haut à droite
         lives_text = font.render(f"Vies: {current_player.lives}", True, (0, 0, 255))
-        screen.blit(lives_text, (WIDTH - 180, 1))  # 📌 Position ajustée en haut à droite
+        screen.blit(lives_text, (WIDTH - 180, 1))
 
         pygame.display.flip()
         clock.tick(60)
-    print("🔴 Retour au menu principal depuis main_game()")
-    return  # ✅ On revient au menu sans fermer Pygame
+    return
 
 
 if __name__ == "__main__":
