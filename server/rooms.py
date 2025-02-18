@@ -50,6 +50,23 @@ class RoomManager:
         room = self.rooms.get(room_id)
         return room and room.is_player_in_room(sender_id)
 
+    def send_udp(self, sender_id, room_id, message, sock):
+        """
+        Send data to all players in room, except sender with udp
+        """
+        if not self.room_exists(room_id):
+            return False
+
+        room = self.rooms.get(room_id)
+        if not room:
+            return False
+
+        players = room.players
+
+        for player_id in players:
+            if player_id != sender_id:
+                pass
+                #mettre ici la fonction send utilisant udp
 
 class Room:
 
