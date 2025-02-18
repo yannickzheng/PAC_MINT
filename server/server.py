@@ -10,6 +10,7 @@ import json
 timeout = 10 #temps en seconde pour considérer un joueur inactif
 MAX_PLAYERS = 5 # Limite de joueurs
 server = "localhost" # J'ai pris mon adresse IP wifi, il faudra mettre celle du serveur plus tard
+
 port = 5555 # Port de communication
 
 #Gestion de l'arrêt du serveur

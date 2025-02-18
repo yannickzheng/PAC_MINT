@@ -1,8 +1,10 @@
 import pygame
 from global_variable import WIDTH, HEIGHT, CELL_SIZE
 from map import MAP_DATA
+
 import random
 import string
+
 
 class Player:
     def __init__(self, x, y, role, ip, tcp_port, udp_port):
@@ -16,12 +18,16 @@ class Player:
         self.y = y
         self.coord = (x, y)
         self.color = (255, 0, 0)
-        self.size = 20
-        self.hitbox_size = 10
+        self.size = CELL_SIZE  # Pac-Man doit être basé sur `CELL_SIZE`
+        self.hitbox_size = CELL_SIZE // 2
+        self.speed = CELL_SIZE // 6  # Pac-Man bouge par petits pas
+        self.lives = 3  # Pac-Man commence avec 3 vies
+    #Chargement des images
         self.image1 = pygame.image.load("images/pacman - right.png")
         self.image2 = pygame.image.load("images/pacman - left.png")
         self.image3 = pygame.image.load("images/pacman - up.png")
         self.image4 = pygame.image.load("images/pacman - down.png")
+        self.image5 = pygame.image.load("images/red_ghost.png")
         self.is_pacman = role == "PacMan"
         self.is_phantom = role == "Fantôme"
         self.is_coin = role == "Pièce"
@@ -29,75 +35,86 @@ class Player:
         self.game_code = ""
 
     def check_collision(self, players):
-        """
-        Vérifie si le joueur entre en collision avec un autre joueur en prenant en compte leur hitbox
-        :param players: Liste des autres joueurs
-        :return: True si collision, False sinon
-        """
+        """Vérifie si le joueur entre en collision avec un autre joueur"""
         for player in players:
             if player != self:
-                # calcul de la distance au carré entre les centres des deux joueurs
                 distance_squared = (self.x - player.x) ** 2 + (self.y - player.y) ** 2
-                # il y a collision quand la distance entre les deux joueurs est inférieure à la somme de leur rayon
                 if distance_squared < (self.hitbox_size + player.hitbox_size) ** 2:
                     return True
         return False
 
     def move(self, players):
-        """
-        Déplace le joueur en vérifiant les collisions avec les murs et les autres joueurs.
-        :param players: Liste des autres joueurs
-        """
+        """Déplace Pac-Man en s'assurant qu'il ne traverse pas les murs"""
         keys = pygame.key.get_pressed()
-        cell_x = self.x // CELL_SIZE
-        cell_y = self.y // CELL_SIZE
-
         new_x, new_y = self.x, self.y
+        hitbox_offset = self.size // 4  #  Réduit la hitbox pour éviter l'entrée partielle dans les murs
 
-        if (keys[pygame.K_LEFT]
-                and self.x > 0
-                and cell_x > 0
-                and MAP_DATA[cell_y][(self.x - 2) // CELL_SIZE] == 0):
-            new_x = self.x - 2
+        #  Vérifie plusieurs points autour de Pac-Man pour détecter un mur
+        def is_wall(x, y):
+            return (
+                    MAP_DATA[y // CELL_SIZE][x // CELL_SIZE] == 1 or  # Point Haut-Gauche
+                    MAP_DATA[y // CELL_SIZE][(x + self.size - hitbox_offset) // CELL_SIZE] == 1 or  # Point Haut-Droit
+                    MAP_DATA[(y + self.size - hitbox_offset) // CELL_SIZE][x // CELL_SIZE] == 1 or  # Point Bas-Gauche
+                    MAP_DATA[(y + self.size - hitbox_offset) // CELL_SIZE][
+                        (x + self.size - hitbox_offset) // CELL_SIZE] == 1  # Point Bas-Droit
+            )
 
-        if (keys[pygame.K_RIGHT]
-                and self.x + 1 < WIDTH
-                and cell_x > 0
-                and MAP_DATA[cell_y][(self.x + 2) // CELL_SIZE] == 0):
-            new_x = self.x + 2
+        #  Pac-Man ne peut pas traverser les murs
+        if self.is_pacman:
+            if keys[pygame.K_LEFT] and self.x > 0:
+                if not is_wall(self.x - self.speed, self.y):
+                    new_x -= self.speed
 
-        if (keys[pygame.K_UP]
-                and self.y > 0
-                and cell_y > 0
-                and MAP_DATA[(self.y - 2) // CELL_SIZE][cell_x] == 0):
-            new_y = self.y - 2
+            if keys[pygame.K_RIGHT] and self.x + self.size < WIDTH:
+                if not is_wall(self.x + self.speed, self.y):
+                    new_x += self.speed
 
-        if (keys[pygame.K_DOWN]
-                and self.y - 1 < HEIGHT
-                and cell_y > 0
-                and MAP_DATA[(self.y + 2) // CELL_SIZE][cell_x] == 0):
-            new_y = self.y + 2
-        # anciennes coordonnées
+            if keys[pygame.K_UP] and self.y > 0:
+                if not is_wall(self.x, self.y - self.speed):
+                    new_y -= self.speed
+
+            if keys[pygame.K_DOWN] and self.y + self.size < HEIGHT:
+                if not is_wall(self.x, self.y + self.speed):
+                    new_y += self.speed
+
+        #  Les Fantômes ne sont PAS bloqués par les murs
+        elif self.is_phantom:
+            if keys[pygame.K_LEFT] and self.x > 0:
+                if not is_wall(self.x - self.speed, self.y):
+                    new_x -= self.speed
+
+            if keys[pygame.K_RIGHT] and self.x + self.size < WIDTH:
+                if not is_wall(self.x + self.speed, self.y):
+                    new_x += self.speed
+
+            if keys[pygame.K_UP] and self.y > 0:
+                if not is_wall(self.x, self.y - self.speed):
+                    new_y -= self.speed
+
+            if keys[pygame.K_DOWN] and self.y + self.size < HEIGHT:
+                if not is_wall(self.x, self.y + self.speed):
+                    new_y += self.speed
+
+        #  Vérification des collisions avec les autres joueurs
         old_x, old_y = self.x, self.y
-        # nouvelles coordonnées temporaires
         self.x, self.y = new_x, new_y
-        # on vérifgie s'il y a collision
+
         if self.check_collision(players):
-            # on annule le déplacement en cas de collision
-            self.x, self.y = old_x, old_y
+            self.x, self.y = old_x, old_y  #  Annule le déplacement en cas de collision avec un autre joueur
         else:
-            # sinon on met à jour les coordonnées
-            self.x, self.y = new_x, new_y
-        self.update()
+            self.update()  #  Met à jour les coordonnées si le déplacement est valide
+
     def update(self):
-        """
-        Met à jour les coordonnées du joueur
-        """
+        """Met à jour les coordonnées du joueur"""
         self.coord = (self.x, self.y)
-    def get_img(self):
-        """
-        Renvoie l'image du joueur en fonction de la direction
-        """
+
+    def get_img_pacman(self, controlled_player):
+        """Renvoie l'image de Pac-Man en fonction de la direction uniquement si c'est le joueur contrôlé"""
+
+        #  Vérifie que Pac-Man est bien le joueur contrôlé
+        if not self.is_pacman or self != controlled_player:
+            return self.image1  #  Garde son orientation actuelle
+
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             return self.image2
@@ -107,32 +124,21 @@ class Player:
             return self.image3
         if keys[pygame.K_DOWN]:
             return self.image4
-        return self.image1
+        return self.image1  #  Par défaut, Pac-Man regarde à droite
 
-    def draw(self, screen):
-        """
-        Dessine le joueur à l'écran
-        :param screen: Surface d'affichage du jeu
-        """
+    def get_img_phantom(self):
+        """Renvoie l'image du fantôme"""
+        return self.image5
+
+    def draw(self, screen, controlled_player):
+        """Dessine Pac-Man ou un fantôme sur l'écran"""
         if self.is_pacman:
-            self.spawn(screen, self.get_img())
+            self.spawn(screen, self.get_img_pacman(controlled_player))  #  Passe `controlled_player`
         elif self.is_phantom:
-            pygame.draw.circle(screen, self.color, (self.x, self.y), self.size // 2)
+            self.spawn(screen, self.image5)  # Les fantômes gardent leur image
         else:
             pygame.draw.rect(screen, self.color, (self.x, self.y, self.size, self.size))
 
     def spawn(self, screen, img):
-        """
-        Affiche l'image du joueur à l'écran
-        :param screen: Surface d'affichage du jeu
-        :param img: Image du joueur
-        """
+        """Affiche Pac-Man ou un fantôme"""
         screen.blit(img, (self.x, self.y))
-
-def tuple_to_str(couple):
-    return str(couple[0]) + "," + str(couple[1])
-def triple_to_str(triple):
-    return str(triple[0]) + "," + str(triple[1]) + "," + str(triple[2])
-def str_to_tuple(s: str):
-    s = s.split(",")
-    return int(s[0]), int(s[1])
