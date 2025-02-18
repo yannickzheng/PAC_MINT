@@ -35,6 +35,22 @@ class RoomManager:
             return room.leave(player_identifier)
         return False
 
+    def remove_empty_rooms(self):
+        """Suppression des salles vides"""
+        for room_id, room in self.rooms.items():
+            if room.is_empty():
+                del self.rooms[room_id]
+
+    def room_exists(self, room_id):
+        """Check if a room exists in the manager."""
+        return room_id in self.rooms
+
+    def is_sender_in_room(self, sender_id, room_id):
+        """Check if the sender is part of the specified room."""
+        room = self.rooms.get(room_id)
+        return room and room.is_player_in_room(sender_id)
+
+
 class Room:
 
     def __init__(self, identifier, player_capacity, room_name):
