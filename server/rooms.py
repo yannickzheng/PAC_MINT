@@ -1,8 +1,6 @@
 import uuid  #générer des identifiants uniques
 
-"""Donne t'on un identifiant pour les players ?"""
 """Faire en sort qu'un joueur n'est présent que dans une seule salle"""
-
 
 class RoomManager:
 
@@ -17,10 +15,25 @@ class RoomManager:
 
         # Par default, on dit que la capacité des rooms est de 5 joueurs max
 
-        identifier = str(uuid.uuid4())
+        identifier = str(uuid.uuid4()) # On crée un identifiant unique pour les salons
         new_room = Room(identifier, player_capacity, room_name)
         self.rooms[identifier] = new_room
         return new_room
+
+
+    def join(self, player_identifier, room_identifier):
+        """Ajout d'un joueur dans une salle"""
+        room = self.rooms.get(room_identifier)
+        if room:
+            return room.join(player_identifier)
+        return False
+
+    def leave(self, player_identifier, room_identifier):
+        """Suppression d'un joueur d'une salle"""
+        room = self.rooms.get(room_identifier)
+        if room:
+            return room.leave(player_identifier)
+        return False
 
 class Room:
 
@@ -41,18 +54,18 @@ class Room:
         if len(self.players) == 0:
             return True
 
-    def join(self, player):
+    def join(self, player_id):
         """Ajout d'un joueur dans la salle"""
         if not self.is_full():
-            self.players.add(player)
+            self.players.add(player_id)
             return True
 
-    def leave(self, player):
+    def leave(self, player_id):
         """Suppression d'un joueur de la salle"""
-        if player in self.players:
-            self.players.remove(player)
+        if player_id in self.players:
+            self.players.remove(player_id)
             return True
 
-    def is_player_in_room(self, player):
-        """Le joeur est il dans la salle?"""
-        return player in self.players
+    def is_player_in_room(self, player_id):
+        """Le joueur est il dans la salle?"""
+        return player_id in self.players
