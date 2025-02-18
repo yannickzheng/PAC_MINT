@@ -3,7 +3,7 @@ from _thread import start_new_thread
 import json
 
 # Adresse IP locale du serveur (ici le serveur est sur la même machine que le client, il doit être modifiable)
-server = "localhost" # J'ai pris mon adresse IP wifi, il faudra mettre celle du serveur plus tard
+server = "localhost" # Adresse IP du serveur (ici localhost)
 port = 5555 # Port de communication
 
 # Création d'un socket pour la communication sur IPV4 en utilisant le protocole TCP

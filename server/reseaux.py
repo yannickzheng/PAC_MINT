@@ -1,6 +1,5 @@
 import socket
 
-
 class Network:
     def __init__(self):
         """
@@ -9,11 +8,11 @@ class Network:
         - Connexion au serveur
         - Récupération de la position initiale du joueur
         """
-        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Socket TCP/IP
-        self.server = "localhost"  # Adresse IP du serveur (ici le serveur est sur la même machine que le client, à l'avenir il devra avoir une adresse IP fixe)
-        self.port = 5555  # Port de communication
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #Socket TCP/IP
+        self.server = "localhost" #Adresse IP du serveur (ici le serveur est sur la même machine que le client, à l'avenir il devra avoir une adresse IP fixe)
+        self.port = 5555 #Port de communication
         self.address = (self.server, self.port)
-        self.pos = self.connect()  # Permet d'établir une connexion avec le serveur et de récupérer la position initiale du joueur
+        self.pos = self.connect() #Permet d'établir une connexion avec le serveur et de récupérer la position initiale du joueur
 
     def get_pos(self):
         """
@@ -29,9 +28,8 @@ class Network:
         Renvoie les données reçues du serveur après la connexion (décodées en chaîne de caractères)
         """
         try:
-            self.client.connect(self.address)  # Connexion au serveur
-            return self.client.recv(
-                2048).decode()  # Récupération des données initiales du serveur (taille max = 2048 octets)
+            self.client.connect(self.address) #Connexion au serveur
+            return self.client.recv(2048).decode() #Récupération des données initiales du serveur (taille max = 2048 octets)
         except:
             pass
 
@@ -44,6 +42,6 @@ class Network:
         """
         try:
             self.client.send(str.encode(data))
-            return self.client.recv(2048 * 4).decode()
+            return self.client.recv(2048*4).decode()
         except socket.error as e:
             print(e)

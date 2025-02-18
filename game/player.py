@@ -1,8 +1,6 @@
 import pygame
 from global_variable import WIDTH, HEIGHT, CELL_SIZE
 from map import MAP_DATA
-
-
 class Player:
     def __init__(self, x, y, role):
         self.x = x
@@ -82,13 +80,11 @@ class Player:
             # sinon on met à jour les coordonnées
             self.x, self.y = new_x, new_y
         self.update()
-
     def update(self):
         """
         Met à jour les coordonnées du joueur
         """
         self.coord = (self.x, self.y)
-
     def get_img_pacman(self):
         """
         Renvoie l'image du joueur en fonction de la direction
@@ -109,7 +105,6 @@ class Player:
         Renvoie l'image du joueur
         """
         return self.image5
-
     def draw(self, screen):
         """
         Dessine le joueur à l'écran
@@ -118,7 +113,7 @@ class Player:
         if self.is_pacman:
             self.spawn(screen, self.get_img_pacman())
         elif self.is_phantom:
-            self.spawn(screen, self.get_img_phantom())
+            self.spawn(screen,self.get_img_phantom())
         else:
             pygame.draw.rect(screen, self.color, (self.x, self.y, self.size, self.size))
 

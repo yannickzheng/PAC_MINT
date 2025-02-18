@@ -1,8 +1,12 @@
 import pygame
-from global_variable import WIDTH, HEIGHT
+
+from global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
 from server.reseaux import Network
 from player import Player
 from map import MAP_SURFACE
+
+from pygame import mixer
+
 import json
 
 import sys
@@ -14,28 +18,63 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PacMint")
 
-#COLORS
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
-GREEN = (0, 255, 0)
 font = pygame.font.SysFont("Arial", 24)
-def draw_button(text, x, y, width, height, color):
-    pygame.draw.rect(screen, color, (x, y, width, height))
-    text_surface = font.render(text, True, (255, 255, 255))
-    text_rect = text_surface.get_rect(center=(x + width / 2, y + height / 2))
+
+image = pygame.image.load("images/background2.png")
+
+
+# musique
+mixer.init()
+
+mixer.music.load("sound/background_sound.mp3")
+mixer.music.set_volume(0.3)
+mixer.music.play(-1)
+
+button_click = mixer.Sound("sound/button_click.mp3")
+button_click.set_volume(5)
+
+
+def draw_button(text, x, y, width, height, base_color, glow_color, screen):
+    # permet de vérifier la position de la souris sur le bouton
+    mouse_pos = pygame.mouse.get_pos()
+    hover = (x <= mouse_pos[0] <= x + width) and (y <= mouse_pos[1] <= y + height)
+
+    # ajout de l'effet de lumière autour du bouton
+    if hover:
+        for i in range(10):
+            glow_radius = i * 2
+            glow_surface = pygame.Surface((width + glow_radius * 2, height + glow_radius * 2), pygame.SRCALPHA)
+            pygame.draw.rect(glow_surface, (*glow_color, 50 - i * 5),
+                             (0, 0, width + glow_radius * 2, height + glow_radius * 2), border_radius=10)
+            screen.blit(glow_surface, (x - glow_radius, y - glow_radius))
+
+    # dégradé de couleur du bouton
+    button_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+    for i in range(height):
+        alpha = int(255 * (i / height))
+        color = (*base_color, alpha)
+        pygame.draw.line(button_surface, color, (0, i), (width, i))
+    screen.blit(button_surface, (x, y))
+    # ajoute un contour de lumière autour du bouton
+    pygame.draw.rect(screen, glow_color, (x, y, width, height), 3, border_radius=10)
+    # permet de centrer le texte dans le bouton
+    text_surface = font.render(text, True, WHITE)
+    text_rect = text_surface.get_rect(center=(x + width // 2, y + height // 2))
     screen.blit(text_surface, text_rect)
 
 
-def main_menu():
-    run = True
-    while run:
-        screen.fill(WHITE)
-        draw_button("Créer une partie", 540, 200, 200, 50, GREEN)
-        draw_button("Rejoindre une partie", 540, 300, 200, 50, BLUE)
-        draw_button("Quitter", 540, 400, 200, 50, RED)
+def generate_code():
+    pass
 
+
+def create_game():
+    run = True
+
+    while run:
+        screen.blit(image, (0, 0))
+        draw_button("Générer un code", 250, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Lancer la partie", 550, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -44,23 +83,75 @@ def main_menu():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
+                button_click.play()
                 # Vérifier si un bouton est cliqué
-                if 540 <= x <= 740:
-                    if 200 <= y <= 250:
+                if 600 <= y <= 650:
+                    if 250 <= x <= 450:
+                        generate_code()
+                    elif 550 <= x <= 750:
                         main_game()
-                    elif 300 <= y <= 350:
-                        pass
-                    elif 400 <= y <= 450:
+                    elif 850 <= x <= 1050:
+                        main_menu()
+
+        pygame.display.flip()
+
+
+def main_menu():
+    run = True
+    while run:
+        screen.blit(image, (0, 0))
+        draw_button("Créer une partie", 250, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Rejoindre une partie", 550, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Quitter", 850, 600, 200, 50, BLUE, PURPLE, screen)
+
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                button_click.play()
+                # Vérifier si un bouton est cliqué
+                if 600 <= y <= 650:
+                    if 250 <= x <= 450:
+                        create_game()
+                    elif 550 <= x <= 750:
+                        join_game()
+                    elif 850 <= x <= 1050:
                         run = False
                         pygame.quit()
                         sys.exit()
         pygame.display.flip()
 
+def join_game():
+    run = True
+    while run:
+        screen.blit(image, (0, 0))
+        draw_button("Entrez le code", 250, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Retour", 550, 600, 200, 50, BLUE, PURPLE, screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                button_click.play()
+                # Vérifier si un bouton est cliqué
+                if 600 <= y <= 650:
+                    if 250 <= x <= 450:
+                        pass
+                    elif 550 <= y <= 750:
+                        main_menu()
+        pygame.display.flip()
+
 def main_game():
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
-
-
 
     clock = pygame.time.Clock()
     n = Network()
@@ -75,10 +166,7 @@ def main_game():
     for data in positions_and_roles:
         player = Player(data["pos"][0], data["pos"][1], data["roles"])
         players.append(player)
-
     # Initialisation de la police pour afficher le score
-
-
     run = True
     while run:
 
@@ -90,7 +178,7 @@ def main_game():
         current_player = players[current_player_id]
         current_player.move(players)
 
-        all_players_data["players"][current_player_id] = { # Mettre à jour les données pour tous les joueurs
+        all_players_data["players"][current_player_id] = {  # Mettre à jour les données pour tous les joueurs
             "pos": current_player.coord,
             "roles": "PacMan" if current_player.is_pacman else "Fantôme"
         }
@@ -115,5 +203,8 @@ def main_game():
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
+
 if __name__ == "__main__":
     main_menu()
+
+    # Mettre le graphe de nos modèles avec Django extensions
