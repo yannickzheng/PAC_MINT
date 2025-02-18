@@ -11,6 +11,8 @@ class Player:
         self.size = CELL_SIZE  # Pac-Man doit être basé sur `CELL_SIZE`
         self.hitbox_size = CELL_SIZE // 2
         self.speed = CELL_SIZE // 6  # ✅ Pac-Man bouge par petits pas
+        self.lives = 3  # ✅ Pac-Man commence avec 3 vies
+    #Chargement des images
         self.image1 = pygame.image.load("images/pacman - right.png")
         self.image2 = pygame.image.load("images/pacman - left.png")
         self.image3 = pygame.image.load("images/pacman - up.png")

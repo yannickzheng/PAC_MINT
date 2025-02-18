@@ -210,6 +210,9 @@ def main_game():
         # Afficher le score du joueur actuel
         score_text = font.render(f"Score: {current_player.score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
+        # ✅ Affichage du nombre de vies en haut à droite
+        lives_text = font.render(f"Vies: {current_player.lives}", True, (0, 0, 255))
+        screen.blit(lives_text, (WIDTH - 180, 1))  # 📌 Position ajustée en haut à droite
 
         pygame.display.flip()
         clock.tick(60)

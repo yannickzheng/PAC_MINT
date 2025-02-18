@@ -70,7 +70,7 @@ class ItemManager:
             coin_rect = pygame.Rect(coin[0], coin[1], CELL_SIZE, CELL_SIZE)
             if player_rect.colliderect(coin_rect):
                 self.coins.remove(coin)  # ✅ Supprime la pièce
-                player.score += 10  # ✅ Pac-Man gagne 10 points
+                player.score += 10
                 MAP_DATA[coin[1] // CELL_SIZE][coin[0] // CELL_SIZE] = 0  # ✅ Supprime la pièce de la map
 
         # Vérification pour les cerises
@@ -78,6 +78,6 @@ class ItemManager:
             cherry_rect = pygame.Rect(cherry[0], cherry[1], CELL_SIZE, CELL_SIZE)
             if player_rect.colliderect(cherry_rect):
                 self.cherries.remove(cherry)  # ✅ Supprime la cerise immédiatement
-                player.score += 50  # ✅ Pac-Man gagne 50 points
+                player.score += 50
                 MAP_DATA[cherry[1] // CELL_SIZE][cherry[0] // CELL_SIZE] = 0  # ✅ Supprime la cerise de la map
 
