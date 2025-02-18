@@ -200,7 +200,7 @@ def main_game():
         item_manager.draw_items(screen)
 
         for player in players:
-            player.draw(screen)
+            player.draw(screen, current_player)
 
         # Afficher le score du joueur actuel
         score_text = font.render(f"Score: {current_player.score}", True, (255, 255, 255))
@@ -211,7 +211,6 @@ def main_game():
         pygame.display.flip()
         clock.tick(60)
     return
-
 
 if __name__ == "__main__":
     main_menu()
