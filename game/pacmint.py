@@ -174,8 +174,7 @@ def main_game():
     for data in positions_and_roles:
         player = Player(data["pos"][0], data["pos"][1], data["roles"])
         players.append(player)
-    # Initialisation de la police pour afficher le score
-    item_manager = ItemManager()  # ✅ Création d'un objet ItemManager
+    item_manager = ItemManager()  #  Création d'un objet ItemManager
     run = True
     while run:
         for event in pygame.event.get():
@@ -185,7 +184,7 @@ def main_game():
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
         current_player = players[current_player_id]
         current_player.move(players)
-        item_manager.check_collision(current_player)  # ✅ Vérifie si Pac-Man mange une pièce
+        item_manager.check_collision(current_player)  #  Vérifie si Pac-Man mange une pièce
 
         all_players_data["players"][current_player_id] = {  # Mettre à jour les données pour tous les joueurs
             "pos": current_player.coord,
@@ -202,22 +201,22 @@ def main_game():
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
-        item_manager.draw_items(screen)  # ✅ Appel sur l'objet créé
+        item_manager.draw_items(screen)  #  Appel sur l'objet créé
 
         for player in players:
-            player.draw(screen)
+            player.draw(screen, current_player)  #  Passe `current_player` en argument
 
         # Afficher le score du joueur actuel
         score_text = font.render(f"Score: {current_player.score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
-        # ✅ Affichage du nombre de vies en haut à droite
+        #  Affichage du nombre de vies en haut à droite
         lives_text = font.render(f"Vies: {current_player.lives}", True, (0, 0, 255))
         screen.blit(lives_text, (WIDTH - 180, 1))  # 📌 Position ajustée en haut à droite
 
         pygame.display.flip()
         clock.tick(60)
     print("🔴 Retour au menu principal depuis main_game()")
-    return  # ✅ On revient au menu sans fermer Pygame
+    return  #  On revient au menu sans fermer Pygame
 
 
 if __name__ == "__main__":
