@@ -22,7 +22,7 @@ class Network:
         self.server = "localhost" #Adresse IP du serveur (ici le serveur est sur la même machine que le client, à l'avenir il devra avoir une adresse IP fixe)
         self.port = 5555 #Port de communication
         self.address = (self.server, self.port)
-        #self.client.connect(self.address)  # Connexion au serveur
+        self.client.connect(self.address)  # Connexion au serveur
         self.game_code = ""
         self.pos = ""
         self.connect()

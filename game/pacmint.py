@@ -64,8 +64,11 @@ def draw_button(text, x, y, width, height, base_color, glow_color, screen):
 
 
 def generate_code():
-    pass
-
+    """Génère un code pour la partie"""
+    n = Network()
+    code = n.create_party()
+    print(f"Code généré : {code}")
+    return code
 
 def create_game():
     run = True
@@ -158,8 +161,9 @@ def main_game():
 
     clock = pygame.time.Clock()
     n = Network()
-    print("Hello, world !")
+    print("Connexion au serveur...")
 
+    game_code = n.game_code  # 🔴 Utiliser le code de la partie existante
     # Demander à l'utilisateur de créer ou rejoindre une partie
     game_code = n.create_party()
     print(f"Partie créée avec le code : {game_code}")
