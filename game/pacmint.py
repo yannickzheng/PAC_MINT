@@ -204,7 +204,7 @@ def main_game():
         item_manager.draw_items(screen)  #  Appel sur l'objet créé
 
         for player in players:
-            player.draw(screen)
+            player.draw(screen,current_player)
         # Afficher le score du joueur actuel
         score_text = font.render(f"Score: {current_player.score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))

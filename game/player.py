@@ -121,8 +121,11 @@ class Player:
         """Met à jour les coordonnées du joueur"""
         self.coord = (self.x, self.y)
 
-    def get_img_pacman(self):
-        """Renvoie l'image de Pac-Man en fonction de la direction et du super pouvoir"""
+    def get_img_pacman(self, controlled_player):
+        """Renvoie l'image de Pac-Man en fonction de la direction uniquement si c'est le joueur contrôlé"""
+
+        if self != controlled_player:  # ✅ Vérifie que Pac-Man est bien le joueur actif
+            return self.image1  # ✅ Garde son orientation actuelle
 
         keys = pygame.key.get_pressed()
 
@@ -140,7 +143,7 @@ class Player:
         # ✅ Si pas de super pouvoir, on retourne les images normales
         if keys[pygame.K_LEFT]:
             return self.image2
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_3]:
             return self.image1
         if keys[pygame.K_UP]:
             return self.image3
@@ -152,12 +155,12 @@ class Player:
         """Renvoie l'image du fantôme"""
         return self.image5
 
-    def draw(self, screen):
+    def draw(self, screen, controlled_player):
         """Dessine Pac-Man ou un fantôme sur l'écran"""
         if self.is_pacman:
-            self.spawn(screen, self.get_img_pacman())  #  Passe `controlled_player`
+            self.spawn(screen, self.get_img_pacman(controlled_player))  # ✅ Passe `controlled_player`
         elif self.is_phantom:
-            self.spawn(screen, self.image5)  # Les fantômes gardent leur image
+            self.spawn(screen, self.image5)  # ✅ Les fantômes gardent leur image
         else:
             pygame.draw.rect(screen, self.color, (self.x, self.y, self.size, self.size))
 
