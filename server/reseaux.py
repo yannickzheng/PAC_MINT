@@ -50,6 +50,7 @@ class Network:
         """
         print(f"Envoi de la commande '{command}' au serveur")
         self.client.sendall(command.encode())
+        print("envoyé")
         response = self.client.recv(self.BUFFER_SIZE).decode()
         print(f"Réponse reçue : {response}")
         return response
@@ -58,27 +59,35 @@ class Network:
         """
         Récupère et retourne la position actuelle du joueur depuis le serveur.
         """
-        return self.send_command("GET_POS")
+        print("GETPOS")
+        response = self.send_command("GET_POS")
+        print("Hello:", response)
+        print(f"<<<< {json.loads(response)}")
+        try:
+            return json.loads(response)
+        except json.JSONDecodeError as e:
+            print(f"Erreur de décodage JSON : {e}, réponse reçue : {response}")
+            return None
 
     def connect(self):
-        """
-        Etablit une connexion avec le serveur :
-        -En cas de  succès, reçoit une donnée initiale telle que la positon du joueur
-        -En cas d'échec, la connexion est fermée
-        Renvoie les données reçues du serveur après la connexion (décodées en chaîne de caractères)
-        """
-        try:
-            #(self.client.connect(self.address)) #Connexion au serveur
-            print("Connecté au serveur correctement")
             """
-            data = self.client.recv(2048).decode() #Récupération des données initiales du serveur (taille max = 2048 octets)
-            if data:
-                self.pos = data
-            else:
-                print("Aucune donnée reçue lors de la connexion initiale")
+            Etablit une connexion avec le serveur :
+            -En cas de  succès, reçoit une donnée initiale telle que la positon du joueur
+            -En cas d'échec, la connexion est fermée
+            Renvoie les données reçues du serveur après la connexion (décodées en chaîne de caractères)
             """
-        except Exception as e:
-            print(f"Erreur lors de la connexion {e}")
+            try:
+                #(self.client.connect(self.address)) #Connexion au serveur
+                print("Connecté au serveur correctement")
+                """
+                data = self.client.recv(2048).decode() #Récupération des données initiales du serveur (taille max = 2048 octets)
+                if data:
+                    self.pos = data
+                else:
+                    print("Aucune donnée reçue lors de la connexion initiale")
+                """
+            except Exception as e:
+                print(f"Erreur lors de la connexion {e}")
 
     def send(self, data):
         """

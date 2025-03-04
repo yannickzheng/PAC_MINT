@@ -132,13 +132,14 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
             except Exception as erreur:
                 print(f"Erreur avec le joueur {joueur_actuel} : {erreur}")
                 break
-
+        """
         # Déconnexion : Libération du rôle
         for player in datas["players"]:
             if player["ip"] == address[0] and player["tcp_port"] == address[1]:
                 player["ip"] = None
                 player["tcp_port"] = None  # Réinitialisation du rôle
                 break
+        """
 
         connexion.close()
         room.leave(joueur_actuel)  # Supprime le joueur de la salle
@@ -149,44 +150,38 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
         print(f"Erreur dans la gestion de la partie : {e}")
         connexion.close()
 
-def threaded_client(connexion):
+def threaded_client(connexion, address):
     """
     Gère la création et la connexion aux parties.
     """
     try:
         raw_data = connexion.recv(2048).decode()
         if not raw_data:
-            print("Client déconnecté avant d'envoyer des données")
+            print("Connexion interrompue avant la réception des données.")
             connexion.close()
             return
 
         data = json.loads(raw_data)
         if data["action"] == "create_party":
-            #room_name = data["name"]
             room_name = "Test Room"
-            room = room_manager.create_room(room_name = room_name,room_id= data["code"],player_capacity=max_players)
-            print("data",data)
+            room = room_manager.create_room(room_name=room_name, room_id=data["code"], player_capacity=max_players)
             room_id = data["code"]
 
             player_id = threading.get_ident()  # Identifiant unique pour le joueur
-            # Le créateur rejoint la partie
-            if room_manager.join(player_id, data["code"]):
+            if room_manager.join(player_id, room_id):
                 connexion.send(str.encode(json.dumps({"status": "ok", "room_id": room.identifier})))
-                # Lancement du thread de jeu pour le créateur
-                start_new_thread(threaded_game_client, (connexion, player_id, data["code"]))
+                start_new_thread(threaded_game_client, (connexion, player_id, room_id, address))
             else:
                 connexion.send(str.encode(json.dumps({"status": "full"})))
                 connexion.close()
 
         elif data["action"] == "join_party":
             room_id = data["room_id"]
-            player_id = threading.get_ident()  # Identifiant unique pour le joueur
+            player_id = threading.get_ident()
 
             if room_manager.join(player_id, room_id):
-                # Démarrer un thread pour le joueur
-                start_new_thread(threaded_game_client, (connexion, player_id, room_id))
+                start_new_thread(threaded_game_client, (connexion, player_id, room_id, address))
             else:
-                print('pas ok')
                 connexion.send(
                     str.encode(json.dumps({"status": "full" if room_manager.room_exists(room_id) else "not_found"})))
                 connexion.close()
@@ -198,7 +193,7 @@ while True:
     connexion, address = s.accept()
     print("Connecté à:", address)
     print("Room Manager",room_manager.rooms)
-    thread = threading.Thread(target=threaded_client, args=(connexion,))
+    thread = threading.Thread(target=threaded_client, args=(connexion,address))
     thread.start()
 
 
