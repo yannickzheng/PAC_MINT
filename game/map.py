@@ -1,4 +1,4 @@
-from global_variable import WIDTH, HEIGHT, CELL_SIZE, MAP_WIDTH, MAP_HEIGHT, WALL_COLOR, PATH_COLOR, DEFAULT_COLOR
+from common.global_variable import WIDTH, HEIGHT, CELL_SIZE, MAP_WIDTH, MAP_HEIGHT, WALL_COLOR, PATH_COLOR, DEFAULT_COLOR
 import pygame
 import random
 

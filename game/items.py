@@ -2,8 +2,9 @@
 
 import pygame
 import os
-from global_variable import CELL_SIZE
-from map import MAP_DATA, MAP_SURFACE
+from common.global_variable import CELL_SIZE
+from map import MAP_DATA
+
 small_size = CELL_SIZE // 4  # Taille des pièces
 cherry_size = CELL_SIZE // 2  #  Augmente la taille des cerises
 

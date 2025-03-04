@@ -104,9 +104,7 @@ def main_menu():
         draw_button("Créer une partie", 250, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Rejoindre une partie", 550, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Quitter", 850, 600, 200, 50, BLUE, PURPLE, screen)
-
         for event in pygame.event.get():
-
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
@@ -158,6 +156,7 @@ def main_game(game_code):
     print("Début de la fonction main_game()")
 
     mixer.init()
+
     mixer.music.load("sound/game_sound.mp3")
     mixer.music.set_volume(0.3)
     mixer.music.play(-1)
@@ -190,7 +189,6 @@ def main_game(game_code):
 
     # création de la liste des joueurs
     players = []
-
     for data in positions_and_roles:
         if data["ip"] is not None and data["tcp_port"] is not None:
             player = Player(data["pos"][0], data["pos"][1], data["roles"], data["ip"], data["tcp_port"])
