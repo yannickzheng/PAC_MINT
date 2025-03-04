@@ -183,16 +183,19 @@ def main_game(game_code):
 
     # On va récupérer les données de tous les joueurs (par exemple leur position et leur rôle)
     print("demande position serveur")
-    all_players_data = json.loads(n.get_pos())
+    all_players_data = n.get_pos()
     print("Joueurs récupérés :", all_players_data)
-    current_player_id = all_players_data["current_player"]
+    current_player_adresse = all_players_data["current_player"] # on récupère l'ip et le port tcp du joueur courant
     positions_and_roles = all_players_data["players"]
 
     # création de la liste des joueurs
     players = []
+
     for data in positions_and_roles:
-        player = Player(data["pos"][0], data["pos"][1], data["roles"])
-        players.append(player)
+        if data["ip"] is not None and data["tcp_port"] is not None:
+            player = Player(data["pos"][0], data["pos"][1], data["roles"], data["ip"], data["tcp_port"])
+            players.append(player)
+
     # Initialisation de la police pour afficher le score
     item_manager = ItemManager()
     run = True
@@ -203,22 +206,38 @@ def main_game(game_code):
                 run = False
 
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
-        current_player = players[current_player_id]
-        current_player.move(players)
-        item_manager.check_collision(current_player)
+        current_player = None
+        for player in players:
+            if player.ip == current_player_adresse[0] and player.tcp_port == current_player_adresse[1]:
+                current_player = player
+                break
 
-        all_players_data["players"][current_player_id] = {  # Mettre à jour les données pour tous les joueurs
+        item_manager.check_collision(current_player)
+        ###
+        all_players_data["players"][0] = {  # Mettre à jour les données pour tous les joueurs ici on suppose que le joueur actuel est pacman
             "pos": current_player.coord,
             "roles": "PacMan" if current_player.is_pacman else "Fantôme"
         }
         # mise à jour des données du joueur en local et envoie au serveur ces données pour les synchroniser avec les autres joueurs
         response = n.send(json.dumps(all_players_data))
-        updated_data = json.loads(response)
+        updated_data = json.loads(response)["players"] # Format étrange ici
+        print("updated",updated_data)
         # Met à jour les positions des autres joueurs
-        for i, data in enumerate(updated_data["players"]):
-            if i != current_player_id:
+        for data in updated_data:
+            # Chercher le joueur correspondant dans la liste des joueurs en fonction de l'IP et du port TCP
+            for player in players:
+                if player.ip == data["ip"] and player.tcp_port == data["tcp_port"]:
+                    # Mettre à jour la position du joueur
+                    player.x, player.y = data["pos"]
+                    # Effectuer toute autre mise à jour relevant
+                    player.update()
+                    break
+
+            """
+            if i != 0: # On suppose que le joueur actuel est pacman
                 players[i].x, players[i].y = data["pos"]
                 players[i].update()
+            """
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
