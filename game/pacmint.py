@@ -1,7 +1,7 @@
 import pygame
 
-from global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
-from server.reseaux import Network
+from common.global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE, BLACK
+from common.reseaux import Network
 from player import Player
 from map import MAP_SURFACE
 from items import ItemManager
@@ -73,7 +73,7 @@ def create_game():
     while run:
         screen.blit(image, (0, 0))
         draw_button("Générer un code", 250, 600, 200, 50, BLUE, CYAN, screen)
-        draw_button("Lancer la partie", 550, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Créer un lobby", 550, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -86,7 +86,7 @@ def create_game():
                     if 250 <= x <= 450:
                         generate_code()
                     elif 550 <= x <= 750:
-                        main_game()
+                        lobby()
                     elif 850 <= x <= 1050:
                         main_menu()
         pygame.display.flip()
@@ -99,9 +99,7 @@ def main_menu():
         draw_button("Créer une partie", 250, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Rejoindre une partie", 550, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Quitter", 850, 600, 200, 50, BLUE, PURPLE, screen)
-
         for event in pygame.event.get():
-
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
@@ -123,7 +121,45 @@ def main_menu():
         pygame.display.flip()
 
 def lobby():
-    pass
+    run = True
+    screen.blit(image, (0, 0))
+    TABLE_WIDTH = 200
+    TABLE_HEIGHT = 400
+    TABLE_X = 150
+    TABLE_Y = 00
+    LINE_COUNT = 4
+
+    while run:
+        draw_button("Lancer la partie", 250, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Retour", 550, 600, 200, 50, BLUE, PURPLE, screen)
+
+        row_height = TABLE_HEIGHT // LINE_COUNT
+        for i in range(LINE_COUNT):
+            y = TABLE_Y + i * row_height
+            pygame.draw.rect(screen, BLACK, (TABLE_X, y, TABLE_WIDTH, row_height), 1)
+        # Afficher les modifications
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                button_click.play()
+                # Vérifier si un bouton est cliqué
+                if 600 <= y <= 650:
+                    if 250 <= x <= 450:
+                        main_game()
+                    elif 550 <= y <= 750:
+                        main_menu()
+
+        pygame.display.flip()
+
+
+
 def join_game():
     run = True
     while run:
