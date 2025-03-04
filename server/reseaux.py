@@ -10,6 +10,10 @@ def generate_unique_code():
         return code
 
 class Network:
+    SERVER_ADDRESS = "localhost"  # Constante pour l'adresse IP du serveur
+    SERVER_PORT = 5555  # Constante pour le port
+    BUFFER_SIZE = 2048  # Taille du buffer pour les messages reçus
+
     def __init__(self):
         # La classe pour une partie
         """
@@ -18,23 +22,43 @@ class Network:
         - Connexion au serveur
         - Récupération de la position initiale du joueur
         """
-        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #Socket TCP/IP
-        self.server = "localhost" #Adresse IP du serveur (ici le serveur est sur la même machine que le client, à l'avenir il devra avoir une adresse IP fixe)
-        self.port = 5555 #Port de communication
-        self.address = (self.server, self.port)
-        self.client.connect(self.address)  # Connexion au serveur
+        print("Connexion au client")
+        self.client = None
+        self.server_address = (self.SERVER_ADDRESS, self.SERVER_PORT)
+        self.player_position = ""
         self.game_code = ""
-        self.pos = ""
-        self.connect()
+        self._initialize_connection()
 
+
+    def _initialize_connection(self):
+            """
+            Configure le socket client et établit la connexion avec le serveur.
+            """
+            self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Socket TCP/IP
+            try:
+                self.client.connect(self.server_address)  # Connexion au serveur
+                print(f"Connecté au serveur {self.SERVER_ADDRESS}:{self.SERVER_PORT}")
+            except socket.error as e:
+                print(f"Erreur lors de la connexion au serveur : {e}")
+                raise
+
+    def send_command(self, command):
+        """
+        Méthode générique pour envoyer une commande au serveur et recevoir une réponse.
+        :param command: La commande à envoyer.
+        :return: La réponse du serveur.
+        """
+        print(f"Envoi de la commande '{command}' au serveur")
+        self.client.sendall(command.encode())
+        response = self.client.recv(self.BUFFER_SIZE).decode()
+        print(f"Réponse reçue : {response}")
+        return response
 
     def get_pos(self):
         """
-        Renvoie la position actuelle du joueur
+        Récupère et retourne la position actuelle du joueur depuis le serveur.
         """
-        self.client.send(str.encode("GET_POS"))
-        data = self.client.recv(2048).decode()
-        return data
+        return self.send_command("GET_POS")
 
     def connect(self):
         """
@@ -44,7 +68,8 @@ class Network:
         Renvoie les données reçues du serveur après la connexion (décodées en chaîne de caractères)
         """
         try:
-            (self.client.connect(self.address)) #Connexion au serveur
+            #(self.client.connect(self.address)) #Connexion au serveur
+            print("Connecté au serveur correctement")
             """
             data = self.client.recv(2048).decode() #Récupération des données initiales du serveur (taille max = 2048 octets)
             if data:
