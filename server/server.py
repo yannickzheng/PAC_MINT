@@ -104,7 +104,6 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
 
                 # Réception des données mises à jour par le client
                 raw_data = connexion.recv(2048).decode()
-                print("Raw data",raw_data)
                 if not raw_data:
                     print(f"Déconnexion du joueur {joueur_actuel}")
                     break
@@ -119,7 +118,10 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
 
                 # Sinon, on considère que le client envoie des données JSON pour mettre à jour sa position
                 all_players_updated = json.loads(raw_data)
-                datas["players"][joueur_actuel] = all_players_updated["players"][joueur_actuel]
+
+                for i, updated_player in enumerate(all_players_updated["players"]):
+                    if datas["players"][i]["ip"] is not None:  # Mettre à jour uniquement les joueurs actifs
+                        datas["players"][i]["pos"] = updated_player["pos"]
 
                 # Renvoi les données mises à jour à tous les clients
                 connexion.sendall(json.dumps(datas).encode())
@@ -129,6 +131,13 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
 
             except Exception as erreur:
                 print(f"Erreur avec le joueur {joueur_actuel} : {erreur}")
+                break
+
+        # Déconnexion : Libération du rôle
+        for player in datas["players"]:
+            if player["ip"] == address[0] and player["tcp_port"] == address[1]:
+                player["ip"] = None
+                player["tcp_port"] = None  # Réinitialisation du rôle
                 break
 
         connexion.close()
