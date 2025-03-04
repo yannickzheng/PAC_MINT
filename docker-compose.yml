@@ -21,6 +21,6 @@ services:
     networks:
       - pacmint_network
 
-  networks:
-    pacmint_network:
-      driver: bridge
+networks:
+  pacmint_network:
+    driver: bridge
