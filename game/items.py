@@ -1,3 +1,4 @@
+
 #Un item est un objet que PacMan peut ramasser.
 #Il s'agit de soit d'une pièce qui augmente son score
 #ou d'un super pouvoir qui lui permet de manger les fantômes pendant un certain temps.
@@ -5,10 +6,14 @@
     #il est boost),
     #Pour le système de super pouvoir, on peut utiliser un système de tick, quand PacMan ramasse un super
     #pouvoir, on va attribuer la possibilité à pacman de manger les fantômes pendant un certain nombre de ticks
+
 import pygame
 import os
-from global_variable import CELL_SIZE
-from map import MAP_DATA, MAP_SURFACE
+from common.global_variable import CELL_SIZE
+from map import MAP_DATA
+
+small_size = CELL_SIZE // 4  # Taille des pièces
+cherry_size = CELL_SIZE // 2  #  Augmente la taille des cerises
 
 coin_size = CELL_SIZE*0.65
 fruit_size = CELL_SIZE // 2
