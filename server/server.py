@@ -54,31 +54,43 @@ def check_inactive_players():
             print(f"Joueur {joueur} inactif")
             del player_inactive_time[joueur]
 
-def threaded_game_client(connexion, joueur_actuel, room_id):
+def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
     """
        Fonction permettant de gérer les connexions des clients
        :param connexion: socket de connexion
        :param joueur_actuel: joueur actuel (entier)
        :return:
     """
-    print("OK")
+    print(f"Connexion établie avec le joueur {joueur_actuel} depuis {address}")
+
     try:
+        # Vérificatier si la salle demandée existe
         if not room_manager.room_exists(room_id):
             print("Partie introuvable")
             connexion.close()
             return
+
         room = room_manager.rooms[room_id]  # Récupération de la salle
+
+
 
         datas = {
         "players": [
-                {"pos": [150, 150], "roles": "PacMan", "ip": address[0], "tcp_port": address[1]},
+                {"pos": [150, 150], "roles": "PacMan", "ip": None, "tcp_port": None},
                 {"pos": [950, 450], "roles": "Fantôme", "ip": None, "tcp_port": None},
                 {"pos": [920, 450], "roles": "Fantôme", "ip": None, "tcp_port": None},
                 {"pos": [950, 420], "roles": "Fantôme", "ip": None, "tcp_port": None},
                 {"pos": [920, 420], "roles": "Fantôme", "ip": None, "tcp_port": None}
             ],
-            "current_player": joueur_actuel # Permet d'identifier quel joueur est en train de se connecter
+            "current_player": address # Permet d'identifier quel joueur est en train de se connecter
         }
+
+        # Assigner dynamiquement le rôle et les informations réseau du joueur actuel
+        for player in datas["players"]:
+            if player["ip"] is None and player["tcp_port"] is None:  # Cherche un rôle libre
+                player["ip"] = address[0]
+                player["tcp_port"] = address[1]
+                break
 
         # Envoi des données initiales au client connecté
         connexion.send(str.encode(json.dumps(datas)))
