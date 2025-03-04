@@ -1,9 +1,17 @@
 import pygame
 from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
 from map import MAP_DATA
+import random
+import string
 
 class Player:
-    def __init__(self, x, y, role):
+    def __init__(self, x, y, role, ip, tcp_port, udp_port = None):
+        self.ip = ip
+        self.tcp_port = int(tcp_port)
+        #self.udp_port = int(udp_port) # Pas prise en compte encore de udp
+        self.tcp_addr = (self.ip, self.tcp_port)
+        #self.udp_addr = (self.ip, self.udp_port) # Pas prise en compte encore de udp
+
         self.x = x
         self.y = y
         self.coord = (x, y)
