@@ -1,7 +1,7 @@
 import pygame
 
-from global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
-from server.reseaux import Network
+from common.global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
+from common.reseaux import Network
 from player import Player
 from map import MAP_SURFACE
 from items import ItemManager
