@@ -185,6 +185,7 @@ def threaded_client(connexion, address):
                 connexion.send(
                     str.encode(json.dumps({"status": "full" if room_manager.room_exists(room_id) else "not_found"})))
                 connexion.close()
+                return
     except Exception as e:
         print(f"Erreur lors de la gestion d'un client : {e}")
         connexion.close()
