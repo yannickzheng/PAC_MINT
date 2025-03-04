@@ -22,7 +22,6 @@ font = pygame.font.SysFont("Arial", 24)
 
 image = pygame.image.load("images/background2.png")
 
-
 # musique
 mixer.init()
 
@@ -71,11 +70,12 @@ def generate_code():
     return code
 
 def create_game():
+    game_code = None
     run = True
 
     while run:
         screen.blit(image, (0, 0))
-        draw_button("Générer un code", 250, 600, 200, 50, BLUE, CYAN, screen)
+        #draw_button("Générer un code", 250, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Lancer la partie", 550, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen)
         for event in pygame.event.get():
@@ -87,9 +87,11 @@ def create_game():
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
-                        generate_code()
+                        #Pas d'interet
+                        game_code = None # Génération d'un code
                     elif 550 <= x <= 750:
-                        main_game()
+                        main_game(game_code)  # On lance une partie si un code a été généré
+
                     elif 850 <= x <= 1050:
                         main_menu()
         pygame.display.flip()
@@ -131,7 +133,9 @@ def join_game():
     run = True
     while run:
         screen.blit(image, (0, 0))
-        draw_button("Entrez le code", 250, 600, 200, 50, BLUE, CYAN, screen)
+        #game_code = "0399"
+        #draw_button(f"Code: {game_code}", 250, 500, 400, 50, BLUE, CYAN, screen)
+        draw_button("Rejoindre", 250, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Retour", 550, 600, 200, 50, BLUE, PURPLE, screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -150,9 +154,10 @@ def join_game():
                         main_menu()
         pygame.display.flip()
 
-def main_game():
-    mixer.init()
+def main_game(game_code):
+    print("Début de la fonction main_game()")
 
+    mixer.init()
     mixer.music.load("sound/game_sound.mp3")
     mixer.music.set_volume(0.3)
     mixer.music.play(-1)
@@ -160,10 +165,11 @@ def main_game():
     font = pygame.font.SysFont("Arial", 24)
 
     clock = pygame.time.Clock()
+
     n = Network()
     print("Connexion au serveur...")
 
-    game_code = n.game_code  # 🔴 Utiliser le code de la partie existante
+
     # Demander à l'utilisateur de créer ou rejoindre une partie
     game_code = n.create_party()
     print(f"Partie créée avec le code : {game_code}")
@@ -176,7 +182,9 @@ def main_game():
     """
 
     # On va récupérer les données de tous les joueurs (par exemple leur position et leur rôle)
+    print("demande position serveur")
     all_players_data = json.loads(n.get_pos())
+    print("Joueurs récupérés :", all_players_data)
     current_player_id = all_players_data["current_player"]
     positions_and_roles = all_players_data["players"]
 
@@ -189,6 +197,7 @@ def main_game():
     item_manager = ItemManager()
     run = True
     while run:
+        print("Boucle principale du jeu... zz")
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
