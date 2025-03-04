@@ -1,4 +1,5 @@
-
+import json
+import socket
 
 class Client:
 
@@ -7,7 +8,7 @@ class Client:
         """
 
         """
-
+        self.identifier = None
         self.server_message = []
         self.room_id = None
         self.client_udp = ("0.0.0.0", client_port_udp)

@@ -20,7 +20,6 @@ class RoomManager:
         self.rooms[identifier] = new_room
         return new_room
 
-
     def join(self, player_identifier, room_identifier):
         """Ajout d'un joueur dans une salle"""
         room = self.rooms.get(room_identifier)
