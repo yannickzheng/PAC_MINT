@@ -11,16 +11,16 @@ from global_variable import CELL_SIZE
 from map import MAP_DATA, MAP_SURFACE
 
 coin_size = CELL_SIZE*0.65
-cherry_size = CELL_SIZE // 2
+fruit_size = CELL_SIZE // 2
 
 small_size = CELL_SIZE // 4
 
 coin_image = pygame.image.load(os.path.join("images", "piece.png"))
 coin_image = pygame.transform.scale(coin_image, (coin_size, coin_size))
 
-cherry_image = pygame.image.load(os.path.join("images", "cerise.png"))
-cherry_size = int(CELL_SIZE * 1.2)  #  Ajustement à 80% de la taille d'une case
-cherry_image = pygame.transform.scale(cherry_image, (cherry_size, cherry_size))
+fruit_image = pygame.image.load(os.path.join("images", "fraise.png"))
+fruit_size = int(CELL_SIZE * 1.2)  #  Ajustement à 80% de la taille d'une case
+fruit_image = pygame.transform.scale(fruit_image, (fruit_size, fruit_size))
 
 
 
@@ -29,7 +29,7 @@ cherry_image = pygame.transform.scale(cherry_image, (cherry_size, cherry_size))
 class ItemManager:
     def __init__(self):
         self.coins = []
-        self.cherries = []
+        self.fruits = []
         self.load_items()
 
     def load_items(self):
@@ -39,18 +39,18 @@ class ItemManager:
                 if MAP_DATA[y][x] == 2:
                     self.coins.append((x * CELL_SIZE, y * CELL_SIZE))
                 elif MAP_DATA[y][x] == 4:
-                    self.cherries.append((x * CELL_SIZE, y * CELL_SIZE))
+                    self.fruits.append((x * CELL_SIZE, y * CELL_SIZE))
 
     def draw_items(self, screen):
         """Affiche les pièces et les cerises sur la carte."""
         coin_offset = (CELL_SIZE - small_size) // 2
-        cherry_offset = (CELL_SIZE - cherry_size) // 2  #  Ajusté pour la nouvelle taille
+        fruit_offset = (CELL_SIZE - fruit_size) // 2  #  Ajusté pour la nouvelle taille
 
         for coin in self.coins:
             screen.blit(coin_image, (coin[0] + coin_offset, coin[1] + coin_offset))
 
-        for cherry in self.cherries:
-            screen.blit(cherry_image, (cherry[0] + cherry_offset, cherry[1] + cherry_offset))
+        for fruit in self.fruits:
+            screen.blit(fruit_image, (fruit[0] + fruit_offset, fruit[1] + fruit_offset))
 
     def check_collision(self, player):
         """Gère la collecte des pièces et des cerises uniquement pour Pac-Man."""
@@ -74,9 +74,9 @@ class ItemManager:
                 MAP_DATA[coin[1] // CELL_SIZE][coin[0] // CELL_SIZE] = 0
                 break
 
-        for cherry in self.cherries[:]:
-            cherry_rect = pygame.Rect(cherry[0], cherry[1], CELL_SIZE, CELL_SIZE)
-            if player_rect.colliderect(cherry_rect):
-                self.cherries.remove(cherry)
+        for fruit in self.fruits[:]:
+            fruit_rect = pygame.Rect(fruit[0], fruit[1], CELL_SIZE, CELL_SIZE)
+            if player_rect.colliderect(fruit_rect):
+                self.fruits.remove(fruit)
                 player.score += 50
-                MAP_DATA[cherry[1] // CELL_SIZE][cherry[0] // CELL_SIZE] = 0
+                MAP_DATA[fruit[1] // CELL_SIZE][fruit[0] // CELL_SIZE] = 0
