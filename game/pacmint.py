@@ -191,8 +191,10 @@ def main_game(game_code):
     players = []
     for data in positions_and_roles:
         if data["ip"] is not None and data["tcp_port"] is not None:
-            player = Player(data["pos"][0], data["pos"][1], data["roles"], data["ip"], data["tcp_port"])
-            players.append(player)
+            if not any(player.ip == data["ip"] and player.tcp_port == data["tcp_port"] for player in players):
+
+                player = Player(data["pos"][0], data["pos"][1], data["roles"], data["ip"], data["tcp_port"])
+                players.append(player)
 
     # Initialisation de la police pour afficher le score
     item_manager = ItemManager()
@@ -243,6 +245,10 @@ def main_game(game_code):
 
         for player in players:
             player.draw(screen, current_player)
+
+        # Affiche le code de la partie sous le score
+        game_code_text = font.render(f"Code de la partie: {game_code}", True, (255, 255, 0))
+        screen.blit(game_code_text, (10, 40))
 
         # Afficher le score du joueur actuel
         score_text = font.render(f"Score: {current_player.score}", True, (255, 255, 255))
