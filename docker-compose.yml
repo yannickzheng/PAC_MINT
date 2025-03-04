@@ -1,30 +1,26 @@
-version: '3'
+version: '3.8'
+
 services:
-  #Pour le serveur
   server:
-    build:
-      context: .
-      args :
-        mode : server
+    image: pacmint_image
+    container_name: pacmint_server
+    command: python server/server.py
     ports:
       - "5555:5555"
     networks:
       - pacmint_network
-    container_name: pacmint_server
 
-  #Pour le client
-  client :
-    build:
-      context: .
-      args :
-        mode : client
-    depends_on: #nécessite que le serveur soit lancé au préalable
-      - server
-    networks :
-        - pacmint_network
+  client:
+    image: pacmint_image
     container_name: pacmint_client
+    command: python client/client.py
+    depends_on:
+      - server
+    environment:
+      - SERVER_IP=server
+    networks:
+      - pacmint_network
 
-networks:
+  networks:
     pacmint_network:
-        driver: bridge
-
+      driver: bridge

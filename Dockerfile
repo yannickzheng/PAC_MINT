@@ -1,16 +1,8 @@
-FROM python:3.9
+FROM python:3.9-slim
 WORKDIR /app
-ARG mode=client
+COPY . /app
 ENV MODE=$mode
-COPY server /app/server
-COPY game /app/game
-COPY common /app/common
-COPY images /app/images
-COPY sound /app/sound
-RUN if [ "$MODE" = "server" ]; then \
-      rm -rf game common images sound; \
-    else \
-      rm -rf server; \
-    fi
+RUN pip install --no-cache-dire -r /app/requirements.txt
 RUN pip install pygame
-CMD ["sh", "-c", "if [ \"$MODE\" = 'server' ]; then python3 server/server.py; else python3 game/pacmint.py; fi"]
+EXPOSE 5555
+CMD ["python", "server/server.py"]
