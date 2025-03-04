@@ -77,6 +77,9 @@ class ItemManager:
         for fruit in self.fruits[:]:
             fruit_rect = pygame.Rect(fruit[0], fruit[1], CELL_SIZE, CELL_SIZE)
             if player_rect.colliderect(fruit_rect):
-                self.fruits.remove(fruit)
-                player.score += 50
+                self.fruits.remove(fruit)  # ✅ Supprime le fruit immédiatement
+                player.score += 50  # ✅ Pac-Man gagne 50 points
+                player.activate_super_power()  # ✅ ACTIVE DIRECTEMENT LE SUPER POUVOIR
                 MAP_DATA[fruit[1] // CELL_SIZE][fruit[0] // CELL_SIZE] = 0
+
+
