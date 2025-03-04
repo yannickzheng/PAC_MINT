@@ -1,0 +1,30 @@
+version: '3'
+services:
+  #Pour le serveur
+  server:
+    build:
+      context: .
+      args :
+        mode : server
+    ports:
+      - "5555:5555"
+    networks:
+      - pacmint_network
+    container_name: pacmint_server
+
+  #Pour le client
+  client :
+    build:
+      context: .
+      args :
+        mode : client
+    depends_on: #nécessite que le serveur soit lancé au préalable
+      - server
+    networks :
+        - pacmint_network
+    container_name: pacmint_client
+
+networks:
+    pacmint_network:
+        driver: bridge
+

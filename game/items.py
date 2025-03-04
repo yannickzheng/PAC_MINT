@@ -2,7 +2,7 @@
 
 import pygame
 import os
-from common.global_variable import CELL_SIZE
+from global_variable import CELL_SIZE
 from map import MAP_DATA
 
 small_size = CELL_SIZE // 4  # Taille des pièces

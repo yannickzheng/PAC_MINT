@@ -1,5 +1,5 @@
 import pygame
-from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
+from global_variable import WIDTH, HEIGHT, CELL_SIZE
 from map import MAP_DATA
 
 class Player:
