@@ -18,6 +18,10 @@ class Player:
         self.image3 = pygame.image.load("images/pacman - up.png")
         self.image4 = pygame.image.load("images/pacman - down.png")
         self.image5 = pygame.image.load("images/red_ghost.png")
+        self.image_super = pygame.image.load("images/Black Pacman.png")
+        self.image_super_left = pygame.transform.flip(self.image_super, True, False)
+        self.image_super_up = pygame.transform.rotate(self.image_super, 90)
+        self.image_super_down = pygame.transform.rotate(self.image_super, -90)
         self.is_pacman = role == "PacMan"
         self.is_phantom = role == "Fantôme"
         self.is_coin = role == "Pièce"
