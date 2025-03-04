@@ -10,18 +10,21 @@ class RoomManager:
         self.rooms = {}
         self.room_capacity = room_capacity
 
-    def create_room(self, room_name, player_capacity = 5):
+    def create_room(self, room_name,room_id,player_capacity = 5):
         """Création d'une salle'"""
 
         # Par default, on dit que la capacité des rooms est de 5 joueurs max
 
-        identifier = str(uuid.uuid4()) # On crée un identifiant unique pour les salons
-        new_room = Room(identifier, player_capacity, room_name)
-        self.rooms[identifier] = new_room
+        new_room = Room(room_id, player_capacity, room_name)
+        self.rooms[room_id] = new_room
         return new_room
 
     def join(self, player_identifier, room_identifier):
         """Ajout d'un joueur dans une salle"""
+        # Retirer le joueur de toutes les salles où il serait présent
+        for room in self.rooms.values():
+            if room.is_player_in_room(player_identifier):
+                room.leave(player_identifier)
         room = self.rooms.get(room_identifier)
         if room:
             return room.join(player_identifier)
