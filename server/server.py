@@ -3,9 +3,11 @@ from _thread import start_new_thread
 import json
 import os
 
-server = os.getenv("SERVER_IP", "0.0.0.0") #utilise  'server' comme adresse ip par défaut dans docker
-port = int(os.getenv("SERVER_PORT", "5555"))
+server_ip = os.getenv("SERVER_IP", "0.0.0.0") #utilise  'server' comme adresse ip par défaut dans docker
+server_port = int(os.getenv("SERVER_PORT", "5555"))
 
+server = "localhost"
+port = 5555
 # Création d'un socket pour la communication sur IPV4 en utilisant le protocole TCP
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
