@@ -211,7 +211,7 @@ def main_game(game_code):
             if player.ip == current_player_adresse[0] and player.tcp_port == current_player_adresse[1]:
                 current_player = player
                 break
-
+        current_player.move(players)
         item_manager.check_collision(current_player)
         ###
         all_players_data["players"][0] = {  # Mettre à jour les données pour tous les joueurs ici on suppose que le joueur actuel est pacman
