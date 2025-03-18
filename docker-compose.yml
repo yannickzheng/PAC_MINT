@@ -1,17 +1,13 @@
 version : '3.9'
 services :
   server :
-    build :
-      context : .
-      dockerfile : server/Dockerfile
+    build : ./server
     container_name: server
     ports :
       - "5555:5555"
 
   client :
-    build :
-      context : .
-      dockerfile: game/Dockerfile
+    build : ./game
     container_name : client
-    depends_on:
+    depends_on :
       - server

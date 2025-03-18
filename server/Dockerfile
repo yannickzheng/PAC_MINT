@@ -1,7 +1,7 @@
 FROM python:3.9-slim
-WORKDIR /app
-COPY ../common /app/common
-COPY . /app
-
+WORKDIR /server/
+COPY ../requirements.txt .
+COPY . /server/
+EXPOSE 5555
 RUN pip install --no-cache-dir -r requirements.txt
-CMD ["python", "server.py"]
+CMD python ./server.py
