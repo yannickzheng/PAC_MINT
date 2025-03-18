@@ -190,19 +190,15 @@ def main_game(game_code):
     # création de la liste des joueurs
     players = []
     for data in positions_and_roles:
-        #Pour l'instant, on ne prend en compte que les personnages qui ont une adresse ip
-        #if data["ip"] is not None and data["tcp_port"] is not None:
-            #On regarde
-            #if not any(player.ip == data["ip"] and player.tcp_port == data["tcp_port"] for player in players):
-
-                player = Player(data["pos"][0], data["pos"][1], data["roles"], data["ip"], data["tcp_port"])
-                players.append(player)
+        player = Player(data["pos"][0], data["pos"][1], data["roles"], data["ip"], data["tcp_port"])
+        players.append(player)
 
     # Initialisation de la police pour afficher le score
     item_manager = ItemManager()
     run = True
+
+    #Boucle principale du jeu
     while run:
-        print("Boucle principale du jeu... zz")
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -213,6 +209,7 @@ def main_game(game_code):
             if player.ip == current_player_adresse[0] and player.tcp_port == current_player_adresse[1]:
                 current_player = player
                 break
+
         current_player.move(players)
         item_manager.check_collision(current_player)
         ###
@@ -231,10 +228,10 @@ def main_game(game_code):
                 for player in players:
                     if player.is_pacman:
                         # Mettre à jour la position du joueur
-                        player.x, player.y = data["pos"]
+                        #player.x, player.y = data["pos"]
                         # Effectuer toute autre mise à jour relevant
-                        player.update()
-                        #break
+                        #player.update()
+                        pass
 
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
@@ -242,6 +239,7 @@ def main_game(game_code):
         item_manager.draw_items(screen)
 
         for player in players:
+            #Problème d'affiche, Pacman est affiché deux fois
             player.draw(screen, current_player)
 
         # Affiche le code de la partie sous le score
