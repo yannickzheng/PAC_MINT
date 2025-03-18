@@ -129,12 +129,23 @@ def lobby():
     pass
 def join_game():
     run = True
+    game_code = ""
+    input_active = False
+    input_box = pygame.Rect(250, 600, 200, 50)
+    color_inactive = pygame.Color('lightskyblue3')
+    color_active = pygame.Color('dodgerblue2')
+    color = BLUE
+
     while run:
         screen.blit(image, (0, 0))
-        #game_code = "0399"
-        #draw_button(f"Code: {game_code}", 250, 500, 400, 50, BLUE, CYAN, screen)
-        draw_button("Rejoindre", 250, 600, 200, 50, BLUE, CYAN, screen)
-        draw_button("Retour", 550, 600, 200, 50, BLUE, PURPLE, screen)
+
+        draw_button("Rejoindre", 550, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen)
+
+        pygame.draw.rect(screen, color, input_box, 2)
+        txt_surface = font.render(game_code, True, WHITE)
+        screen.blit(txt_surface, (input_box.x + 5, input_box.y + 15))
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -144,12 +155,28 @@ def join_game():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 button_click.play()
-                # Vérifier si un bouton est cliqué
+                if input_box.collidepoint(event.pos):
+                    input_active = not input_active
+                else:
+                    input_active = False
+                color = color_active if input_active else color_inactive
+
                 if 600 <= y <= 650:
-                    if 250 <= x <= 450:
-                        pass
-                    elif 550 <= y <= 750:
+                    if 550 <= x <= 750 and game_code:
+                        print(f"Code entré: {game_code}")
+                        return game_code  # Retourne le code saisi
+                    elif 850 <= x <= 1050:
                         main_menu()
+
+            if event.type == pygame.KEYDOWN and input_active:
+                if event.key == pygame.K_RETURN:
+                    print(f"Code entré: {game_code}")
+                    return game_code
+                elif event.key == pygame.K_BACKSPACE:
+                    game_code = game_code[:-1]
+                else:
+                    game_code += event.unicode
+
         pygame.display.flip()
 
 def main_game(game_code):
