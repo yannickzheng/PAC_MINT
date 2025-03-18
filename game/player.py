@@ -7,7 +7,7 @@ import string
 class Player:
     def __init__(self, x, y, role, ip, tcp_port, udp_port = None):
         self.ip = ip
-        self.tcp_port = int(tcp_port)
+        self.tcp_port = int(tcp_port) if tcp_port else None
         #self.udp_port = int(udp_port) # Pas prise en compte encore de udp
         self.tcp_addr = (self.ip, self.tcp_port)
         #self.udp_addr = (self.ip, self.udp_port) # Pas prise en compte encore de udp
