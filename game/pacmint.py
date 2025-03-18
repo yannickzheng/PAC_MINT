@@ -190,8 +190,10 @@ def main_game(game_code):
     # création de la liste des joueurs
     players = []
     for data in positions_and_roles:
-        if data["ip"] is not None and data["tcp_port"] is not None:
-            if not any(player.ip == data["ip"] and player.tcp_port == data["tcp_port"] for player in players):
+        #Pour l'instant, on ne prend en compte que les personnages qui ont une adresse ip
+        #if data["ip"] is not None and data["tcp_port"] is not None:
+            #On regarde
+            #if not any(player.ip == data["ip"] and player.tcp_port == data["tcp_port"] for player in players):
 
                 player = Player(data["pos"][0], data["pos"][1], data["roles"], data["ip"], data["tcp_port"])
                 players.append(player)
@@ -225,19 +227,15 @@ def main_game(game_code):
         # Met à jour les positions des autres joueurs
         for data in updated_data:
             # Chercher le joueur correspondant dans la liste des joueurs en fonction de l'IP et du port TCP
-            for player in players:
-                if player.ip == data["ip"] and player.tcp_port == data["tcp_port"]:
-                    # Mettre à jour la position du joueur
-                    player.x, player.y = data["pos"]
-                    # Effectuer toute autre mise à jour relevant
-                    player.update()
-                    break
+            if data["roles"] == "PacMan":
+                for player in players:
+                    if player.is_pacman:
+                        # Mettre à jour la position du joueur
+                        player.x, player.y = data["pos"]
+                        # Effectuer toute autre mise à jour relevant
+                        player.update()
+                        #break
 
-            """
-            if i != 0: # On suppose que le joueur actuel est pacman
-                players[i].x, players[i].y = data["pos"]
-                players[i].update()
-            """
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
