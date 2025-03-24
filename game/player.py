@@ -27,13 +27,13 @@ class Player:
         self.image_down = pygame.image.load("images/pacman - down.png")
         self.image_red_ghost = pygame.image.load("images/red_ghost.png")
 
-        self.image_super = pygame.image.load("images/Black Pacman.png")
+        self.image_super_right = pygame.image.load("images/Black Pacman.png")
         self.image_super_left = pygame.image.load("images/Black Pacman-left.png")
         self.image_super_up = pygame.image.load("images/Black Pacman-up.png")
         self.image_super_down = pygame.image.load("images/Black Pacman-down.png")
 
         # Redimensionner toutes les images pour correspondre à Pac-Man normal
-        self.image_super = pygame.transform.scale(self.image_super, (self.size, self.size))
+        self.image_super_right = pygame.transform.scale(self.image_super_right, (self.size, self.size))
         self.image_super_left = pygame.transform.scale(self.image_super_left, (self.size, self.size))
         self.image_super_up = pygame.transform.scale(self.image_super_up, (self.size, self.size))
         self.image_super_down = pygame.transform.scale(self.image_super_down, (self.size, self.size))
@@ -172,34 +172,61 @@ class Player:
         self.coord = (self.x, self.y)
 
     def get_img_pacman(self, controlled_player):
-        """Renvoie l'image de Pac-Man en fonction de la direction uniquement si c'est le joueur contrôlé"""
+        """Renvoie l'image de Pac-Man selon la direction, le super pouvoir ou l'invincibilité"""
 
-        if self != controlled_player:  #  Vérifie que Pac-Man est bien le joueur actif
-            return self.image_right  # Garde son orientation actuelle
+        if self != controlled_player:
+            return self.image1  # Image par défaut pour les autres clients
 
         keys = pygame.key.get_pressed()
 
-        if self.super_power_active:  # Vérifie si le super pouvoir est actif
+        # 👻 Mode clignotement pendant l'invincibilité
+        if self.invincible:
+            blink_on = (self.invincibility_timer // 10) % 2 == 0  # Change toutes les ~10 frames
+            if blink_on:
+                # Image Black
+                if keys[pygame.K_LEFT]:
+                    return self.image_super_left
+                if keys[pygame.K_RIGHT]:
+                    return self.image_super_right
+                if keys[pygame.K_UP]:
+                    return self.image_super_up
+                if keys[pygame.K_DOWN]:
+                    return self.image_super_down
+                return self.image_super_right
+            else:
+                # Image normale
+                if keys[pygame.K_LEFT]:
+                    return self.image_left
+                if keys[pygame.K_RIGHT]:
+                    return self.image_right
+                if keys[pygame.K_UP]:
+                    return self.image_up
+                if keys[pygame.K_DOWN]:
+                    return self.image_down
+                return self.image_right
+
+        # 🌟 Mode super pouvoir actif
+        if self.super_power_active:
             if keys[pygame.K_LEFT]:
                 return self.image_super_left
             if keys[pygame.K_RIGHT]:
-                return self.image_super
+                return self.image_super_right
             if keys[pygame.K_UP]:
                 return self.image_super_up
             if keys[pygame.K_DOWN]:
                 return self.image_super_down
-            return self.image_super  # Par défaut, regarde à droite
+            return self.image_super_right
 
-        # Si pas de super pouvoir, on retourne les images normales
+        # 🟡 Mode normal
         if keys[pygame.K_LEFT]:
             return self.image_left
-        if keys[pygame.K_3]:
+        if keys[pygame.K_RIGHT]:
             return self.image_right
         if keys[pygame.K_UP]:
             return self.image_up
         if keys[pygame.K_DOWN]:
             return self.image_down
-        return self.image_right  # Par défaut, Pac-Man regarde à droite
+        return self.image_right
 
     def get_img_phantom(self):
         """Renvoie l'image du fantôme"""
