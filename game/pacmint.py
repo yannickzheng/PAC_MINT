@@ -122,6 +122,7 @@ def main_menu():
 
 def lobby():
     pass
+
 def join_game():
     run = True
     game_code = ""
@@ -158,14 +159,13 @@ def join_game():
 
                 if 600 <= y <= 650:
                     if 550 <= x <= 750 and game_code:
-                        print(f"Code entré: {game_code}")
                         return game_code  # Retourne le code saisi
                     elif 850 <= x <= 1050:
                         main_menu()
 
             if event.type == pygame.KEYDOWN and input_active:
                 if event.key == pygame.K_RETURN:
-                    print(f"Code entré: {game_code}")
+                    main_game(is_created_game = False,game_code = game_code)
                     return game_code
                 elif event.key == pygame.K_BACKSPACE:
                     game_code = game_code[:-1]
@@ -174,11 +174,9 @@ def join_game():
 
         pygame.display.flip()
 
-def main_game(is_created_game):
-    print("Début de la fonction main_game()")
+def main_game(is_created_game, game_code = None):
 
     mixer.init()
-
     mixer.music.load("sound/game_sound.mp3")
     mixer.music.set_volume(0.3)
     mixer.music.play(-1)
@@ -189,8 +187,21 @@ def main_game(is_created_game):
 
     n = Network()
 
-    #Si le joueur souhaite créer une partie, il envoie une demande au serveur
+
     game_code = ""
+    if not is_created_game:
+        message = json.dumps({
+            "action": "JOIN_GAME",
+            "code": game_code
+        })
+        response = n.send(message)
+        response_data = json.loads(response)
+
+        if response_data.get("status") != "OK":
+            print("Impossible de rejoindre la partie")
+            return
+
+    #Si le joueur souhaite créer une partie, il envoie une demande au serveur
     if is_created_game:
         # Le client demande la création d'une partie au serveur
         message = json.dumps({
