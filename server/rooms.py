@@ -1,4 +1,7 @@
 import uuid  #générer des identifiants uniques
+import json
+import random
+import string
 
 """Faire en sort qu'un joueur n'est présent que dans une seule salle"""
 
@@ -10,13 +13,13 @@ class RoomManager:
         self.rooms = {}
         self.room_capacity = room_capacity
 
-    def create_room(self, room_name,room_id,player_capacity = 5):
+    def create_room(self,player_capacity = 5, room_name = None):
         """Création d'une salle'"""
 
         # Par default, on dit que la capacité des rooms est de 5 joueurs max
-
-        new_room = Room(room_id, player_capacity, room_name)
-        self.rooms[room_id] = new_room
+        code = self.generate_unique_code()
+        new_room = Room(player_capacity, room_name, code)
+        self.rooms[new_room.code] = new_room
         return new_room
 
     def join(self, player_identifier, room_identifier):
@@ -70,16 +73,21 @@ class RoomManager:
                 pass
                 #mettre ici la fonction send utilisant udp
 
+    def generate_unique_code(self):
+        """Crée une nouvelle partie"""
+        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        return code
+
 class Room:
 
-    def __init__(self, identifier, player_capacity, room_name):
+    def __init__(self, player_capacity, room_name, code = None):
         """
         Création d'une salle'
         """
         self.player_capacity = player_capacity
         self.players = set() #set pour éviter les doublons
-        self.identifier = identifier
         self.room_name = room_name
+        self.code = code
 
     def is_full(self):
         if len(self.players) >= self.player_capacity:
