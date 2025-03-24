@@ -90,7 +90,9 @@ def create_game():
                         #Pas d'interet
                         game_code = None # Génération d'un code
                     elif 550 <= x <= 750:
-                        main_game(game_code)  # On lance une partie si un code a été généré
+                        #On lance la partie ici
+                        #Le client demande au serveur de créer un code de partie, le serveur crée un code et l'envoit au client
+                        main_game(is_created_game=True)
 
                     elif 850 <= x <= 1050:
                         main_menu()
@@ -179,7 +181,7 @@ def join_game():
 
         pygame.display.flip()
 
-def main_game(game_code):
+def main_game(is_created_game):
     print("Début de la fonction main_game()")
 
     mixer.init()
@@ -193,12 +195,14 @@ def main_game(game_code):
     clock = pygame.time.Clock()
 
     n = Network()
-    print("Connexion au serveur...")
 
-
-    # Demander à l'utilisateur de créer ou rejoindre une partie
-    game_code = n.create_party()
-    print(f"Partie créée avec le code : {game_code}")
+    #Si le joueur souhaite créer une partie, il envoie une demande au serveur
+    if is_created_game:
+        # Le client demande la création d'une partie au serveur
+        message = json.dumps({
+            "action": "CREATE_GAME"
+        })
+        response = n.send(message)
 
     """
     game_code = input("Entrez le code de la partie : ").strip().upper()
