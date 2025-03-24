@@ -62,13 +62,6 @@ def draw_button(text, x, y, width, height, base_color, glow_color, screen):
     screen.blit(text_surface, text_rect)
 
 
-def generate_code():
-    """Génère un code pour la partie"""
-    n = Network()
-    code = n.create_party()
-    print(f"Code généré : {code}")
-    return code
-
 def create_game():
     game_code = None
     run = True
@@ -197,6 +190,7 @@ def main_game(is_created_game):
     n = Network()
 
     #Si le joueur souhaite créer une partie, il envoie une demande au serveur
+    game_code = ""
     if is_created_game:
         # Le client demande la création d'une partie au serveur
         message = json.dumps({
@@ -204,12 +198,11 @@ def main_game(is_created_game):
         })
         response = n.send(message)
 
-    """
-    game_code = input("Entrez le code de la partie : ").strip().upper()
-    if not n.join_party(game_code):
-        print("Impossible de rejoindre la partie. Vérifiez le code.")
-        return
-    """
+        response_data = json.loads(response)
+        game_code = response_data.get("code", "")
+        print(f"Code de la partie créée : {game_code}")
+
+
 
     # On va récupérer les données de tous les joueurs (par exemple leur position et leur rôle)
     print("demande position serveur")
