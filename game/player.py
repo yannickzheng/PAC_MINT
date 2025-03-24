@@ -32,7 +32,7 @@ class Player:
         self.image_super_up = pygame.image.load("images/Black Pacman-up.png")
         self.image_super_down = pygame.image.load("images/Black Pacman-down.png")
 
-        # ✅ Redimensionner toutes les images pour correspondre à Pac-Man normal
+        # Redimensionner toutes les images pour correspondre à Pac-Man normal
         self.image_super = pygame.transform.scale(self.image_super, (self.size, self.size))
         self.image_super_left = pygame.transform.scale(self.image_super_left, (self.size, self.size))
         self.image_super_up = pygame.transform.scale(self.image_super_up, (self.size, self.size))
@@ -42,8 +42,26 @@ class Player:
         self.is_phantom = role == "Fantôme"
         self.is_coin = role == "Pièce"
         self.score = 0
-        self.super_power_active = False  # ✅ Par défaut, Pac-Man n'a pas le super pouvoir
-        self.super_power_timer = 0  # ✅ Timer du super pouvoir initialisé à 0
+        self.super_power_active = False  # Par défaut, Pac-Man n'a pas le super pouvoir
+        self.super_power_timer = 0  # Timer du super pouvoir initialisé à 0
+        self.invincible = False  # Pac-Man ne commence pas invincible
+        self.invincibility_timer = 0  # Timer pour gérer l'invincibilité
+
+    def lose_life(self):
+        """Fait perdre une vie à Pac-Man et l'active en mode invincible temporairement"""
+        if self.invincible:
+            return  # Ne perd pas de vie s'il est encore invincible
+
+        if self.lives > 1:
+            self.lives -= 1
+            print(f"💥 Pac-Man touché ! Il lui reste {self.lives} vies.")
+
+            self.invincible = True
+            self.invincibility_timer = 180  # Environ 3 secondes à 60 FPS
+
+        else:
+            self.lives = 0
+            print("Game Over ! Pac-Man a perdu toutes ses vies.")
 
     def check_collision(self, players):
         """Vérifie si le joueur entre en collision avec un autre joueur"""
@@ -54,21 +72,47 @@ class Player:
                     return True
         return False
 
+    def check_ghost_collision(self, players):
+        """Vérifie si Pac-Man entre en collision avec un fantôme"""
+
+        if not self.is_pacman or self.invincible:
+            return  # Si Pac-Man est invincible, il ne perd pas de vie
+
+        player_rect = pygame.Rect(self.x, self.y, self.size, self.size)
+
+        for player in players:
+            if player.is_phantom:
+                ghost_rect = pygame.Rect(player.x, player.y, player.size, player.size)
+
+                if player_rect.colliderect(ghost_rect):
+                    if self.super_power_active:
+                        self.eat_ghost(player)
+                    else:
+                        self.lose_life()
+                    break
+
     def activate_super_power(self, duration=200):
         """Active le super pouvoir immédiatement lorsque Pac-Man mange un fruit"""
-        self.super_power_active = True  # ✅ Active le pouvoir
-        self.super_power_timer = duration  # ✅ Durée du pouvoir (ex: 300 frames = 5 secondes à 60 FPS)
+        self.super_power_active = True  # Active le pouvoir
+        self.super_power_timer = duration  # Durée du pouvoir (ex: 300 frames = 5 secondes à 60 FPS)
         self.speed = min(int(self.speed * 1.2), CELL_SIZE//5)
     def move(self, players):
         """Déplace Pac-Man en s'assurant qu'il ne traverse pas les murs"""
+        # Gère le timer d'invincibilité
+        if self.invincible:
+            self.invincibility_timer -= 1
+            if self.invincibility_timer <= 0:
+                self.invincible = False
+                print("🛡️ Fin de l'invincibilité.")
+
         keys = pygame.key.get_pressed()
         new_x, new_y = self.x, self.y
         hitbox_offset = self.size // 4  #  Réduit la hitbox pour éviter l'entrée partielle dans les murs
         if self.super_power_active:
             self.super_power_timer -= 1
             if self.super_power_timer <= 0:
-                self.super_power_active = False  # ✅ Désactive le super pouvoir après le temps écoulé
-                self.speed = CELL_SIZE // 6  # ✅ Remet la vitesse normale
+                self.super_power_active = False  # Désactive le super pouvoir après le temps écoulé
+                self.speed = CELL_SIZE // 6  # Remet la vitesse normale
                 print("⏳ Fin du super pouvoir ! Pac-Man redevient normal.")
 
         def is_wall(x, y):
@@ -132,12 +176,12 @@ class Player:
     def get_img_pacman(self, controlled_player):
         """Renvoie l'image de Pac-Man en fonction de la direction uniquement si c'est le joueur contrôlé"""
 
-        if self != controlled_player:  # ✅ Vérifie que Pac-Man est bien le joueur actif
-            return self.image1  # ✅ Garde son orientation actuelle
+        if self != controlled_player:  #  Vérifie que Pac-Man est bien le joueur actif
+            return self.image1  # Garde son orientation actuelle
 
         keys = pygame.key.get_pressed()
 
-        if self.super_power_active:  # ✅ Vérifie si le super pouvoir est actif
+        if self.super_power_active:  # Vérifie si le super pouvoir est actif
             if keys[pygame.K_LEFT]:
                 return self.image_super_left
             if keys[pygame.K_RIGHT]:
@@ -146,9 +190,9 @@ class Player:
                 return self.image_super_up
             if keys[pygame.K_DOWN]:
                 return self.image_super_down
-            return self.image_super  # ✅ Par défaut, regarde à droite
+            return self.image_super  # Par défaut, regarde à droite
 
-        # ✅ Si pas de super pouvoir, on retourne les images normales
+        # Si pas de super pouvoir, on retourne les images normales
         if keys[pygame.K_LEFT]:
             return self.image2
         if keys[pygame.K_3]:
@@ -157,7 +201,7 @@ class Player:
             return self.image3
         if keys[pygame.K_DOWN]:
             return self.image4
-        return self.image1  # ✅ Par défaut, Pac-Man regarde à droite
+        return self.image1  # Par défaut, Pac-Man regarde à droite
 
     def get_img_phantom(self):
         """Renvoie l'image du fantôme"""
@@ -166,9 +210,9 @@ class Player:
     def draw(self, screen, controlled_player):
         """Dessine Pac-Man ou un fantôme sur l'écran"""
         if self.is_pacman:
-            self.spawn(screen, self.get_img_pacman(controlled_player))  # ✅ Passe `controlled_player`
+            self.spawn(screen, self.get_img_pacman(controlled_player))  # Passe `controlled_player`
         elif self.is_phantom:
-            self.spawn(screen, self.image5)  # ✅ Les fantômes gardent leur image
+            self.spawn(screen, self.image5)  # Les fantômes gardent leur image
         else:
             pygame.draw.rect(screen, self.color, (self.x, self.y, self.size, self.size))
 
