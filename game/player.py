@@ -21,11 +21,11 @@ class Player:
         self.speed = CELL_SIZE // 6  # Pac-Man bouge par petits pas
         self.lives = 3  # Pac-Man commence avec 3 vies
     #Chargement des images
-        self.image1 = pygame.image.load("images/pacman - right.png")
-        self.image2 = pygame.image.load("images/pacman - left.png")
-        self.image3 = pygame.image.load("images/pacman - up.png")
-        self.image4 = pygame.image.load("images/pacman - down.png")
-        self.image5 = pygame.image.load("images/red_ghost.png")
+        self.image_right = pygame.image.load("images/pacman - right.png")
+        self.image_left = pygame.image.load("images/pacman - left.png")
+        self.image_up = pygame.image.load("images/pacman - up.png")
+        self.image_down = pygame.image.load("images/pacman - down.png")
+        self.image_red_ghost = pygame.image.load("images/red_ghost.png")
 
         self.image_super = pygame.image.load("images/Black Pacman.png")
         self.image_super_left = pygame.image.load("images/Black Pacman-left.png")
@@ -54,7 +54,6 @@ class Player:
 
         if self.lives > 1:
             self.lives -= 1
-            print(f"💥 Pac-Man touché ! Il lui reste {self.lives} vies.")
 
             self.invincible = True
             self.invincibility_timer = 180  # Environ 3 secondes à 60 FPS
@@ -103,7 +102,6 @@ class Player:
             self.invincibility_timer -= 1
             if self.invincibility_timer <= 0:
                 self.invincible = False
-                print("🛡️ Fin de l'invincibilité.")
 
         keys = pygame.key.get_pressed()
         new_x, new_y = self.x, self.y
@@ -177,7 +175,7 @@ class Player:
         """Renvoie l'image de Pac-Man en fonction de la direction uniquement si c'est le joueur contrôlé"""
 
         if self != controlled_player:  #  Vérifie que Pac-Man est bien le joueur actif
-            return self.image1  # Garde son orientation actuelle
+            return self.image_right  # Garde son orientation actuelle
 
         keys = pygame.key.get_pressed()
 
@@ -194,25 +192,25 @@ class Player:
 
         # Si pas de super pouvoir, on retourne les images normales
         if keys[pygame.K_LEFT]:
-            return self.image2
+            return self.image_left
         if keys[pygame.K_3]:
-            return self.image1
+            return self.image_right
         if keys[pygame.K_UP]:
-            return self.image3
+            return self.image_up
         if keys[pygame.K_DOWN]:
-            return self.image4
-        return self.image1  # Par défaut, Pac-Man regarde à droite
+            return self.image_down
+        return self.image_right  # Par défaut, Pac-Man regarde à droite
 
     def get_img_phantom(self):
         """Renvoie l'image du fantôme"""
-        return self.image5
+        return self.image_red_ghost
 
     def draw(self, screen, controlled_player):
         """Dessine Pac-Man ou un fantôme sur l'écran"""
         if self.is_pacman:
             self.spawn(screen, self.get_img_pacman(controlled_player))  # Passe `controlled_player`
         elif self.is_phantom:
-            self.spawn(screen, self.image5)  # Les fantômes gardent leur image
+            self.spawn(screen, self.image_red_ghost)  # Les fantômes gardent leur image
         else:
             pygame.draw.rect(screen, self.color, (self.x, self.y, self.size, self.size))
 
