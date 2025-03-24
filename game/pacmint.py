@@ -168,6 +168,19 @@ def main_game(game_code):
     n = Network()
     print("Connexion au serveur...")
 
+    # Fonction de décode JSON sécurisée
+    # Cette fonction permet d'éviter les plantages liés à des réponses JSON mal formées
+    # Parfois, le serveur envoie plusieurs objets JSON collés ensemble (ex: {"a":1}{"b":2})
+    # Ce cas provoque une erreur `json.decoder.JSONDecodeError: Extra data`
+    # On utilise `raw_decode()` pour ne lire que le premier objet JSON valide
+
+    def safe_json_load(s):
+        decoder = json.JSONDecoder()
+        try:
+            obj, _ = decoder.raw_decode(s)
+            return obj
+        except json.JSONDecodeError as e:
+            return None
 
     # Demander à l'utilisateur de créer ou rejoindre une partie
     game_code = n.create_party()
@@ -212,15 +225,26 @@ def main_game(game_code):
 
         current_player.move(players)
         item_manager.check_collision(current_player)
-        ###
+        current_player.check_ghost_collision(players)  # Vérifie si Pac-Man touche un fantôme
+
+        # Vérifie si Pac-Man a encore des vies
+        if current_player.lives == 0:
+            screen.fill((0, 0, 0))  # Efface l’écran
+            game_over_text = font.render("GAME OVER", True, (255, 0, 0))
+            screen.blit(game_over_text, (WIDTH // 2 - 100, HEIGHT // 2))
+            pygame.display.flip()
+            pygame.time.delay(2000)  #  Pause avant de quitter
+            return
+
         all_players_data["players"][0] = {  # Mettre à jour les données pour tous les joueurs ici on suppose que le joueur actuel est pacman
             "pos": current_player.coord,
             "roles": "PacMan" if current_player.is_pacman else "Fantôme"
         }
         # mise à jour des données du joueur en local et envoie au serveur ces données pour les synchroniser avec les autres joueurs
         response = n.send(json.dumps(all_players_data))
-        updated_data = json.loads(response)["players"] # Format étrange ici
-        print("updated",updated_data)
+        data = safe_json_load(response)
+        updated_data = data["players"]
+
         # Met à jour les positions des autres joueurs
         for data in updated_data:
             # Chercher le joueur correspondant dans la liste des joueurs en fonction de l'IP et du port TCP
