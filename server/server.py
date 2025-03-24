@@ -163,17 +163,10 @@ def threaded_client(connexion, address):
 
         data = json.loads(raw_data)
         if data["action"] == "CREATE_GAME":
-
-            """
-            player_id = threading.get_ident()  # Identifiant unique pour le joueur
-            if room_manager.join(player_id, room_id):
-                connexion.send(str.encode(json.dumps({"status": "ok", "room_id": room.identifier})))
-                start_new_thread(threaded_game_client, (connexion, player_id, room_id, address))
-            else:
-                connexion.send(str.encode(json.dumps({"status": "full"})))
-                connexion.close()
-            """
-            pass
+            room_name = "Test Room"
+            room = room_manager.create_room(room_name=room_name)
+            print(room.code)
+            connexion.send(json.dumps({"action": "CREATE_GAME", "code": room.code}).encode())
 
         elif data["action"] == "join_party":
             room_id = data["room_id"]
