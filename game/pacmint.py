@@ -1,6 +1,6 @@
 import pygame
 
-from common.global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE, BLACK
+from common.global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
 from common.reseaux import Network
 from player import Player
 from map import MAP_SURFACE
@@ -21,7 +21,6 @@ pygame.display.set_caption("PacMint")
 font = pygame.font.SysFont("Arial", 24)
 
 image = pygame.image.load("images/background2.png")
-
 
 # musique
 mixer.init()
@@ -64,16 +63,20 @@ def draw_button(text, x, y, width, height, base_color, glow_color, screen):
 
 
 def generate_code():
-    pass
-
+    """Génère un code pour la partie"""
+    n = Network()
+    code = n.create_party()
+    print(f"Code généré : {code}")
+    return code
 
 def create_game():
+    game_code = None
     run = True
 
     while run:
         screen.blit(image, (0, 0))
-        draw_button("Générer un code", 250, 600, 200, 50, BLUE, CYAN, screen)
-        draw_button("Créer un lobby", 550, 600, 200, 50, BLUE, CYAN, screen)
+        #draw_button("Générer un code", 250, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Lancer la partie", 550, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -84,9 +87,11 @@ def create_game():
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
-                        generate_code()
+                        #Pas d'interet
+                        game_code = None # Génération d'un code
                     elif 550 <= x <= 750:
-                        lobby()
+                        main_game(game_code)  # On lance une partie si un code a été généré
+
                     elif 850 <= x <= 1050:
                         main_menu()
         pygame.display.flip()
@@ -121,50 +126,14 @@ def main_menu():
         pygame.display.flip()
 
 def lobby():
-    run = True
-    screen.blit(image, (0, 0))
-    TABLE_WIDTH = 200
-    TABLE_HEIGHT = 400
-    TABLE_X = 150
-    TABLE_Y = 00
-    LINE_COUNT = 4
-
-    while run:
-        draw_button("Lancer la partie", 250, 600, 200, 50, BLUE, CYAN, screen)
-        draw_button("Retour", 550, 600, 200, 50, BLUE, PURPLE, screen)
-
-        row_height = TABLE_HEIGHT // LINE_COUNT
-        for i in range(LINE_COUNT):
-            y = TABLE_Y + i * row_height
-            pygame.draw.rect(screen, BLACK, (TABLE_X, y, TABLE_WIDTH, row_height), 1)
-        # Afficher les modifications
-        pygame.display.flip()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-                pygame.quit()
-                sys.exit()
-
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = event.pos
-                button_click.play()
-                # Vérifier si un bouton est cliqué
-                if 600 <= y <= 650:
-                    if 250 <= x <= 450:
-                        main_game()
-                    elif 550 <= y <= 750:
-                        main_menu()
-
-        pygame.display.flip()
-
-
-
+    pass
 def join_game():
     run = True
     while run:
         screen.blit(image, (0, 0))
-        draw_button("Entrez le code", 250, 600, 200, 50, BLUE, CYAN, screen)
+        #game_code = "0399"
+        #draw_button(f"Code: {game_code}", 250, 500, 400, 50, BLUE, CYAN, screen)
+        draw_button("Rejoindre", 250, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Retour", 550, 600, 200, 50, BLUE, PURPLE, screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -183,7 +152,9 @@ def join_game():
                         main_menu()
         pygame.display.flip()
 
-def main_game():
+def main_game(game_code):
+    print("Début de la fonction main_game()")
+
     mixer.init()
 
     mixer.music.load("sound/game_sound.mp3")
@@ -193,50 +164,86 @@ def main_game():
     font = pygame.font.SysFont("Arial", 24)
 
     clock = pygame.time.Clock()
+
     n = Network()
+    print("Connexion au serveur...")
+
+
+    # Demander à l'utilisateur de créer ou rejoindre une partie
+    game_code = n.create_party()
+    print(f"Partie créée avec le code : {game_code}")
+
+    """
+    game_code = input("Entrez le code de la partie : ").strip().upper()
+    if not n.join_party(game_code):
+        print("Impossible de rejoindre la partie. Vérifiez le code.")
+        return
+    """
 
     # On va récupérer les données de tous les joueurs (par exemple leur position et leur rôle)
-    all_players_data = json.loads(n.get_pos())
-    current_player_id = all_players_data["current_player"]
+    print("demande position serveur")
+    all_players_data = n.get_pos()
+    print("Joueurs récupérés :", all_players_data)
+    current_player_adresse = all_players_data["current_player"] # on récupère l'ip et le port tcp du joueur courant
     positions_and_roles = all_players_data["players"]
 
     # création de la liste des joueurs
     players = []
     for data in positions_and_roles:
-        player = Player(data["pos"][0], data["pos"][1], data["roles"])
+        player = Player(data["pos"][0], data["pos"][1], data["roles"], data["ip"], data["tcp_port"])
         players.append(player)
+
     # Initialisation de la police pour afficher le score
     item_manager = ItemManager()
     run = True
+
+    #Boucle principale du jeu
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
 
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
-        current_player = players[current_player_id]
+        current_player = None
+        for player in players:
+            if player.ip == current_player_adresse[0] and player.tcp_port == current_player_adresse[1]:
+                current_player = player
+                break
+
         current_player.move(players)
         item_manager.check_collision(current_player)
-
-        all_players_data["players"][current_player_id] = {  # Mettre à jour les données pour tous les joueurs
+        ###
+        all_players_data["players"][0] = {  # Mettre à jour les données pour tous les joueurs ici on suppose que le joueur actuel est pacman
             "pos": current_player.coord,
             "roles": "PacMan" if current_player.is_pacman else "Fantôme"
         }
         # mise à jour des données du joueur en local et envoie au serveur ces données pour les synchroniser avec les autres joueurs
         response = n.send(json.dumps(all_players_data))
-        updated_data = json.loads(response)
+        updated_data = json.loads(response)["players"] # Format étrange ici
         # Met à jour les positions des autres joueurs
-        for i, data in enumerate(updated_data["players"]):
-            if i != current_player_id:
-                players[i].x, players[i].y = data["pos"]
-                players[i].update()
+        for data in updated_data:
+            # Chercher le joueur correspondant dans la liste des joueurs en fonction de l'IP et du port TCP
+            if data["roles"] == "PacMan":
+                for player in players:
+                    if player.is_pacman:
+                        # Mettre à jour la position du joueur
+                        #player.x, player.y = data["pos"]
+                        # Effectuer toute autre mise à jour relevant
+                        #player.update()
+                        pass
+
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
         item_manager.draw_items(screen)
 
         for player in players:
+            #Problème d'affiche, Pacman est affiché deux fois
             player.draw(screen, current_player)
+
+        # Affiche le code de la partie sous le score
+        game_code_text = font.render(f"Code de la partie: {game_code}", True, (255, 255, 0))
+        screen.blit(game_code_text, (10, 40))
 
         # Afficher le score du joueur actuel
         score_text = font.render(f"Score: {current_player.score}", True, (255, 255, 255))
