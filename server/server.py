@@ -107,7 +107,6 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                 if not raw_data:
                     print(f"Déconnexion du joueur {joueur_actuel}")
                     break
-                print(f"Reçu du joueur {joueur_actuel} : {raw_data}")
                 # Si le client envoie la commande GET_POS, on renvoie l'état actuel
                 if raw_data == "GET_POS":
                     print(f"Envoi des positions au joueur {joueur_actuel}")

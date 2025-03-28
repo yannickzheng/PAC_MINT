@@ -220,7 +220,6 @@ def main_game(game_code):
         # mise à jour des données du joueur en local et envoie au serveur ces données pour les synchroniser avec les autres joueurs
         response = n.send(json.dumps(all_players_data))
         updated_data = json.loads(response)["players"] # Format étrange ici
-        print("updated",updated_data)
         # Met à jour les positions des autres joueurs
         for data in updated_data:
             # Chercher le joueur correspondant dans la liste des joueurs en fonction de l'IP et du port TCP
