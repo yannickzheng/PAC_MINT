@@ -195,5 +195,3 @@ while True:
     print("Room Manager",room_manager.rooms)
     thread = threading.Thread(target=threaded_client, args=(connexion,address))
     thread.start()
-
-
