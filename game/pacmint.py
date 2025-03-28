@@ -190,17 +190,15 @@ def main_game(game_code):
     # création de la liste des joueurs
     players = []
     for data in positions_and_roles:
-        if data["ip"] is not None and data["tcp_port"] is not None:
-            if not any(player.ip == data["ip"] and player.tcp_port == data["tcp_port"] for player in players):
-
-                player = Player(data["pos"][0], data["pos"][1], data["roles"], data["ip"], data["tcp_port"])
-                players.append(player)
+        player = Player(data["pos"][0], data["pos"][1], data["roles"], data["ip"], data["tcp_port"])
+        players.append(player)
 
     # Initialisation de la police pour afficher le score
     item_manager = ItemManager()
     run = True
+
+    #Boucle principale du jeu
     while run:
-        print("Boucle principale du jeu... zz")
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -211,6 +209,7 @@ def main_game(game_code):
             if player.ip == current_player_adresse[0] and player.tcp_port == current_player_adresse[1]:
                 current_player = player
                 break
+
         current_player.move(players)
         item_manager.check_collision(current_player)
         ###
@@ -221,29 +220,25 @@ def main_game(game_code):
         # mise à jour des données du joueur en local et envoie au serveur ces données pour les synchroniser avec les autres joueurs
         response = n.send(json.dumps(all_players_data))
         updated_data = json.loads(response)["players"] # Format étrange ici
-        print("updated",updated_data)
         # Met à jour les positions des autres joueurs
         for data in updated_data:
             # Chercher le joueur correspondant dans la liste des joueurs en fonction de l'IP et du port TCP
-            for player in players:
-                if player.ip == data["ip"] and player.tcp_port == data["tcp_port"]:
-                    # Mettre à jour la position du joueur
-                    player.x, player.y = data["pos"]
-                    # Effectuer toute autre mise à jour relevant
-                    player.update()
-                    break
+            if data["roles"] == "PacMan":
+                for player in players:
+                    if player.is_pacman:
+                        # Mettre à jour la position du joueur
+                        #player.x, player.y = data["pos"]
+                        # Effectuer toute autre mise à jour relevant
+                        #player.update()
+                        pass
 
-            """
-            if i != 0: # On suppose que le joueur actuel est pacman
-                players[i].x, players[i].y = data["pos"]
-                players[i].update()
-            """
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
         item_manager.draw_items(screen)
 
         for player in players:
+            #Problème d'affiche, Pacman est affiché deux fois
             player.draw(screen, current_player)
 
         # Affiche le code de la partie sous le score
