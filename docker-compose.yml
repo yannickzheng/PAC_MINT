@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: ./server
+    container_name: pacmint-server
+    ports:
+      - "5555:5555"
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./game
+    container_name: pacmint-client
+    environment:
+      - DISPLAY=${DISPLAY}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    network_mode: host
+    depends_on:
+      - server
