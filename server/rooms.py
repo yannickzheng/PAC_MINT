@@ -88,9 +88,18 @@ class Room:
         Création d'une salle'
         """
         self.player_capacity = player_capacity
-        self.players = set() #set pour éviter les doublons
+        self.players = {} #  Exemple : {"pacman": Player(...), "fantome_1": Player(...)}
         self.room_name = room_name
         self.code = code
+
+    def initial_positions(self):
+        return {
+            "pacman": [150, 150],
+            "fantome_1": [950, 450],
+            "fantome_2": [920, 450],
+            "fantome_3": [950, 420],
+            "fantome_4": [920, 420]
+        }
 
     def is_full(self):
         if len(self.players) >= self.player_capacity:
