@@ -76,7 +76,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
         room = room_manager.rooms[room_id]  # Récupération de la salle
 
 
-
+        #On initialise les positions initiales
         datas = {
         "players": [
                 {"pos": [150, 150], "roles": "PacMan", "ip": None, "tcp_port": None},

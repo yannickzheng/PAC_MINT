@@ -159,6 +159,7 @@ def join_game():
 
                 if 600 <= y <= 650:
                     if 550 <= x <= 750 and game_code:
+                        main_game(is_created_game=False, game_code=game_code)
                         return game_code  # Retourne le code saisi
                     elif 850 <= x <= 1050:
                         main_menu()
@@ -187,8 +188,6 @@ def main_game(is_created_game, game_code = None):
 
     n = Network()
 
-
-    game_code = ""
     if not is_created_game:
         message = json.dumps({
             "action": "JOIN_GAME",
@@ -196,10 +195,13 @@ def main_game(is_created_game, game_code = None):
         })
         response = n.send(message)
         response_data = json.loads(response)
-
+        
+        """
         if response_data.get("status") != "OK":
             print("Impossible de rejoindre la partie")
             return
+            
+        """
 
     #Si le joueur souhaite créer une partie, il envoie une demande au serveur
     if is_created_game:
