@@ -63,8 +63,11 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
     """
     print(f"Connexion établie avec le joueur {joueur_actuel} depuis {address}")
 
+    #Sécurité, on impose que room_id est bien un int
+    room_id = int(room_id)
+
     try:
-        # Vérificatier si la salle demandée existe
+        # On vérifie que la salle existe bien sinon on ferme la session
         if not room_manager.room_exists(room_id):
             print("Partie introuvable")
             connexion.close()
@@ -107,14 +110,15 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                 if not raw_data:
                     print(f"Déconnexion du joueur {joueur_actuel}")
                     break
-                print(f"Reçu du joueur {joueur_actuel} : {raw_data}")
+                #print(f"Reçu du joueur {joueur_actuel} : {raw_data}")
                 # Si le client envoie la commande GET_POS, on renvoie l'état actuel
                 if raw_data == "GET_POS":
-                    print(f"Envoi des positions au joueur {joueur_actuel}")
+                    #print(f"Envoi des positions au joueur {joueur_actuel}")
                     connexion.sendall(json.dumps(datas).encode())
                     continue
                 else:
-                    print(f"Commande inconnue : {raw_data}")
+                    #print(f"Commande inconnue : {raw_data}")
+                    pass
 
                 # Sinon, on considère que le client envoie des données JSON pour mettre à jour sa position
                 all_players_updated = json.loads(raw_data)
@@ -179,10 +183,11 @@ def threaded_client(connexion, address):
                 connexion.send(str.encode(json.dumps({"status": "full"})))
                 connexion.close()
 
-        elif data["action"] == "join_party":
-            room_id = data["room_id"]
-            player_id = threading.get_ident()
-
+        elif data["action"] == "JOIN_GAME":
+            print(data)
+            room_id = data["code"]
+            #player_id = threading.get_ident()
+            player_id = 123
             if room_manager.join(player_id, room_id):
                 start_new_thread(threaded_game_client, (connexion, player_id, room_id, address))
             else:
