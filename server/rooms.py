@@ -26,9 +26,11 @@ class RoomManager:
         """Ajout d'un joueur dans une salle"""
         # Retirer le joueur de toutes les salles où il serait présent
         for room in self.rooms.values():
+            #On regarde si le joueur est dans un salon
             if room.is_player_in_room(player_identifier):
                 room.leave(player_identifier)
-        room = self.rooms.get(room_identifier)
+        #ATTENTION room_identifer est un str mais les clés du dictiononnaires rooms sont des int
+        room = self.rooms.get(int(room_identifier))
         if room:
             return room.join(player_identifier)
         return False
@@ -75,7 +77,8 @@ class RoomManager:
 
     def generate_unique_code(self):
         """Crée une nouvelle partie"""
-        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        #ode = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        code = 111
         return code
 
 class Room:
