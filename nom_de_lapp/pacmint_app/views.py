@@ -1,4 +1,4 @@
-from django.shortcuts import render
+
 from django.shortcuts import render, redirect
 from .forms import PlayerRegistrationForm
 from django.contrib import messages
@@ -24,6 +24,11 @@ def register_player(request):
         form = PlayerRegistrationForm()
 
     return render(request, 'register.html', {'form': form})
+
+
+def home(request):
+    return render(request, 'home.html')
+
 
 
 # Create your views here.
