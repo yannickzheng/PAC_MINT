@@ -15,6 +15,3 @@ COPY sound/ ./sound/
 RUN pip install --no-cache-dir -r requirements.txt
 ENV PYTHONPATH=/app
 CMD ["python", "game/pacmint.py"]
-
-
-

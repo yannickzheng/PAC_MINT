@@ -4,19 +4,28 @@ services:
   server:
     build:
       context: ./server
+      dockerfile: Dockerfile
     container_name: pacmint-server
     ports:
       - "5555:5555"
     restart: unless-stopped
+    network_mode: host
 
   client:
     build:
       context: ./game
+      dockerfile: Dockerfile
     container_name: pacmint-client
     environment:
       - DISPLAY=${DISPLAY}
+      - SDL_AUDIODRIVER=alsa
+      - XDG_RUNTIME_DIR=/tmp
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
+    devices:
+      - /dev/snd:/dev/snd
     network_mode: host
-    depends_on:
+    depends_on: #le serveur est lancé ava,t le client
       - server
+    tty: true
+    stdin_open: true
