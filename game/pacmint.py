@@ -153,7 +153,6 @@ def join_game():
         pygame.display.flip()
 
 def main_game(game_code):
-    print("Début de la fonction main_game()")
 
     mixer.init()
 
@@ -225,7 +224,7 @@ def main_game(game_code):
 
         current_player.move(players)
         item_manager.check_collision(current_player)
-        current_player.check_ghost_collision(players)  # Vérifie si Pac-Man touche un fantôme
+        current_player.handle_collisions_with_players(players) #Vérifie si Pac-Man touche un fantôme
 
         # Vérifie si Pac-Man a encore des vies
         if current_player.lives == 0:
