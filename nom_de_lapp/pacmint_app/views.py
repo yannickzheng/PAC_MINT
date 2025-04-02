@@ -1,8 +1,10 @@
+
 from django.shortcuts import render, redirect
-from game.pacmint_app.forms import PlayerRegistrationForm
+from .forms import PlayerRegistrationForm
 from django.contrib import messages
-from game.pacmint_app.models import Player
+from .models import Player
 from django.contrib.auth.hashers import make_password
+from django.http import HttpResponse
 
 def register_player(request):
     if request.method == 'POST':
@@ -22,3 +24,11 @@ def register_player(request):
         form = PlayerRegistrationForm()
 
     return render(request, 'register.html', {'form': form})
+
+
+def home(request):
+    return render(request, 'home.html')
+
+
+
+# Create your views here.
