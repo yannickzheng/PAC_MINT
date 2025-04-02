@@ -2,6 +2,7 @@ import uuid  #générer des identifiants uniques
 import json
 import random
 import string
+from game.player import Player
 
 """Faire en sort qu'un joueur n'est présent que dans une seule salle"""
 
@@ -91,15 +92,17 @@ class Room:
         self.players = {} #  Exemple : {"pacman": Player(...), "fantome_1": Player(...)}
         self.room_name = room_name
         self.code = code
-
-    def initial_positions(self):
-        return {
-            "pacman": [150, 150],
-            "fantome_1": [950, 450],
-            "fantome_2": [920, 450],
-            "fantome_3": [950, 420],
-            "fantome_4": [920, 420]
+        self.initial_positions = {
+            "pacman": (150, 150),
+            "fantome_1": (950, 450),
+            "fantome_2": (920, 450),
+            "fantome_3": (950, 420),
+            "fantome_4": (920, 420)
         }
+
+    def update_position(self, role_key, new_pos):
+        if role_key in self.players:
+            self.players[role_key].update_position(new_pos)
 
     def is_full(self):
         if len(self.players) >= self.player_capacity:
@@ -110,15 +113,20 @@ class Room:
             return True
 
     def join(self, player_id):
-        """Ajout d'un joueur dans la salle"""
         if not self.is_full():
-            self.players.add(player_id)
+            # Déterminer le rôle en fonction de l'ordre d'arrivée
+            role_keys = list(self.initial_positions.keys())
+            role = role_keys[len(self.players)]  # ex : "pacman", "fantome_1", etc.
+            position = self.initial_positions[role]
+            player = Player(ip=None, tcp_port=None, role=role, position=position)
+            self.players[player_id] = player
             return True
+        return False
 
     def leave(self, player_id):
         """Suppression d'un joueur de la salle"""
         if player_id in self.players:
-            self.players.remove(player_id)
+            self.players.pop(player_id)
             return True
 
     def is_player_in_room(self, player_id):
