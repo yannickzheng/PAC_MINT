@@ -132,7 +132,7 @@ class Player:
             self.update()  #  Met à jour les coordonnées si le déplacement est valide
 
     def update_position(self, new_pos):
-        self.x, self.y = new_pos
+        self.x, self.y = tuple(new_pos)
         self.coord = new_pos
         self.position = new_pos
 
