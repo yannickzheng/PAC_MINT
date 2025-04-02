@@ -1,5 +1,10 @@
 import pygame
 
+try:
+    pygame.mixer.init()
+except pygame.error:
+    pass
+
 from common.global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
 from common.reseaux import Network
 from player import Player
