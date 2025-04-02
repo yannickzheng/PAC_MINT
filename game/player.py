@@ -113,8 +113,6 @@ class Player:
         print("⚠ Aucune position libre trouvée pour le fantôme.")
 
     def move(self, players):
-        """Déplace Pac-Man ou un fantôme, gère les murs, le super pouvoir et sauvegarde la position"""
-
         # 🔁 Gère l'invincibilité
         if self.invincible:
             self.invincibility_timer -= 1
@@ -141,7 +139,9 @@ class Player:
                         (x + self.size - hitbox_offset) // CELL_SIZE] == 1
             )
 
-        # 🔁 Mouvement Pac-Man (bloqué par les murs)
+        # ✅ 🧠 Sauvegarde position avant déplacement
+        self.coord = (self.x, self.y)
+
         if self.is_pacman:
             if keys[pygame.K_LEFT] and self.x > 0 and not is_wall(self.x - self.speed, self.y):
                 new_x -= self.speed
@@ -152,7 +152,6 @@ class Player:
             if keys[pygame.K_DOWN] and self.y + self.size < HEIGHT and not is_wall(self.x, self.y + self.speed):
                 new_y += self.speed
 
-        # 🔁 Mouvement Fantômes (traversent les murs)
         elif self.is_phantom:
             if keys[pygame.K_LEFT] and self.x > 0:
                 new_x -= self.speed
@@ -163,13 +162,7 @@ class Player:
             if keys[pygame.K_DOWN] and self.y + self.size < HEIGHT:
                 new_y += self.speed
 
-        # 💾 Sauvegarde position avant tentative de déplacement
-        self.coord = (self.x, self.y)
-
-        # ✅ Applique le déplacement
         self.x, self.y = new_x, new_y
-
-        # 🔁 Met à jour les coordonnées (utile pour rollback ou affichage)
         self.update()
 
     def update(self):
@@ -209,10 +202,6 @@ class Player:
             screen.blit(self.get_img_pacman(controlled_player), (self.x, self.y))
         elif self.is_phantom:
             screen.blit(self.get_img_phantom(), (self.x, self.y))
-
-        pygame.draw.rect(screen, (0, 0, 255), (self.x, self.y, self.size, self.size), 1)
-        center = (self.x + self.size // 2, self.y + self.size // 2)
-        pygame.draw.circle(screen, (0, 255, 0), center, self.hitbox_size, 1)
 
     def spawn(self, screen, img):
         screen.blit(img, (self.x, self.y))
