@@ -1,26 +1,35 @@
 import pygame
 from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
-from map import MAP_DATA
+from game.map import MAP_DATA
 import random
 import string
 
 class Player:
-    def __init__(self, x, y, role, ip, tcp_port, udp_port = None):
+    def __init__(self, ip, tcp_port, role, position):
+
         self.ip = ip
         self.tcp_port = int(tcp_port) if tcp_port else None
-        #self.udp_port = int(udp_port) # Pas prise en compte encore de udp
+        # self.udp_port = int(udp_port) # Pas prise en compte encore de udp
         self.tcp_addr = (self.ip, self.tcp_port)
-        #self.udp_addr = (self.ip, self.udp_port) # Pas prise en compte encore de udp
+        # self.udp_addr = (self.ip, self.udp_port) # Pas prise en compte encore de udp
 
-        self.x = x
-        self.y = y
-        self.coord = (x, y)
+        self.role = role
+        self.id = None
+        self.is_pacman = "pacman" in role.lower()
+        self.is_phantom = "fantome" in role.lower()
+        self.is_coin = role == "Pièce"
+
+        #Position
+        self.position = position
+        self.x,self.y = position
+        self.coord = (self.x, self.y)
+
         self.color = (255, 0, 0)
         self.size = CELL_SIZE  # Pac-Man doit être basé sur `CELL_SIZE`
         self.hitbox_size = CELL_SIZE // 2
         self.speed = CELL_SIZE // 6  # Pac-Man bouge par petits pas
         self.lives = 3  # Pac-Man commence avec 3 vies
-    #Chargement des images
+        #Chargement des images
         self.image1 = pygame.image.load("images/pacman - right.png")
         self.image2 = pygame.image.load("images/pacman - left.png")
         self.image3 = pygame.image.load("images/pacman - up.png")
@@ -38,9 +47,6 @@ class Player:
         self.image_super_up = pygame.transform.scale(self.image_super_up, (self.size, self.size))
         self.image_super_down = pygame.transform.scale(self.image_super_down, (self.size, self.size))
 
-        self.is_pacman = role == "PacMan"
-        self.is_phantom = role == "Fantôme"
-        self.is_coin = role == "Pièce"
         self.score = 0
         self.super_power_active = False  # ✅ Par défaut, Pac-Man n'a pas le super pouvoir
         self.super_power_timer = 0  # ✅ Timer du super pouvoir initialisé à 0
@@ -124,6 +130,11 @@ class Player:
             self.x, self.y = old_x, old_y  #  Annule le déplacement en cas de collision avec un autre joueur
         else:
             self.update()  #  Met à jour les coordonnées si le déplacement est valide
+
+    def update_position(self, new_pos):
+        self.x, self.y = new_pos
+        self.coord = new_pos
+        self.position = new_pos
 
     def update(self):
         """Met à jour les coordonnées du joueur"""
