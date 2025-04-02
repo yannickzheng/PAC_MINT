@@ -7,7 +7,7 @@ from rooms import RoomManager
 import threading
 
 import json
-
+import uuid
 
 #Paramètres
 timeout = 10 #temps en seconde pour considérer un joueur inactif
@@ -88,27 +88,29 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                     break
 
                 if raw_data == "GET_POS":
+                    print("test",datas)
                     connexion.sendall(json.dumps(datas).encode())
                     continue
 
                 all_players_updated = json.loads(raw_data)
+                #print(all_players_updated)
                 for pdata in all_players_updated.get("players", []):
-                    role = pdata["roles"]
+                    pid = pdata["id"]
                     pos = pdata["pos"]
-                    for p in room.players.values():
-                        if p.role == role:
-                            p.update_position(pos)
+                    if pid in room.players:
+                        room.players[pid].update_position(pos)
 
                 # Mettre à jour le paquet datas
                 datas = {
-                    "current_player": (address[0], address[1]),
+                    "current_player_id": joueur_actuel,
                     "players": [
                         {
+                            "id": p_id,
                             "pos": p.position,
                             "roles": p.role,
                             "ip": p.ip,
                             "tcp_port": p.tcp_port
-                        } for p in room.players.values()
+                        } for p_id, p in room.players.items()
                     ]
                 }
 
@@ -147,7 +149,7 @@ def threaded_client(connexion, address):
             room = room_manager.create_room(room_name=room_name)
             room_code = room.code
 
-            player_id = threading.get_ident()  # Identifiant unique pour le joueur
+            player_id = str(uuid.uuid4())   # Identifiant unique pour le joueur
             if room_manager.join(player_id, room_code) is not None:
 
                 #On envoie le code de la partie au joueur
@@ -161,7 +163,7 @@ def threaded_client(connexion, address):
             print(data)
             room_id = data["code"]
             #player_id = threading.get_ident()
-            player_id = 123
+            player_id = str(uuid.uuid4())
             if room_manager.join(player_id, room_id):
                 start_new_thread(threaded_game_client, (connexion, player_id, room_id, address))
             else:
