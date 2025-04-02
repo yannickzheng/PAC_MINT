@@ -227,7 +227,7 @@ def main_game(is_created_game, game_code = None):
     # création de la liste des joueurs
     players = []
     for data in positions_and_roles:
-        player = Player(data["pos"][0], data["pos"][1], data["roles"], data["ip"], data["tcp_port"])
+        player = Player(ip = data["ip"],tcp_port = data["tcp_port"],role = data["roles"], position = data["pos"])
         players.append(player)
 
     # Initialisation de la police pour afficher le score
@@ -250,25 +250,21 @@ def main_game(is_created_game, game_code = None):
         current_player.move(players)
         item_manager.check_collision(current_player)
         ###
-        all_players_data["players"][0] = {  # Mettre à jour les données pour tous les joueurs ici on suppose que le joueur actuel est pacman
-            "pos": current_player.coord,
-            "roles": "PacMan" if current_player.is_pacman else "Fantôme"
-        }
+
+        for pdata in all_players_data["players"]:
+            if pdata["ip"] == current_player.ip and pdata["tcp_port"] == current_player.tcp_port:
+                pdata["pos"] = current_player.coord
+                break
+
         # mise à jour des données du joueur en local et envoie au serveur ces données pour les synchroniser avec les autres joueurs
         response = n.send(json.dumps(all_players_data))
         updated_data = json.loads(response)["players"] # Format étrange ici
         print("updated",updated_data)
         # Met à jour les positions des autres joueurs
         for data in updated_data:
-            # Chercher le joueur correspondant dans la liste des joueurs en fonction de l'IP et du port TCP
-            if data["roles"] == "PacMan":
-                for player in players:
-                    if player.is_pacman:
-                        # Mettre à jour la position du joueur
-                        #player.x, player.y = data["pos"]
-                        # Effectuer toute autre mise à jour relevant
-                        #player.update()
-                        pass
+            for player in players:
+                if player.role == data["roles"] and player.ip != current_player.ip:
+                    player.update_position(data["pos"])
 
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
