@@ -221,13 +221,14 @@ def main_game(is_created_game, game_code = None):
     print("demande position serveur")
     all_players_data = n.get_pos()
     print("Joueurs récupérés :", all_players_data)
-    current_player_adresse = all_players_data["current_player"] # on récupère l'ip et le port tcp du joueur courant
-    positions_and_roles = all_players_data["players"]
 
     # création de la liste des joueurs
     players = []
-    for data in positions_and_roles:
-        player = Player(ip = data["ip"],tcp_port = data["tcp_port"],role = data["roles"], position = data["pos"])
+    current_player_id = all_players_data["current_player_id"]
+
+    for data in all_players_data["players"]:
+        player = Player(ip = data["ip"], tcp_port = data["tcp_port"], role = data["roles"], position = data["pos"])
+        player.id = data["id"]
         players.append(player)
 
     # Initialisation de la police pour afficher le score
@@ -243,7 +244,7 @@ def main_game(is_created_game, game_code = None):
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
         current_player = None
         for player in players:
-            if player.ip == current_player_adresse[0] and player.tcp_port == current_player_adresse[1]:
+            if player.id == current_player_id:
                 current_player = player
                 break
 
