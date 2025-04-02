@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
-from nom_de_lapp.pacmint_app.views import register_player, home  # ✅ Vérifie que .views est bien utilisé
+from pacmint_app.views import register_player, home  # ✅ Vérifie que .views est bien utilisé
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
