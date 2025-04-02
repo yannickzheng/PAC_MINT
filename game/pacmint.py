@@ -30,7 +30,7 @@ mixer.music.set_volume(0.9)
 mixer.music.play(-1)
 
 button_click = mixer.Sound("sound/button_click.mp3")
-button_click.set_volume(5)
+button_click.set_volume(-10)
 
 
 def draw_button(text, x, y, width, height, base_color, glow_color, screen):
@@ -215,8 +215,6 @@ def main_game(is_created_game, game_code = None):
         game_code = response_data.get("code", "")
         print(f"Code de la partie créée : {game_code}")
 
-
-
     # On va récupérer les données de tous les joueurs (par exemple leur position et leur rôle)
     print("demande position serveur")
     all_players_data = n.get_pos()
@@ -250,31 +248,36 @@ def main_game(is_created_game, game_code = None):
 
         current_player.move(players)
         item_manager.check_collision(current_player)
-        ###
 
-        for pdata in all_players_data["players"]:
-            if pdata["ip"] == current_player.ip and pdata["tcp_port"] == current_player.tcp_port:
-                pdata["pos"] = current_player.coord
-                break
+        # Envoie les nouvelles positions au serveur
+        payload = {
+            "players": [
+                {
+                    "id": current_player.id,
+                    "pos": current_player.coord
+                }
+            ]
+        }
+        response = n.send(json.dumps(payload))
 
-        # mise à jour des données du joueur en local et envoie au serveur ces données pour les synchroniser avec les autres joueurs
-        response = n.send(json.dumps(all_players_data))
-        updated_data = json.loads(response)["players"] # Format étrange ici
-        print("updated",updated_data)
-        # Met à jour les positions des autres joueurs
+
+        updated_data = json.loads(response)["players"]
+        print(updated_data)
+
+        # Met à jour la position des autres joueurs sur l'interface récupéré par le serveur
         for data in updated_data:
             for player in players:
-                if player.role == data["roles"] and player.ip != current_player.ip:
-                    player.update_position(data["pos"])
+                if player.id == data["id"] and player.id != current_player.id:
+                    player.update_position(tuple(data["pos"]))
 
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
         item_manager.draw_items(screen)
 
+        #On affiche sur l'interface l'ensemble des joueurs
         for player in players:
-            #Problème d'affiche, Pacman est affiché deux fois
-            player.draw(screen, current_player)
+            player.draw(screen, player)
 
         # Affiche le code de la partie sous le score
         game_code_text = font.render(f"Code de la partie: {game_code}", True, (255, 255, 0))
