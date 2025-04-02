@@ -31,28 +31,7 @@ except socket.error as e:
 s.listen(max_players)
 print("Serveur démarré, en attente de connexions...")
 
-#Gestion de l'arrêt du serveur
-def server_shutdown():
-    print("Arrêt du serveur...")
-    s.close()
-    sys.exit(0)
 
-#Gestion des joueurs inactifs
-
-player_inactive_time = {}
-def check_inactive_players():
-    """Comment voir qu'un joueur est inactif ?
-    Il garde la même position (normalement pas possible dans le vrai pacman, il avance tout le temps) ?
-    ou l'utilisateur ne touche pas à une touche pendant x temps ? Je crois que le client envoie des données
-     quoi qu'il arrive peut-être une modification à apporter au niveau de client"""
-
-    current_time = time.time()
-    for joueur, last_active in list(player_inactive_time.items()):
-        print(joueur, last_active)
-
-        if current_time - last_active > timeout:
-            print(f"Joueur {joueur} inactif")
-            del player_inactive_time[joueur]
 
 def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
     """
@@ -73,77 +52,72 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
             connexion.close()
             return
 
-        room = room_manager.rooms[room_id]  # Récupération de la salle
+        # Récupération du salon
+        room = room_manager.rooms[room_id]
 
+        # Mise à jour des infos réseau du joueur
+        if joueur_actuel in room.players:
+            player = room.players[joueur_actuel]
+            player.ip = address[0]
+            player.tcp_port = address[1]
 
-        #On initialise les positions initiales
+        # Crée un dictionnaire avec les données des joueurs
         datas = {
-        "players": [
-                {"pos": [150, 150], "roles": "PacMan", "ip": None, "tcp_port": None},
-                {"pos": [950, 450], "roles": "Fantôme", "ip": None, "tcp_port": None},
-                {"pos": [920, 450], "roles": "Fantôme", "ip": None, "tcp_port": None},
-                {"pos": [950, 420], "roles": "Fantôme", "ip": None, "tcp_port": None},
-                {"pos": [920, 420], "roles": "Fantôme", "ip": None, "tcp_port": None}
-            ],
-            "current_player": address # Permet d'identifier quel joueur est en train de se connecter
+            "current_player_id": joueur_actuel,
+            "players": [
+                {
+                    "id": p_id,
+                    "pos": p.position,
+                    "roles": p.role,
+                    "ip": p.ip,
+                    "tcp_port": p.tcp_port
+                }
+                for p_id, p in room.players.items()
+            ]
         }
-
-        # Assigner dynamiquement le rôle et les informations réseau du joueur actuel
-        for player in datas["players"]:
-            if player["ip"] is None and player["tcp_port"] is None:  # Cherche un rôle libre
-                player["ip"] = address[0]
-                player["tcp_port"] = address[1]
-                break
 
         # Envoi des données initiales au client connecté
         connexion.send(str.encode(json.dumps(datas)))
         print("Envoi des données au client connecté")
 
-        #Mettre à jour le temps d'inactivité dès que le joueur se connecte
-        player_inactive_time[joueur_actuel] = time.time()
-
         while True:
             try:
-
-                # Réception des données mises à jour par le client
                 raw_data = connexion.recv(2048).decode()
                 if not raw_data:
                     print(f"Déconnexion du joueur {joueur_actuel}")
                     break
-                #print(f"Reçu du joueur {joueur_actuel} : {raw_data}")
-                # Si le client envoie la commande GET_POS, on renvoie l'état actuel
+
                 if raw_data == "GET_POS":
-                    #print(f"Envoi des positions au joueur {joueur_actuel}")
                     connexion.sendall(json.dumps(datas).encode())
                     continue
-                else:
-                    #print(f"Commande inconnue : {raw_data}")
-                    pass
 
-                # Sinon, on considère que le client envoie des données JSON pour mettre à jour sa position
                 all_players_updated = json.loads(raw_data)
+                for pdata in all_players_updated.get("players", []):
+                    role = pdata["roles"]
+                    pos = pdata["pos"]
+                    for p in room.players.values():
+                        if p.role == role:
+                            p.update_position(pos)
 
-                for i, updated_player in enumerate(all_players_updated["players"]):
-                    if datas["players"][i]["ip"] is not None:  # Mettre à jour uniquement les joueurs actifs
-                        datas["players"][i]["pos"] = updated_player["pos"]
+                # Mettre à jour le paquet datas
+                datas = {
+                    "current_player": (address[0], address[1]),
+                    "players": [
+                        {
+                            "pos": p.position,
+                            "roles": p.role,
+                            "ip": p.ip,
+                            "tcp_port": p.tcp_port
+                        } for p in room.players.values()
+                    ]
+                }
 
-                # Renvoi les données mises à jour à tous les clients
                 connexion.sendall(json.dumps(datas).encode())
 
-                #Mettre à jour le temps d'inactivité
-                player_inactive_time[joueur_actuel] = time.time()
 
             except Exception as erreur:
                 print(f"Erreur avec le joueur {joueur_actuel} : {erreur}")
                 break
-        """
-        # Déconnexion : Libération du rôle
-        for player in datas["players"]:
-            if player["ip"] == address[0] and player["tcp_port"] == address[1]:
-                player["ip"] = None
-                player["tcp_port"] = None  # Réinitialisation du rôle
-                break
-        """
 
         connexion.close()
         room.leave(joueur_actuel)  # Supprime le joueur de la salle
