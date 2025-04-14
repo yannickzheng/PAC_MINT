@@ -37,7 +37,8 @@ class Player:
         self.super_power_timer = 0
         self.invincible = False
         self.invincibility_timer = 0
-
+        self.is_eaten = False
+        self.respawn_target = None  # Centre à atteindre quand mangé
     def lose_life(self):
         if self.invincible:
             return
@@ -64,8 +65,6 @@ class Player:
                 combined_squared = combined_radius ** 2
 
                 if distance_squared <= combined_squared:
-                    print("💥 COLLISION Pac-Man ↔ Fantôme détectée")
-
                     if self.super_power_active:
                         self.eat_ghost(player, players)
                     else:
@@ -79,38 +78,46 @@ class Player:
         self.super_power_timer = duration
         self.speed = min(int(self.speed * 1.2), CELL_SIZE // 5)
 
+    def is_position_free(x, y, ghost, players):
+        for player in players:
+            if player == ghost:
+                continue
+            dx = (player.x + player.size // 2) - (x + ghost.size // 2)
+            dy = (player.y + player.size // 2) - (y + ghost.size // 2)
+            distance_squared = dx * dx + dy * dy
+            if distance_squared < (ghost.size) ** 2:
+                return False
+        return True
+
     def eat_ghost(self, ghost, players):
         print("👻 Pac-Man a mangé un fantôme !")
         self.score += 1000
-        center_x, center_y = WIDTH // 2, HEIGHT // 2
+
+        center_x = WIDTH // 2
+        center_y = HEIGHT // 2
         cell = CELL_SIZE
 
         offsets = [
-            (0, 0), (cell, 0), (-cell, 0), (0, cell), (0, -cell),
-            (cell, cell), (-cell, -cell), (cell, -cell), (-cell, cell),
-            (2 * cell, 0), (-2 * cell, 0), (0, 2 * cell), (0, -2 * cell)
+            (0, 0),
+            (cell, 0), (-cell, 0),
+            (0, cell), (0, -cell),
+            (cell, cell), (-cell, -cell),
+            (cell, -cell), (-cell, cell),
+            (2 * cell, 0), (-2 * cell, 0),
+            (0, 2 * cell), (0, -2 * cell),
+            (cell * 2, cell * 2), (-cell * 2, -cell * 2)
         ]
 
         for dx, dy in offsets:
-            new_x, new_y = center_x + dx, center_y + dy
-            ghost_rect = pygame.Rect(new_x, new_y, ghost.size, ghost.size)
-            collision = False
+            target_x = center_x + dx
+            target_y = center_y + dy
 
-            for player in players:
-                if player != ghost:
-                    player_rect = pygame.Rect(player.x, player.y, player.size, player.size)
-                    if ghost_rect.colliderect(player_rect):
-                        collision = True
-                        break
-
-            if not collision:
-                ghost.x = new_x
-                ghost.y = new_y
-                ghost.update()
-                print(f"📍 Fantôme replacé à ({ghost.x}, {ghost.y})")
+            if Player.is_position_free(target_x, target_y, ghost, players):
+                ghost.is_eaten = True
+                ghost.respawn_target = (target_x, target_y)
                 return
 
-        print("⚠ Aucune position libre trouvée pour le fantôme.")
+        print("⚠ Aucun point de retour libre trouvé autour du centre.")
 
     def move(self, players):
         # 🔁 Gère l'invincibilité
@@ -168,6 +175,31 @@ class Player:
     def update(self):
         self.coord = (self.x, self.y)
 
+
+    def update_eaten_state(self):
+        """Déplace le fantôme mangé vers le centre"""
+        if not self.is_phantom or not self.is_eaten or not self.respawn_target:
+            return
+
+        target_x, target_y = self.respawn_target
+        speed = self.speed  # Tu peux mettre une valeur fixe si besoin
+
+        dx = target_x - self.x
+        dy = target_y - self.y
+        distance = (dx ** 2 + dy ** 2) ** 0.5
+
+        if distance < 2:
+            # 🎯 Arrivé au centre
+            self.is_eaten = False
+            self.respawn_target = None
+            return
+
+        # 🔁 Déplacement vers le centre (normalisé)
+        move_x = speed * dx / distance
+        move_y = speed * dy / distance
+        self.x += move_x
+        self.y += move_y
+
     def get_img_pacman(self, controlled_player):
         if self != controlled_player:
             return self.image_right
@@ -201,7 +233,18 @@ class Player:
         if self.is_pacman:
             screen.blit(self.get_img_pacman(controlled_player), (self.x, self.y))
         elif self.is_phantom:
-            screen.blit(self.get_img_phantom(), (self.x, self.y))
+            if self.is_eaten:
+                # Fantôme mangé : cercle translucide bleu clair
+                ghost_surface = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
+                pygame.draw.circle(
+                    ghost_surface,
+                    (150, 200, 255, 150),  # Couleur + alpha
+                    (self.size // 2, self.size // 2),
+                    self.size // 2
+                )
+                screen.blit(ghost_surface, (self.x, self.y))
+            else:
+                screen.blit(self.get_img_phantom(), (self.x, self.y))
 
     def spawn(self, screen, img):
         screen.blit(img, (self.x, self.y))
