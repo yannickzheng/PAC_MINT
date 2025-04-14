@@ -224,10 +224,15 @@ def main_game(is_created_game, game_code = None):
     players = []
     current_player_id = all_players_data["current_player_id"]
 
+    players = {}
+    current_player_id = all_players_data["current_player_id"]
+
     for data in all_players_data["players"]:
-        player = Player(ip = data["ip"], tcp_port = data["tcp_port"], role = data["roles"], position = data["pos"])
+        player = Player(ip=data["ip"], tcp_port=data["tcp_port"], role=data["roles"], position=tuple(data["pos"]))
         player.id = data["id"]
-        players.append(player)
+        player.score = data.get("score", 0)
+        player.lives = data.get("lives", 3)
+        players[player.id] = player
 
     # Initialisation de la police pour afficher le score
     item_manager = ItemManager()
@@ -240,11 +245,7 @@ def main_game(is_created_game, game_code = None):
                 run = False
 
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
-        current_player = None
-        for player in players:
-            if player.id == current_player_id:
-                current_player = player
-                break
+        current_player = players.get(current_player_id)
 
         current_player.move(players)
         item_manager.check_collision(current_player)
@@ -262,13 +263,30 @@ def main_game(is_created_game, game_code = None):
 
 
         updated_data = json.loads(response)["players"]
-        print(updated_data)
+        #print(updated_data)
 
         # Met à jour la position des autres joueurs sur l'interface récupéré par le serveur
         for data in updated_data:
-            for player in players:
-                if player.id == data["id"] and player.id != current_player.id:
-                    player.update_position(tuple(data["pos"]))
+            pid = data["id"]
+            if pid == current_player_id:
+                continue  # on ignore notre propre joueur
+
+            if pid in players:
+                # Mise à jour de la position
+                players[pid].update_position(tuple(data["pos"]))
+            else:
+                # Nouveau joueur détecté ! On le crée
+                new_player = Player(
+                    ip=data["ip"],
+                    tcp_port=data["tcp_port"],
+                    role=data["roles"],
+                    position=tuple(data["pos"])
+                )
+                new_player.id = pid
+                new_player.score = data.get("score", 0)
+                new_player.lives = data.get("lives", 3)
+                players[pid] = new_player
+                print(f"[CLIENT] Nouveau joueur ajouté : {pid}")
 
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
@@ -276,7 +294,8 @@ def main_game(is_created_game, game_code = None):
         item_manager.draw_items(screen)
 
         #On affiche sur l'interface l'ensemble des joueurs
-        for player in players:
+        print(players)
+        for player in players.values():
             player.draw(screen, player)
 
         # Affiche le code de la partie sous le score

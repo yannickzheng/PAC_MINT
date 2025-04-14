@@ -53,7 +53,7 @@ class Player:
 
     def check_collision(self, players):
         """Vérifie si le joueur entre en collision avec un autre joueur"""
-        for player in players:
+        for player in players.values():
             if player != self:
                 distance_squared = (self.x - player.x) ** 2 + (self.y - player.y) ** 2
                 if distance_squared < (self.hitbox_size + player.hitbox_size) ** 2:
