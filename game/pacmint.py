@@ -195,7 +195,6 @@ def main_game(game_code):
     # On va récupérer les données de tous les joueurs (par exemple leur position et leur rôle)
     print("demande position serveur")
     all_players_data = n.get_pos()
-    print("Joueurs récupérés :", all_players_data)
     current_player_adresse = all_players_data["current_player"] # on récupère l'ip et le port tcp du joueur courant
     positions_and_roles = all_players_data["players"]
 
@@ -265,6 +264,7 @@ def main_game(game_code):
         for player in players:
             #Problème d'affiche, Pacman est affiché deux fois
             player.draw(screen, current_player)
+            player.update_eaten_state()
 
         # Affiche le code de la partie sous le score
         game_code_text = font.render(f"Code de la partie: {game_code}", True, (255, 255, 0))
