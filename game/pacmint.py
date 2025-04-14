@@ -4,7 +4,6 @@ from common.global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
 from common.reseaux import Network
 from player import Player
 from map import MAP_SURFACE
-from items import ItemManager
 from pygame import mixer
 
 import json
@@ -31,6 +30,24 @@ mixer.music.play(-1)
 
 button_click = mixer.Sound("sound/button_click.mp3")
 button_click.set_volume(-10)
+
+#image
+from common.global_variable import CELL_SIZE
+
+small_size = CELL_SIZE // 4  # Taille des pièces
+cherry_size = CELL_SIZE // 2  #  Augmente la taille des cerises
+
+coin_size = CELL_SIZE*0.65
+fruit_size = CELL_SIZE // 2
+
+small_size = CELL_SIZE // 4
+
+coin_image = pygame.image.load(os.path.join("images", "piece.png"))
+coin_image = pygame.transform.scale(coin_image, (coin_size, coin_size))
+
+fruit_image = pygame.image.load(os.path.join("images", "fraise.png"))
+fruit_size = int(CELL_SIZE * 1.2)  #  Ajustement à 80% de la taille d'une case
+fruit_image = pygame.transform.scale(fruit_image, (fruit_size, fruit_size))
 
 
 def draw_button(text, x, y, width, height, base_color, glow_color, screen):
@@ -195,7 +212,7 @@ def main_game(is_created_game, game_code = None):
         })
         response = n.send(message)
         response_data = json.loads(response)
-        
+
         """
         if response_data.get("status") != "OK":
             print("Impossible de rejoindre la partie")
@@ -221,12 +238,11 @@ def main_game(is_created_game, game_code = None):
     print("Joueurs récupérés :", all_players_data)
 
     # création de la liste des joueurs
-    players = []
-    current_player_id = all_players_data["current_player_id"]
 
     players = {}
     current_player_id = all_players_data["current_player_id"]
 
+    #On crée des classes pour chaque joueur en local
     for data in all_players_data["players"]:
         player = Player(ip=data["ip"], tcp_port=data["tcp_port"], role=data["roles"], position=tuple(data["pos"]))
         player.id = data["id"]
@@ -235,7 +251,9 @@ def main_game(is_created_game, game_code = None):
         players[player.id] = player
 
     # Initialisation de la police pour afficher le score
-    item_manager = ItemManager()
+    coins = all_players_data.get("items", {}).get("coins", [])
+    fruits = all_players_data.get("items", {}).get("fruits", [])
+
     run = True
 
     #Boucle principale du jeu
@@ -248,7 +266,7 @@ def main_game(is_created_game, game_code = None):
         current_player = players.get(current_player_id)
 
         current_player.move(players)
-        item_manager.check_collision(current_player)
+        #item_manager.check_collision(current_player)
 
         # Envoie les nouvelles positions au serveur
         payload = {
@@ -260,10 +278,11 @@ def main_game(is_created_game, game_code = None):
             ]
         }
         response = n.send(json.dumps(payload))
-
-
         updated_data = json.loads(response)["players"]
         #print(updated_data)
+
+        coins = updated_data.get("items", {}).get("coins", [])
+        fruits = updated_data.get("items", {}).get("fruits", [])
 
         # Met à jour la position des autres joueurs sur l'interface récupéré par le serveur
         for data in updated_data:
@@ -291,10 +310,14 @@ def main_game(is_created_game, game_code = None):
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
-        item_manager.draw_items(screen)
+        for coin in coins:
+            screen.blit(coin_image, (coin[0] + offset, coin[1] + offset))
+
+        for fruit in fruits:
+            screen.blit(fruit_image, (fruit[0] + offset, fruit[1] + offset))
 
         #On affiche sur l'interface l'ensemble des joueurs
-        print(players)
+        #print(players)
         for player in players.values():
             player.draw(screen, player)
 
