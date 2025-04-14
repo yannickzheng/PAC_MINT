@@ -10,7 +10,7 @@
 import pygame
 import os
 from common.global_variable import CELL_SIZE
-from map import MAP_DATA
+from game.map import MAP_DATA
 
 small_size = CELL_SIZE // 4  # Taille des pièces
 cherry_size = CELL_SIZE // 2  #  Augmente la taille des cerises
@@ -27,18 +27,13 @@ fruit_image = pygame.image.load(os.path.join("images", "fraise.png"))
 fruit_size = int(CELL_SIZE * 1.2)  #  Ajustement à 80% de la taille d'une case
 fruit_image = pygame.transform.scale(fruit_image, (fruit_size, fruit_size))
 
-
-
-
-
-class ItemManager:
+class ServerItemManager:
     def __init__(self):
         self.coins = []
         self.fruits = []
         self.load_items()
 
     def load_items(self):
-        """Initialise les pièces et les cerises sur la carte."""
         for y in range(len(MAP_DATA)):
             for x in range(len(MAP_DATA[y])):
                 if MAP_DATA[y][x] == 2:
@@ -46,45 +41,28 @@ class ItemManager:
                 elif MAP_DATA[y][x] == 4:
                     self.fruits.append((x * CELL_SIZE, y * CELL_SIZE))
 
-    def draw_items(self, screen):
-        """Affiche les pièces et les cerises sur la carte."""
-        coin_offset = (CELL_SIZE - small_size) // 2
-        fruit_offset = (CELL_SIZE - fruit_size) // 2  #  Ajusté pour la nouvelle taille
-
-        for coin in self.coins:
-            screen.blit(coin_image, (coin[0] + coin_offset, coin[1] + coin_offset))
-
-        for fruit in self.fruits:
-            screen.blit(fruit_image, (fruit[0] + fruit_offset, fruit[1] + fruit_offset))
-
     def check_collision(self, player):
-        """Gère la collecte des pièces et des cerises uniquement pour Pac-Man."""
+        px, py = player.position
+        size = CELL_SIZE // 2
 
-        #  Si le joueur est un fantôme, il ne collecte rien
-        if player.is_phantom:
-            return
+        collected = {"coins": [], "fruits": []}
 
-        player_rect = pygame.Rect(
-            player.x + player.size // 6,
-            player.y + player.size // 6,
-            player.size // 2,
-            player.size // 2
-        )
+        player_rect = (px + size // 2, py + size // 2, size, size)
+
+        def rects_overlap(a, b):
+            return (a[0] < b[0] + b[2] and a[0] + a[2] > b[0] and
+                    a[1] < b[1] + b[3] and a[1] + a[3] > b[1])
 
         for coin in self.coins[:]:
-            coin_rect = pygame.Rect(coin[0], coin[1], CELL_SIZE, CELL_SIZE)
-            if player_rect.colliderect(coin_rect):
+            coin_rect = (coin[0], coin[1], CELL_SIZE, CELL_SIZE)
+            if rects_overlap(player_rect, coin_rect):
                 self.coins.remove(coin)
-                player.score += 10
-                MAP_DATA[coin[1] // CELL_SIZE][coin[0] // CELL_SIZE] = 0
-                break
+                collected["coins"].append(coin)
 
         for fruit in self.fruits[:]:
-            fruit_rect = pygame.Rect(fruit[0], fruit[1], CELL_SIZE, CELL_SIZE)
-            if player_rect.colliderect(fruit_rect):
-                self.fruits.remove(fruit)  # ✅ Supprime le fruit immédiatement
-                player.score += 50  # ✅ Pac-Man gagne 50 points
-                player.activate_super_power()  # ✅ ACTIVE DIRECTEMENT LE SUPER POUVOIR
-                MAP_DATA[fruit[1] // CELL_SIZE][fruit[0] // CELL_SIZE] = 0
+            fruit_rect = (fruit[0], fruit[1], CELL_SIZE, CELL_SIZE)
+            if rects_overlap(player_rect, fruit_rect):
+                self.fruits.remove(fruit)
+                collected["fruits"].append(fruit)
 
-
+        return collected
