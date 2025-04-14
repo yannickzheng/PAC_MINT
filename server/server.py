@@ -7,7 +7,7 @@ from rooms import RoomManager
 import threading
 
 import json
-
+import uuid
 
 #Paramètres
 timeout = 10 #temps en seconde pour considérer un joueur inactif
@@ -63,83 +63,84 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
     """
     print(f"Connexion établie avec le joueur {joueur_actuel} depuis {address}")
 
+    #Sécurité, on impose que room_id est bien un int
+    room_id = int(room_id)
+
     try:
-        # Vérificatier si la salle demandée existe
+        # On vérifie que la salle existe bien sinon on ferme la session
         if not room_manager.room_exists(room_id):
             print("Partie introuvable")
             connexion.close()
             return
 
-        room = room_manager.rooms[room_id]  # Récupération de la salle
+        # Récupération du salon
+        room = room_manager.rooms[room_id]
 
+        # Mise à jour des infos réseau du joueur
+        if joueur_actuel in room.players:
+            player = room.players[joueur_actuel]
+            player.ip = address[0]
+            player.tcp_port = address[1]
 
-
+        # Crée un dictionnaire avec les données des joueurs
         datas = {
-        "players": [
-                {"pos": [150, 150], "roles": "PacMan", "ip": None, "tcp_port": None},
-                {"pos": [950, 450], "roles": "Fantôme", "ip": None, "tcp_port": None},
-                {"pos": [920, 450], "roles": "Fantôme", "ip": None, "tcp_port": None},
-                {"pos": [950, 420], "roles": "Fantôme", "ip": None, "tcp_port": None},
-                {"pos": [920, 420], "roles": "Fantôme", "ip": None, "tcp_port": None}
-            ],
-            "current_player": address # Permet d'identifier quel joueur est en train de se connecter
+            "current_player_id": joueur_actuel,
+            "players": [
+                {
+                    "id": p_id,
+                    "pos": p.position,
+                    "roles": p.role,
+                    "ip": p.ip,
+                    "tcp_port": p.tcp_port
+                }
+                for p_id, p in room.players.items()
+            ]
         }
-
-        # Assigner dynamiquement le rôle et les informations réseau du joueur actuel
-        for player in datas["players"]:
-            if player["ip"] is None and player["tcp_port"] is None:  # Cherche un rôle libre
-                player["ip"] = address[0]
-                player["tcp_port"] = address[1]
-                break
 
         # Envoi des données initiales au client connecté
         connexion.send(str.encode(json.dumps(datas)))
         print("Envoi des données au client connecté")
 
-        #Mettre à jour le temps d'inactivité dès que le joueur se connecte
-        player_inactive_time[joueur_actuel] = time.time()
-
         while True:
             try:
-
-                # Réception des données mises à jour par le client
                 raw_data = connexion.recv(2048).decode()
                 if not raw_data:
                     print(f"Déconnexion du joueur {joueur_actuel}")
                     break
-                print(f"Reçu du joueur {joueur_actuel} : {raw_data}")
-                # Si le client envoie la commande GET_POS, on renvoie l'état actuel
+
                 if raw_data == "GET_POS":
-                    print(f"Envoi des positions au joueur {joueur_actuel}")
+                    print("test",datas)
                     connexion.sendall(json.dumps(datas).encode())
                     continue
-                else:
-                    print(f"Commande inconnue : {raw_data}")
 
-                # Sinon, on considère que le client envoie des données JSON pour mettre à jour sa position
                 all_players_updated = json.loads(raw_data)
+                #print(all_players_updated)
+                for pdata in all_players_updated.get("players", []):
+                    pid = pdata["id"]
+                    pos = pdata["pos"]
+                    if pid in room.players:
+                        room.players[pid].update_position(pos)
 
-                for i, updated_player in enumerate(all_players_updated["players"]):
-                    if datas["players"][i]["ip"] is not None:  # Mettre à jour uniquement les joueurs actifs
-                        datas["players"][i]["pos"] = updated_player["pos"]
+                # Mettre à jour le paquet datas
+                datas = {
+                    "current_player_id": joueur_actuel,
+                    "players": [
+                        {
+                            "id": p_id,
+                            "pos": p.position,
+                            "roles": p.role,
+                            "ip": p.ip,
+                            "tcp_port": p.tcp_port
+                        } for p_id, p in room.players.items()
+                    ]
+                }
 
-                # Renvoi les données mises à jour à tous les clients
                 connexion.sendall(json.dumps(datas).encode())
 
-                #Mettre à jour le temps d'inactivité
-                player_inactive_time[joueur_actuel] = time.time()
 
             except Exception as erreur:
                 print(f"Erreur avec le joueur {joueur_actuel} : {erreur}")
                 break
-        """
-        # Déconnexion : Libération du rôle
-        for player in datas["players"]:
-            if player["ip"] == address[0] and player["tcp_port"] == address[1]:
-                player["ip"] = None
-                player["tcp_port"] = None  # Réinitialisation du rôle
-                break
-        """
 
         connexion.close()
         room.leave(joueur_actuel)  # Supprime le joueur de la salle
@@ -162,23 +163,28 @@ def threaded_client(connexion, address):
             return
 
         data = json.loads(raw_data)
-        if data["action"] == "create_party":
-            room_name = "Test Room"
-            room = room_manager.create_room(room_name=room_name, room_id=data["code"], player_capacity=max_players)
-            room_id = data["code"]
+        if data["action"] == "CREATE_GAME":
 
-            player_id = threading.get_ident()  # Identifiant unique pour le joueur
-            if room_manager.join(player_id, room_id):
-                connexion.send(str.encode(json.dumps({"status": "ok", "room_id": room.identifier})))
-                start_new_thread(threaded_game_client, (connexion, player_id, room_id, address))
+            #On crée la partie
+            room_name = "Test Room"
+            room = room_manager.create_room(room_name=room_name)
+            room_code = room.code
+
+            player_id = str(uuid.uuid4())   # Identifiant unique pour le joueur
+            if room_manager.join(player_id, room_code) is not None:
+
+                #On envoie le code de la partie au joueur
+                connexion.send(str.encode(json.dumps({"status": "ok", "code": room_code})))
+                start_new_thread(threaded_game_client, (connexion, player_id, room_code, address))
             else:
                 connexion.send(str.encode(json.dumps({"status": "full"})))
                 connexion.close()
 
-        elif data["action"] == "join_party":
-            room_id = data["room_id"]
-            player_id = threading.get_ident()
-
+        elif data["action"] == "JOIN_GAME":
+            print(data)
+            room_id = data["code"]
+            #player_id = threading.get_ident()
+            player_id = str(uuid.uuid4())
             if room_manager.join(player_id, room_id):
                 start_new_thread(threaded_game_client, (connexion, player_id, room_id, address))
             else:

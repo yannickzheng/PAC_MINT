@@ -1,17 +1,31 @@
 import pygame
 from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
-from map import MAP_DATA
+from game.map import MAP_DATA
+import random
+import string
 
 class Player:
-    def __init__(self, x, y, role, ip, tcp_port, udp_port=None):
+    def __init__(self, ip, tcp_port, role, position):
+
         self.ip = ip
         self.tcp_port = int(tcp_port) if tcp_port else None
+        # self.udp_port = int(udp_port) # Pas prise en compte encore de udp
         self.tcp_addr = (self.ip, self.tcp_port)
+        # self.udp_addr = (self.ip, self.udp_port) # Pas prise en compte encore de udp
 
-        self.x = x
-        self.y = y
-        self.coord = (x, y)
+        self.role = role
+        self.id = None
+        self.is_pacman = "pacman" in role.lower()
+        self.is_phantom = "fantome" in role.lower()
+        self.is_coin = role == "Pièce"
+
+        #Position
+        self.position = position
+        self.x,self.y = position
+        self.coord = (self.x, self.y)
+
         self.color = (255, 0, 0)
+
         self.size = CELL_SIZE
         self.hitbox_size = int(self.size * 0.5)
         self.speed = CELL_SIZE // 6
@@ -29,9 +43,6 @@ class Player:
         self.image_super_up = pygame.transform.scale(pygame.image.load("images/Black Pacman-up.png"), (self.size, self.size))
         self.image_super_down = pygame.transform.scale(pygame.image.load("images/Black Pacman-down.png"), (self.size, self.size))
 
-        self.is_pacman = role == "PacMan"
-        self.is_phantom = role == "Fantôme"
-        self.is_coin = role == "Pièce"
         self.score = 0
         self.super_power_active = False
         self.super_power_timer = 0
@@ -39,6 +50,7 @@ class Player:
         self.invincibility_timer = 0
         self.is_eaten = False
         self.respawn_target = None  # Centre à atteindre quand mangé
+    
     def lose_life(self):
         if self.invincible:
             return
@@ -54,7 +66,6 @@ class Player:
             return
 
         pacman_center = (self.x + self.size // 2, self.y + self.size // 2)
-
         for player in players:
             if player != self and player.is_phantom:
                 ghost_center = (player.x + player.size // 2, player.y + player.size // 2)
@@ -72,6 +83,7 @@ class Player:
 
                     self.x, self.y = self.coord  # Annule le déplacement
                     return
+
 
     def activate_super_power(self, duration=200):
         self.super_power_active = True
@@ -171,6 +183,11 @@ class Player:
 
         self.x, self.y = new_x, new_y
         self.update()
+
+    def update_position(self, new_pos):
+        self.x, self.y = tuple(new_pos)
+        self.coord = new_pos
+        self.position = new_pos
 
     def update(self):
         self.coord = (self.x, self.y)

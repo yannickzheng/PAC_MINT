@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  server:
+    image: pacmint_image
+    container_name: pacmint_server
+    command: python server/server.py
+    ports:
+      - "5555:5555"
+    networks:
+      - pacmint_network
+
+  client:
+    image: pacmint_image
+    container_name: pacmint_client
+    command: python client/client.py
+    depends_on:
+      - server
+    environment:
+      - SERVER_IP=server
+    networks:
+      - pacmint_network
+
+networks:
+  pacmint_network:
+    driver: bridge

@@ -3,12 +3,6 @@ import socket
 import random
 import string
 
-def generate_unique_code():
-    """Génère un code aléatoire unique pour une nouvelle partie"""
-    while True:
-        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-        return code
-
 class Network:
     SERVER_ADDRESS = "localhost"  # Constante pour l'adresse IP du serveur
     SERVER_PORT = 5555  # Constante pour le port
@@ -102,12 +96,7 @@ class Network:
         except socket.error as e:
             print(e)
 
-    def create_party(self):
-        """Crée une nouvelle partie"""
-        code = generate_unique_code()
-        response = self.send(json.dumps({"action":"create_party", "code": code})) #
-        self.game_code = code
-        return code
+
 
     def join_party(self, code):
         """Rejoint une partie existante"""
