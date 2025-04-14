@@ -1,5 +1,7 @@
 import pygame
 
+
+
 try:
     pygame.mixer.init()
 except pygame.error:
@@ -16,6 +18,45 @@ import json
 
 import sys
 import os
+
+def ressource_path (path):
+    """Obtenir le chemin absolu de la ressource"""
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, path)
+    return os.path.join(os.path.abspath("."), path)
+
+def load_images (directory):
+    images = {}
+    for f in os.listdir(directory):
+        if f.endswith((".png",".jpg",)):
+            name = os.path.splitext(f)[0]
+            path = os.path.join(directory, f)
+            images[name] = pygame.image.load(path)
+    return images
+
+images = load_images(ressource_path("images"))
+background2 = images["background2"]
+black_pacman = images["Black Pacman"]
+black_pacman_down = images["Black Pacman-down"]
+black_pacman_left = images["Black Pacman-left"]
+black_pacman_up = images["Black Pacman-up"]
+cerise = images["cerise"]
+coin = images["coin"]
+cyan_ghost = images["cyan_ghost"]
+fraise = images["fraise"]
+pacman_down = images["pacman - down"]
+pacman_left = images["pacman - left"]
+pacman_right = images["pacman - right"]
+pacman_up = images["pacman - up"]
+piece = images["piece"]
+red_ghost = images["red_ghost"]
+
+background_sound_path = ressource_path("sound/background_sound.mp3")
+button_click_path = ressource_path("sound/button_click.mp3")
+game_sound_path = ressource_path("sound/game_sound.mp3")
+song_path = ressource_path("sound/song.mp3")
+background_sound = pygame.mixer.Sound(background_sound_path)
+
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
