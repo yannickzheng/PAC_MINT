@@ -31,7 +31,28 @@ except socket.error as e:
 s.listen(max_players)
 print("Serveur démarré, en attente de connexions...")
 
+#Gestion de l'arrêt du serveur
+def server_shutdown():
+    print("Arrêt du serveur...")
+    s.close()
+    sys.exit(0)
 
+#Gestion des joueurs inactifs
+
+player_inactive_time = {}
+def check_inactive_players():
+    """Comment voir qu'un joueur est inactif ?
+    Il garde la même position (normalement pas possible dans le vrai pacman, il avance tout le temps) ?
+    ou l'utilisateur ne touche pas à une touche pendant x temps ? Je crois que le client envoie des données
+     quoi qu'il arrive peut-être une modification à apporter au niveau de client"""
+
+    current_time = time.time()
+    for joueur, last_active in list(player_inactive_time.items()):
+        print(joueur, last_active)
+
+        if current_time - last_active > timeout:
+            print(f"Joueur {joueur} inactif")
+            del player_inactive_time[joueur]
 
 def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
     """
