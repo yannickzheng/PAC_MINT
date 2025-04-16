@@ -59,19 +59,6 @@ class Network:
         # Envoi de la commande au serveur
         self.client.sendall(command.encode())
         response = self.read_json_message()
-        print("reponse finisant par \n",response)
+
 
         return response
-
-    def send(self, data):
-        """
-        Envoie des données au serveur et attend une réponse
-        -Les données envoyés sont converties en bytes
-        :param data: données à envoyer au serveur
-        :return: données reçues du serveur (décodées en chaîne de caractères)
-        """
-        try:
-            self.client.send(str.encode(data))
-            return self.client.recv(2048*4).decode()
-        except socket.error as e:
-            print(e)
