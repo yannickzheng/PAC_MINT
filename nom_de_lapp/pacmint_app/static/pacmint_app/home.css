@@ -1,36 +1,57 @@
-body {
-    background-color: black;
-    color: yellow;
-    font-family: 'Press Start 2P', cursive;
-    text-align: center;
+/* Animation du logo */
+.logo-animation {
+    animation: float 2s infinite ease-in-out;
 }
 
-.title {
-    font-size: 50px;
-    text-shadow: 3px 3px blue;
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Ligne animée avec pacman + fantômes */
+.animation-line {
+    animation: slide 10s linear infinite;
+    gap: 20px;
+}
+
+@keyframes slide {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
 }
 
 .pacman {
-    width: 50px;
-    height: 50px;
-    background-color: yellow;
+    width: 0;
+    height: 0;
+    border: 25px solid #fcd000;
+    border-right-color: transparent;
     border-radius: 50%;
+    animation: chomping 0.5s infinite;
+}
+
+@keyframes chomping {
+    0%, 100% { border-right-color: transparent; }
+    50% { border-right-color: #fcd000; }
+}
+
+.ghost {
+    width: 40px;
+    height: 40px;
+    background-color: red;
+    border-radius: 50% 50% 0 0;
     position: relative;
-    animation: move 5s linear infinite;
 }
 
-@keyframes move {
-    from { left: 0; }
-    to { left: 100%; }
+.ghost::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 20px;
+    bottom: 0;
+    background: inherit;
+    border-radius: 50%;
 }
 
-.btn {
-    display: inline-block;
-    margin: 20px;
-    padding: 10px 20px;
-    color: black;
-    background-color: yellow;
-    text-decoration: none;
-    border-radius: 5px;
-    font-size: 20px;
-}
+.ghost.red { background-color: #ff0000; }
+.ghost.pink { background-color: #ffb8ff; }
+.ghost.cyan { background-color: #00ffff; }
+.ghost.orange { background-color: #ff9900; }
