@@ -84,6 +84,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
 
         # Crée un dictionnaire avec les données des joueurs
         datas = {
+            "action": "welcome",
             "current_player_id": joueur_actuel,
             "players": [
                 {
@@ -94,35 +95,24 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                     "tcp_port": p.tcp_port
                 }
                 for p_id, p in room.players.items()
-            ]
+            ],
+            "items": {
+                "coins": room.item_manager.coins,
+                "fruits": room.item_manager.fruits
+            }
         }
 
         # Envoi des données initiales au client connecté
         connexion.send(str.encode(json.dumps(datas)))
-        print("Envoi des données au client connecté")
 
         while True:
             try:
+                #On écoute le client
                 raw_data = connexion.recv(2048).decode()
-                if not raw_data:
-                    print(f"Déconnexion du joueur {joueur_actuel}")
-                    break
-
-                if raw_data == "GET_POS":
-                    print("test",datas)
-                    connexion.sendall(json.dumps(datas).encode())
-                    continue
-
-                all_players_updated = json.loads(raw_data)
-                #print(all_players_updated)
-                for pdata in all_players_updated.get("players", []):
-                    pid = pdata["id"]
-                    pos = pdata["pos"]
-                    if pid in room.players:
-                        room.players[pid].update_position(pos)
+                raw_data = json.loads(raw_data)
 
                 # Mettre à jour le paquet datas
-                datas = {
+                update_datas = {
                     "current_player_id": joueur_actuel,
                     "players": [
                         {
@@ -132,11 +122,40 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                             "ip": p.ip,
                             "tcp_port": p.tcp_port
                         } for p_id, p in room.players.items()
-                    ]
+                    ],
+                    "items": {
+                        "coins": room.item_manager.coins,
+                        "fruits": room.item_manager.fruits
+                    }
                 }
 
-                connexion.sendall(json.dumps(datas).encode())
+                if raw_data == "GET_POS":
 
+                    connexion.sendall((json.dumps(update_datas)+ '\n').encode())
+                    continue
+
+                if not raw_data:
+                    print(f"Déconnexion du joueur {joueur_actuel}")
+                    break
+                print(raw_data)
+                if raw_data and raw_data.get("action") == "UPDATE_POSITION":
+                    print(raw_data)
+                    for pdata in raw_data.get("players", []):
+                        pid = pdata["id"]
+                        pos = pdata["pos"]
+                        if pid in room.players:
+                            player = room.players[pid]
+                            player.update_position(pos)
+
+                            # Vérifie la collecte d’items pour ce joueur (uniquement si c'est Pacman)
+                            collected = room.item_manager.check_collision(player)
+                            if collected["coins"]:
+                                player.score += 10 * len(collected["coins"])
+                            if collected["fruits"]:
+                                player.score += 50 * len(collected["fruits"])
+                                # Active le pouvoir si besoin (à gérer côté client aussi)
+
+                    connexion.sendall(json.dumps(datas).encode())
 
             except Exception as erreur:
                 print(f"Erreur avec le joueur {joueur_actuel} : {erreur}")
