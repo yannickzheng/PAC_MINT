@@ -1,7 +1,5 @@
 import json
 import socket
-import random
-import string
 
 class Network:
     SERVER_ADDRESS = "localhost"  # Constante pour l'adresse IP du serveur
@@ -36,52 +34,34 @@ class Network:
                 print(f"Erreur lors de la connexion au serveur : {e}")
                 raise
 
+    def read_json_message(self):
+        """Lit un message JSON complet terminé par '\n'."""
+        buffer = ""
+        while True:
+            chunk = self.client.recv(2048).decode()
+            if not chunk:
+                break
+            buffer += chunk
+            if '\n' in buffer:
+                break
+        try:
+            return json.loads(buffer.strip())
+        except json.JSONDecodeError as e:
+            print(f"[Erreur JSON] {e}\nMessage reçu (tronqué ?) : {buffer}")
+            return None
+
     def send_command(self, command):
         """
         Méthode générique pour envoyer une commande au serveur et recevoir une réponse.
         :param command: La commande à envoyer.
         :return: La réponse du serveur.
         """
-        print(f"Envoi de la commande '{command}' au serveur")
+        # Envoi de la commande au serveur
         self.client.sendall(command.encode())
-        print("envoyé")
-        response = self.client.recv(self.BUFFER_SIZE).decode()
-        print(f"Réponse reçue : {response}")
+        response = self.read_json_message()
+        print("reponse finisant par \n",response)
+
         return response
-
-    def get_pos(self):
-        """
-        Récupère et retourne la position actuelle du joueur depuis le serveur.
-        """
-        print("GETPOS")
-        response = self.send_command("GET_POS")
-        print("Hello:", response)
-        print(f"<<<< {json.loads(response)}")
-        try:
-            return json.loads(response)
-        except json.JSONDecodeError as e:
-            print(f"Erreur de décodage JSON : {e}, réponse reçue : {response}")
-            return None
-
-    def connect(self):
-            """
-            Etablit une connexion avec le serveur :
-            -En cas de  succès, reçoit une donnée initiale telle que la positon du joueur
-            -En cas d'échec, la connexion est fermée
-            Renvoie les données reçues du serveur après la connexion (décodées en chaîne de caractères)
-            """
-            try:
-                #(self.client.connect(self.address)) #Connexion au serveur
-                print("Connecté au serveur correctement")
-                """
-                data = self.client.recv(2048).decode() #Récupération des données initiales du serveur (taille max = 2048 octets)
-                if data:
-                    self.pos = data
-                else:
-                    print("Aucune donnée reçue lors de la connexion initiale")
-                """
-            except Exception as e:
-                print(f"Erreur lors de la connexion {e}")
 
     def send(self, data):
         """
@@ -95,11 +75,3 @@ class Network:
             return self.client.recv(2048*4).decode()
         except socket.error as e:
             print(e)
-
-
-
-    def join_party(self, code):
-        """Rejoint une partie existante"""
-        self.send(json.dumps({"action":"join_party", "code": code}))
-        self.game_code = code
-        return True
