@@ -1,5 +1,6 @@
 import pygame
 import random
+import heapq
 from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
 from map import MAP_DATA
 
@@ -134,34 +135,77 @@ class Player:
 
         print("⚠ Aucun point de retour libre trouvé autour du centre.")
 
+    def heuristic(self, a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    def find_path(self, start, goal, map_data):
+        """Algorithme A* basique pour trouver un chemin sur ta MAP_DATA"""
+        open_set = []
+        heapq.heappush(open_set, (0, start))
+        came_from = {}
+        g_score = {start: 0}
+
+        while open_set:
+            _, current = heapq.heappop(open_set)
+
+            if current == goal:
+                # Reconstituer le chemin
+                path = []
+                while current in came_from:
+                    path.append(current)
+                    current = came_from[current]
+                path.reverse()
+                return path
+
+            x, y = current
+            neighbors = [
+                (x + 1, y),
+                (x - 1, y),
+                (x, y + 1),
+                (x, y - 1)
+            ]
+
+            for neighbor in neighbors:
+                nx, ny = neighbor
+                # Vérifie que le voisin est dans la carte et n'est pas un mur
+                if 0 <= nx < len(map_data[0]) and 0 <= ny < len(map_data):
+                    if map_data[ny][nx] == 1:
+                        continue
+
+                    tentative_g_score = g_score[current] + 1
+                    if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
+                        came_from[neighbor] = current
+                        g_score[neighbor] = tentative_g_score
+                        f_score = tentative_g_score + self.heuristic(neighbor, goal)
+                        heapq.heappush(open_set, (f_score, neighbor))
+
+        return []  # Aucun chemin trouvé
+
     def ghost_ai_move(self, pacman):
-        dx = pacman.x - self.x
-        dy = pacman.y - self.y
+        start = (int(self.x // CELL_SIZE), int(self.y // CELL_SIZE))
+        goal = (int(pacman.x // CELL_SIZE), int(pacman.y // CELL_SIZE))
 
-        directions = []
+        path = self.find_path(start, goal, MAP_DATA)
 
-        if dx > 0:
-            directions.append((self.speed, 0))
-        else:
-            directions.append((-self.speed, 0))
+        if path:
+            # Prendre la prochaine étape du chemin
+            next_cell = path[0]
+            target_x = next_cell[0] * CELL_SIZE
+            target_y = next_cell[1] * CELL_SIZE
 
-        if dy > 0:
-            directions.append((0, self.speed))
-        else:
-            directions.append((0, -self.speed))
+            dx = target_x - self.x
+            dy = target_y - self.y
 
-        random.shuffle(directions)
-
-        for move_x, move_y in directions:
-            new_x = self.x + move_x
-            new_y = self.y + move_y
-
-            if not self.is_wall(new_x, self.y):
-                self.x = new_x
-                break
-            elif not self.is_wall(self.x, new_y):
-                self.y = new_y
-                break
+            if abs(dx) > abs(dy):
+                if dx > 0:
+                    self.x += self.speed
+                else:
+                    self.x -= self.speed
+            else:
+                if dy > 0:
+                    self.y += self.speed
+                else:
+                    self.y -= self.speed
 
     def move(self, players):
         if self.invincible:
