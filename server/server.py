@@ -49,7 +49,7 @@ def check_inactive_players():
 
     current_time = time.time()
     for joueur, last_active in list(player_inactive_time.items()):
-        print(joueur, last_active)
+        #print(joueur, last_active)
 
         if current_time - last_active > timeout:
             print(f"Joueur {joueur} inactif")
@@ -65,7 +65,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
     print(f"Connexion établie avec le joueur {joueur_actuel} depuis {address}")
 
     #Sécurité, on impose que room_id est bien un int
-    #room_id = int(room_id)
+    room_id = int(room_id)
 
     try:
         # On vérifie que la salle existe bien sinon on ferme la session
@@ -99,6 +99,8 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
             ]
         }
 
+        connexion.sendall(json.dumps(datas).encode())
+
         """
         datas = {
             "action": "welcome",
@@ -125,7 +127,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                 #On écoute le client
                 raw_data = connexion.recv(2048).decode()
                 raw_data = json.loads(raw_data)
-                print("raw",raw_data)
+                #print("raw",raw_data)
 
 
                 # Mettre à jour le paquet datas
@@ -164,14 +166,14 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                 if raw_data.get("command", False) == Protocols.Request.GET_POS :
                     json_data = json.dumps(datas)
                     connexion.send(json_data.encode())
-                    print("Coucouu",json_data)
+                    #print("Coucouu",json_data)
 
                 if not raw_data.get("command", False):
                     print(f"Déconnexion du joueur {joueur_actuel}")
                     break
-                print(raw_data)
+                #print(raw_data)
                 if raw_data and raw_data.get("command") == Protocols.Request.UPDATE_POSITION:
-                    print(raw_data)
+                    #print(raw_data)
                     for pdata in raw_data.get("players", []):
                         pid = pdata["id"]
                         pos = pdata["pos"]
@@ -235,12 +237,12 @@ def threaded_client(connexion, address):
                 connexion.close()
 
         elif data["command"] == Protocols.Request.JOIN_ROOM:
-            print(data)
+            #print(data)
             room_id = data["message"]
             player_id = str(uuid.uuid4())
             if room_manager.join(player_id, room_id):
-                connexion.send(str.encode(json.dumps({"status": "ok"})))
-                start_new_thread(threaded_game_client, (connexion, player_id, room_id, address))
+                connexion.send(str.encode(json.dumps({"status": "joined", "message": "Welcome to the room"})))
+                threaded_game_client(connexion, player_id, room_id, address)
                 #return
             else:
                 connexion.send(
