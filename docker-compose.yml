@@ -17,18 +17,21 @@ services:
       dockerfile: game/Dockerfile
     container_name: pacmint-client
     environment:
-      - DISPLAY=${DISPLAY:-host.docker.internal:0.0}  #utiliser la variable hôte ou une valeur par défaut
+      - DISPLAY=${DISPLAY:-host.docker.internal:0.0}
       - SDL_AUDIODRIVER=alsa
       - XDG_RUNTIME_DIR=/tmp
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix  #affichage X11
-      - /dev/snd:/dev/snd  #pour l'audio
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /dev/snd:/dev/snd
+      - /dev/dri:/dev/dri  # Pour l'accès graphique
     devices:
       - /dev/snd:/dev/snd
+      - /dev/dri:/dev/dri  # Pour l'accès graphique
+    privileged: true  # Pour garantir l'accès audio et graphique
     network_mode: host
     depends_on:
       - server
     command: >
-      bash -c "sleep 10 && python game/pacmint.py"
+      bash -c "sleep 5 && python game/pacmint.py"
     tty: true
     stdin_open: true

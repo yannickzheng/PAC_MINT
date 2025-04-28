@@ -1,16 +1,16 @@
 import pygame
 
-try:
-    pygame.mixer.init()
-except pygame.error:
-    pass
+# try:
+#     pygame.mixer.init()
+# except pygame.error:
+#     pass
 
 from common.global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
 from common.reseaux import Network
 from player import Player
 from map import MAP_SURFACE
 from items import ItemManager
-from pygame import mixer
+#from pygame import mixer
 
 import json
 
@@ -68,14 +68,17 @@ font = pygame.font.SysFont("Arial", 24)
 image = pygame.image.load("images/background2.png")
 
 # musique
-mixer.init()
-
-mixer.music.load(ressource_path("sound/background_sound.mp3"))
-mixer.music.set_volume(0.9)
-mixer.music.play(-1)
-
-button_click = mixer.Sound(ressource_path("sound/button_click.mp3"))
-button_click.set_volume(5)
+# try:
+#     mixer.init()
+# except pygame.error as e:
+#     print(f"Erreur d'initialisation de l'audio : {e}")
+#
+# mixer.music.load(ressource_path("sound/background_sound.mp3"))
+# mixer.music.set_volume(0.9)
+# mixer.music.play(-1)
+#
+# button_click = mixer.Sound(ressource_path("sound/button_click.mp3"))
+# button_click.set_volume(5)
 
 
 def draw_button(text, x, y, width, height, base_color, glow_color, screen):
@@ -129,7 +132,7 @@ def create_game():
                 run = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                button_click.play()
+                #button_click.play()
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
@@ -158,7 +161,7 @@ def main_menu():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                button_click.play()
+                #button_click.play()
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
@@ -192,7 +195,7 @@ def join_game():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                button_click.play()
+                #button_click.play()
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
@@ -205,11 +208,11 @@ def join_game():
 def main_game(game_code):
     print("Début de la fonction main_game()")
 
-    mixer.init()
-
-    mixer.music.load(ressource_path("sound/game_sound.mp3"))
-    mixer.music.set_volume(0.3)
-    mixer.music.play(-1)
+    # mixer.init()
+    #
+    # mixer.music.load(ressource_path("sound/game_sound.mp3"))
+    # mixer.music.set_volume(0.3)
+    # mixer.music.play(-1)
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
 
