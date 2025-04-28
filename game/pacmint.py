@@ -210,18 +210,20 @@ def main_game(is_created_game, game_code = None):
     if not is_created_game:
 
         response = n.send_command(Protocols.Request.JOIN_ROOM, game_code)
-        response_data = json.loads(response)
 
     #Si le joueur souhaite créer une partie, il envoie une demande au serveur
     if is_created_game:
         # Le client demande la création d'une partie au serveur
-
+        print("Game started")
         response = n.send_command(Protocols.Request.CREATE_GAME)
         game_code = response.get("code", "")
         print(f"Code de la partie créée : {game_code}")
 
     # On demande les positions au serveur
+    print("GET POS")
     all_players_data = n.send_command(Protocols.Request.GET_POS)
+    print("fin")
+    print(all_players_data)
     print("Joueurs récupérés :", all_players_data["players"])
 
     # création de la liste des joueurs
@@ -256,7 +258,6 @@ def main_game(is_created_game, game_code = None):
 
         # Envoie les nouvelles positions au serveur
         payload = {
-            "action": "UPDATE_POSITION",
             "players": [
                 {
                     "id": current_player.id,
@@ -265,10 +266,10 @@ def main_game(is_created_game, game_code = None):
             ]
         }
 
-        response = n.send_command(json.dumps(payload))
+        response = n.send_command(Protocols.Request.UPDATE_POSITION, payload)
         print(f"Réponse du serveur : '{response}'")
 
-        updated_data = json.loads(response)
+        updated_data = response
         print("updated",updated_data)
 
         coins = updated_data.get("items", {}).get("coins", [])

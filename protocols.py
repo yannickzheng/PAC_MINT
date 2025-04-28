@@ -18,3 +18,4 @@ class Protocols:
         JOIN_ROOM = "protocol.join_room"
         CREATE_GAME = "protocol.create_game"
         GET_POS = "protocol.get_pos"
+        UPDATE_POSITION = "protocol.update_position"
