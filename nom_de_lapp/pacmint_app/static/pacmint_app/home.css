@@ -1,89 +1,57 @@
-body {
-    background-color: #000;
-    background-image: radial-gradient(#111 1px, transparent 1px);
-    background-size: 20px 20px;
-    overflow-x: hidden;
+/* Animation du logo */
+.logo-animation {
+    animation: float 2s infinite ease-in-out;
 }
 
-.game-area {
-    width: 100%;
-    max-width: 700px;
-    height: 150px;
-    margin-top: 20px;
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Ligne animée avec pacman + fantômes */
+.animation-line {
+    animation: slide 10s linear infinite;
+    gap: 20px;
+}
+
+@keyframes slide {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+
+.pacman {
+    width: 0;
+    height: 0;
+    border: 25px solid #fcd000;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: chomping 0.5s infinite;
+}
+
+@keyframes chomping {
+    0%, 100% { border-right-color: transparent; }
+    50% { border-right-color: #fcd000; }
+}
+
+.ghost {
+    width: 40px;
+    height: 40px;
+    background-color: red;
+    border-radius: 50% 50% 0 0;
     position: relative;
 }
 
-/* Pacman animé */
-.pacman {
+.ghost::before {
+    content: '';
     position: absolute;
-    top: 50px;
-    left: 0;
-    width: 60px;
-    height: 60px;
-    background: yellow;
-    border-radius: 50%;
-    clip-path: polygon(50% 50%, 100% 0, 100% 100%);
-    animation: moveRight 6s linear infinite, mouthMovement 0.4s ease-in-out infinite;
-    z-index: 3;
-}
-
-/* Animation de la bouche de Pacman */
-@keyframes mouthMovement {
-    0% { clip-path: polygon(50% 50%, 100% 0, 100% 100%); }
-    50% { clip-path: polygon(50% 50%, 100% 10%, 100% 90%); }
-    100% { clip-path: polygon(50% 50%, 100% 0, 100% 100%); }
-}
-
-/* Fantômes animés */
-.ghost {
-    position: absolute;
-    top: 50px;
-    width: 60px;
-    height: 60px;
-    background-color: red; /* Default color */
-    border-radius: 50%;
-    animation: moveGhost 6s linear infinite;
-}
-
-.ghost.red {
-    background: red;
-    animation-delay: 0s;
-}
-
-.ghost.pink {
-    background: pink;
-    animation-delay: 0.2s;
-}
-
-.ghost.cyan {
-    background: cyan;
-    animation-delay: 0.4s;
-}
-
-.ghost.orange {
-    background: orange;
-    animation-delay: 0.6s;
-}
-
-/* Animation du déplacement de Pacman */
-@keyframes moveRight {
-    0% { left: -80px; }
-    100% { left: 100%; }
-}
-
-/* Animation de déplacement des fantômes (se déplacent de droite à gauche) */
-@keyframes moveGhost {
-    0% { left: 100%; }
-    100% { left: -80px; }
-}
-
-/* Labyrinthe de fond (exemple simple) */
-.labyrinth {
-    position: absolute;
-    top: 30px;
-    left: 0;
     width: 100%;
-    height: 100px;
-    background: linear-gradient(90deg, #444, #888);
-    opacity: 0.1;
+    height: 20px;
+    bottom: 0;
+    background: inherit;
+    border-radius: 50%;
 }
+
+.ghost.red { background-color: #ff0000; }
+.ghost.pink { background-color: #ffb8ff; }
+.ghost.cyan { background-color: #00ffff; }
+.ghost.orange { background-color: #ff9900; }
