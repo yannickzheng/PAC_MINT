@@ -31,8 +31,10 @@ def home(request):
     return render(request, 'home.html')
 
 
+from django.contrib.auth.views import LoginView
+
 class CustomLoginView(LoginView):
-    template_name = "login.html"  # Ton nouveau template
+    template_name = 'login.html'  # ➔ au lieu de 'registration/login.html'
 
 
 

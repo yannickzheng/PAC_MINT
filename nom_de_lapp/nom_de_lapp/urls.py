@@ -19,7 +19,7 @@ from pacmint_app.views import register_player, home  # ✅ Vérifie que .views e
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    path("connexion/", auth_views.LoginView.as_view(), name="login"),  # Ajoute cette ligne
+    path("login/", auth_views.LoginView.as_view(), name="login"),  # Ajoute cette ligne
     path("", home, name="home"),
     path("inscription/", register_player, name="register"),
 ]
