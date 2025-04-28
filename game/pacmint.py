@@ -1,10 +1,12 @@
 import pygame
 
 from common.global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
-from common.reseaux import Network
+from common.network import Network
 from player import Player
 from map import MAP_SURFACE
 from pygame import mixer
+
+from protocols import Protocols
 
 import json
 
@@ -206,39 +208,23 @@ def main_game(is_created_game, game_code = None):
     n = Network()
 
     if not is_created_game:
-        message = json.dumps({
-            "action": "JOIN_GAME",
-            "code": game_code
-        })
-        response = n.send(message)
-        response_data = json.loads(response)
 
-        """
-        if response_data.get("status") != "OK":
-            print("Impossible de rejoindre la partie")
-            return
-            
-        """
+        response = n.send_command(Protocols.Request.JOIN_ROOM, game_code)
+        response_data = json.loads(response)
 
     #Si le joueur souhaite créer une partie, il envoie une demande au serveur
     if is_created_game:
         # Le client demande la création d'une partie au serveur
-        message = json.dumps({
-            "action": "CREATE_GAME"
-        })
-        response = n.send(message)
 
-        response_data = json.loads(response)
-        game_code = response_data.get("code", "")
+        response = n.send_command(Protocols.Request.CREATE_GAME)
+        game_code = response.get("code", "")
         print(f"Code de la partie créée : {game_code}")
 
-    # On va récupérer les données de tous les joueurs (par exemple leur position et leur rôle)
-    print("demande position serveur")
-    all_players_data = n.get_pos()
-    print("Joueurs récupérés :", all_players_data)
+    # On demande les positions au serveur
+    all_players_data = n.send_command(Protocols.Request.GET_POS)
+    print("Joueurs récupérés :", all_players_data["players"])
 
     # création de la liste des joueurs
-
     players = {}
     current_player_id = all_players_data["current_player_id"]
 
@@ -251,8 +237,8 @@ def main_game(is_created_game, game_code = None):
         players[player.id] = player
 
     # Initialisation de la police pour afficher le score
-    coins = all_players_data.get("items", {}).get("coins", [])
-    fruits = all_players_data.get("items", {}).get("fruits", [])
+    #coins = all_players_data.get("items", {}).get("coins", [])
+    #fruits = all_players_data.get("items", {}).get("fruits", [])
 
     run = True
 
@@ -270,6 +256,7 @@ def main_game(is_created_game, game_code = None):
 
         # Envoie les nouvelles positions au serveur
         payload = {
+            "action": "UPDATE_POSITION",
             "players": [
                 {
                     "id": current_player.id,
@@ -277,9 +264,12 @@ def main_game(is_created_game, game_code = None):
                 }
             ]
         }
-        response = n.send(json.dumps(payload))
-        updated_data = json.loads(response)["players"]
-        #print(updated_data)
+
+        response = n.send_command(json.dumps(payload))
+        print(f"Réponse du serveur : '{response}'")
+
+        updated_data = json.loads(response)
+        print("updated",updated_data)
 
         coins = updated_data.get("items", {}).get("coins", [])
         fruits = updated_data.get("items", {}).get("fruits", [])
