@@ -1,20 +1,41 @@
-# PAC_MINT
 
-Pour jouer, suivez ces étapes :
+# PacMint
 
-## Lancer le jeu
+Jeu multijoueur
 
-1. **Lancer le serveur :**
-   - Ouvrez le dossier `server`.
-   - Exécutez le programme `server.py`.
 
-2. **Lancer le client :**
-   - Ouvrez le dossier `game`.
-   - Exécutez le programme `pacmint.py`.
+## Déploiement
 
-## Démarrer une partie
+Pour lancer le projet (Linux):
 
-- Cliquez sur **Créer une partie**.
-- Cliquez sur **Lancer une partie**.
+### Configurer X11:
 
-> **Remarque :** Le système de connexion à une partie déjà existante n'est pas encore finalisé.
+Autoriser Docker à accéder au serveur X11 :
+
+```bash
+xhost +local:docker
+```
+Vérifier les périphériques graphiques :
+Assurez-vous que /dev/dri existe :
+
+```bash
+ls /dev/dri
+```
+
+
+Si /dev/dri/card1 n'existe pas, vérifiez votre pilote graphique :
+
+```bash
+glxinfo | grep "OpenGL renderer"
+```
+
+Installez les pilotes appropriés (par exemple, mesa-vulkan-drivers pour Intel/AMD).
+
+
+### Construire et lancer le jeu 
+
+```bash
+docker-compose down
+docker-compose build
+docker-compose up -d
+```
