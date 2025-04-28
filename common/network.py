@@ -34,6 +34,25 @@ class Network:
                 print(f"Erreur lors de la connexion au serveur : {e}")
                 raise
 
+    def send_command(self, request, message = None):
+        """
+        Méthode générique pour envoyer une commande au serveur et recevoir une réponse.
+        :param request: La commande à envoyer
+        :param message: le message à transmettre
+        :return: La réponse du serveur.
+        """
+        # Envoi de la commande au serveur
+        data = json.dumps({"command": request, "message": message})
+        self.client.sendall(data.encode())
+        #response = self.read_json_message()
+        response = self.receive_j()
+
+
+        return response
+
+    def receive(self):
+        return self.client.recv(Network.BUFFER_SIZE).decode()
+
     def read_json_message(self):
         """Lit un message JSON complet terminé par '\n'."""
         buffer = ""
@@ -50,15 +69,24 @@ class Network:
             print(f"[Erreur JSON] {e}\nMessage reçu (tronqué ?) : {buffer}")
             return None
 
-    def send_command(self, command):
-        """
-        Méthode générique pour envoyer une commande au serveur et recevoir une réponse.
-        :param command: La commande à envoyer.
-        :return: La réponse du serveur.
-        """
-        # Envoi de la commande au serveur
-        self.client.sendall(command.encode())
-        response = self.read_json_message()
+    def receive_j(self):
+        buffer = ""
+        open_braces = 0
+        close_braces = 0
 
+        while True:
+            data = self.client.recv(2048)
+            if not data:
+                raise ConnectionError("Socket closed")
 
-        return response
+            buffer += data.decode()
+
+            # Compter les accolades
+            open_braces += buffer.count('{')
+            close_braces += buffer.count('}')
+
+            # Si le nombre d'accolades ouvrantes = fermantes → JSON complet
+            if open_braces > 0 and open_braces == close_braces:
+                break
+
+        return json.loads(buffer)
