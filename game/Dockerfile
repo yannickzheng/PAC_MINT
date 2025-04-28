@@ -14,4 +14,8 @@ COPY images/ ./images/
 COPY sound/ ./sound/
 RUN pip install --no-cache-dir -r requirements.txt
 ENV PYTHONPATH=/app
+ENV DISPLAY=host.docker.internal:0.0
 CMD ["python", "game/pacmint.py"]
+
+
+
