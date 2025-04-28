@@ -5,10 +5,11 @@ import random
 import string
 
 class Player:
-    def __init__(self, ip, tcp_port, role, position):
+    def __init__(self, ip, tcp_port, role, position, tcp_socket=None):
 
         self.ip = ip
         self.tcp_port = int(tcp_port) if tcp_port else None
+        self.tcp_socket = tcp_socket
         # self.udp_port = int(udp_port) # Pas prise en compte encore de udp
         self.tcp_addr = (self.ip, self.tcp_port)
         # self.udp_addr = (self.ip, self.udp_port) # Pas prise en compte encore de udp

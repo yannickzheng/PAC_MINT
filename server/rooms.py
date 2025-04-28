@@ -3,6 +3,7 @@ import json
 import random
 import string
 from game.player import Player
+from game.items import ServerItemManager
 
 """Faire en sort qu'un joueur n'est présent que dans une seule salle"""
 
@@ -99,6 +100,8 @@ class Room:
             "fantome_3": (950, 420),
             "fantome_4": (920, 420)
         }
+        self.item_manager = ServerItemManager()
+
 
     def update_position(self, role_key, new_pos):
         if role_key in self.players:
@@ -132,3 +135,13 @@ class Room:
     def is_player_in_room(self, player_id):
         """Le joueur est il dans la salle?"""
         return player_id in self.players
+
+    def broadcast(self, msg: dict, exclude_id: str | None = None):
+        data = json.dumps(msg).encode()
+        for pid, p in self.players.items():
+            if pid == exclude_id:
+                continue
+            try:
+                p.tcp_socket.sendall(data)
+            except Exception as e:
+                print(f"[ROOM] Impossible d’envoyer au joueur {pid} : {e}")

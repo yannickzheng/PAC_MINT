@@ -82,6 +82,8 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
             player = room.players[joueur_actuel]
             player.ip = address[0]
             player.tcp_port = address[1]
+            player.tcp_socket = connexion
+
 
         # Crée un dictionnaire avec les données des joueurs
         datas = {
@@ -172,7 +174,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                     print(f"Déconnexion du joueur {joueur_actuel}")
                     break
                 #print(raw_data)
-                if raw_data and raw_data.get("command") == Protocols.Request.UPDATE_POSITION:
+                if raw_data.get("command") == Protocols.Request.UPDATE_POSITION:
                     #print(raw_data)
                     for pdata in raw_data.get("players", []):
                         pid = pdata["id"]
@@ -189,7 +191,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                                 player.score += 50 * len(collected["fruits"])
                                 # Active le pouvoir si besoin (à gérer côté client aussi)
 
-                    #Je ne sais pas à quoi correspond cette ligne
+                    room.broadcast(update_datas, exclude_id=joueur_actuel)
                     connexion.sendall(json.dumps(update_datas).encode())
 
             except Exception as erreur:
