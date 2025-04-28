@@ -210,7 +210,7 @@ def main_game(is_created_game, game_code = None):
     if not is_created_game:
 
         response = n.send_command(Protocols.Request.JOIN_ROOM, game_code)
-
+        print(response)
     #Si le joueur souhaite créer une partie, il envoie une demande au serveur
     if is_created_game:
         # Le client demande la création d'une partie au serveur
@@ -269,14 +269,14 @@ def main_game(is_created_game, game_code = None):
         response = n.send_command(Protocols.Request.UPDATE_POSITION, payload)
         print(f"Réponse du serveur : '{response}'")
 
-        updated_data = response
-        print("updated",updated_data)
+        print("updated",response)
 
-        coins = updated_data.get("items", {}).get("coins", [])
-        fruits = updated_data.get("items", {}).get("fruits", [])
+        coins = response.get("items", {}).get("coins", [])
+        fruits = response.get("items", {}).get("fruits", [])
 
         # Met à jour la position des autres joueurs sur l'interface récupéré par le serveur
-        for data in updated_data:
+
+        for data in response.get("players", []):
             pid = data["id"]
             if pid == current_player_id:
                 continue  # on ignore notre propre joueur
