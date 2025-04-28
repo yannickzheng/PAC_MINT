@@ -129,6 +129,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
 
 
                 # Mettre à jour le paquet datas
+                """
                 update_datas = {
                     "current_player_id": joueur_actuel,
                     "players": [
@@ -145,12 +146,25 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                         "fruits": room.item_manager.fruits
                     }
                 }
+                """
+
+                update_datas = {
+                    "current_player_id": joueur_actuel,
+                    "players": [
+                        {
+                            "id": p_id,
+                            "pos": p.position,
+                            "roles": p.role,
+                            "ip": p.ip,
+                            "tcp_port": p.tcp_port
+                        } for p_id, p in room.players.items()
+                    ]
+                }
 
                 if raw_data.get("command", False) == Protocols.Request.GET_POS :
                     json_data = json.dumps(datas)
                     connexion.send(json_data.encode())
                     print("Coucouu",json_data)
-                    continue
 
                 if not raw_data.get("command", False):
                     print(f"Déconnexion du joueur {joueur_actuel}")
@@ -174,7 +188,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                                 # Active le pouvoir si besoin (à gérer côté client aussi)
 
                     #Je ne sais pas à quoi correspond cette ligne
-                    connexion.sendall(json.dumps(datas).encode())
+                    connexion.sendall(json.dumps(update_datas).encode())
 
             except Exception as erreur:
                 print(f"Erreur avec le joueur {joueur_actuel} : {erreur}")
@@ -215,18 +229,19 @@ def threaded_client(connexion, address):
                 #On envoie le code de la partie au joueur
                 connexion.send(str.encode(json.dumps({"status": "ok", "code": room_code})))
                 start_new_thread(threaded_game_client, (connexion, player_id, room_code, address))
-                return
+                #return
             else:
                 connexion.send(str.encode(json.dumps({"status": "full"})))
                 connexion.close()
 
         elif data["command"] == Protocols.Request.JOIN_ROOM:
             print(data)
-            room_id = data["code"]
+            room_id = data["message"]
             player_id = str(uuid.uuid4())
             if room_manager.join(player_id, room_id):
+                connexion.send(str.encode(json.dumps({"status": "ok"})))
                 start_new_thread(threaded_game_client, (connexion, player_id, room_id, address))
-                return
+                #return
             else:
                 connexion.send(
                     str.encode(json.dumps({"status": "full" if room_manager.room_exists(room_id) else "not_found"})))
