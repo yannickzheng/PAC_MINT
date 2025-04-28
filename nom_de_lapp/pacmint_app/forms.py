@@ -1,5 +1,5 @@
 from django import forms
-from game.pacmint_app.models import Player
+from .models import Player
 
 
 class PlayerRegistrationForm(forms.ModelForm):
