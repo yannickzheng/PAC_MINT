@@ -1,0 +1,57 @@
+/* Fond noir avec effet arcade */
+body {
+    background-color: #000;
+    color: #FFD700;
+    font-family: 'Press Start 2P', cursive;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Style de la navbar */
+.navbar {
+    background-color: #111;
+    padding: 15px;
+}
+
+.navbar-brand {
+    color: #FFD700 !important;
+    font-size: 20px;
+}
+
+/* Carte d'inscription */
+.card {
+    background-color: #111;
+    color: #FFD700;
+    border: 2px solid #FFD700;
+    padding: 20px;
+    max-width: 400px;
+    margin: auto;
+    border-radius: 10px;
+}
+
+/* Style du bouton Pac-Man */
+.btn-pacman {
+    background-color: #FFD700;
+    color: #111;
+    font-size: 16px;
+    border-radius: 50px;
+    padding: 10px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.btn-pacman:hover {
+    transform: scale(1.1);
+    background-color: #FF4500;
+    color: #fff;
+}
+
+/* Formulaires */
+input, select, textarea {
+    background-color: #222;
+    color: #FFD700;
+    border: 2px solid #FFD700;
+    padding: 5px;
+    width: 100%;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}

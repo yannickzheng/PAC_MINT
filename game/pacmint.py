@@ -1,10 +1,5 @@
 import pygame
 
-# try:
-#     pygame.mixer.init()
-# except pygame.error:
-#     pass
-
 from common.global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
 from common.reseaux import Network
 from player import Player
@@ -17,46 +12,6 @@ import json
 import sys
 import os
 
-
-def ressource_path(path):
-    """Obtenir le chemin absolu de la ressource"""
-    if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, path)
-    return os.path.join(os.path.abspath("."), path)
-
-
-def load_images(directory):
-    images = {}
-    for f in os.listdir(directory):
-        if f.endswith((".png", ".jpg",)):
-            name = os.path.splitext(f)[0]
-            path = os.path.join(directory, f)
-            images[name] = pygame.image.load(ressource_path(path))
-    return images
-
-
-images = load_images(ressource_path("images"))
-background2 = images["background2"]
-black_pacman = images["Black Pacman"]
-black_pacman_down = images["Black Pacman-down"]
-black_pacman_left = images["Black Pacman-left"]
-black_pacman_up = images["Black Pacman-up"]
-cerise = images["cerise"]
-coin = images["coin"]
-cyan_ghost = images["cyan_ghost"]
-fraise = images["fraise"]
-pacman_down = images["pacman - down"]
-pacman_left = images["pacman - left"]
-pacman_right = images["pacman - right"]
-pacman_up = images["pacman - up"]
-piece = images["piece"]
-red_ghost = images["red_ghost"]
-
-background_sound_path = ressource_path("sound/background_sound.mp3")
-button_click_path = ressource_path("sound/button_click.mp3")
-game_sound_path = ressource_path("sound/game_sound.mp3")
-song_path = ressource_path("sound/song.mp3")
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 pygame.init()
@@ -67,17 +22,14 @@ font = pygame.font.SysFont("Arial", 24)
 
 image = pygame.image.load("images/background2.png")
 
-# musique
-# try:
-#     mixer.init()
-# except pygame.error as e:
-#     print(f"Erreur d'initialisation de l'audio : {e}")
+# # musique
+# mixer.init()
 #
-# mixer.music.load(ressource_path("sound/background_sound.mp3"))
+# mixer.music.load("sound/background_sound.mp3")
 # mixer.music.set_volume(0.9)
 # mixer.music.play(-1)
 #
-# button_click = mixer.Sound(ressource_path("sound/button_click.mp3"))
+# button_click = mixer.Sound("sound/button_click.mp3")
 # button_click.set_volume(5)
 
 
@@ -117,14 +69,13 @@ def generate_code():
     print(f"Code généré : {code}")
     return code
 
-
 def create_game():
     game_code = None
     run = True
 
     while run:
         screen.blit(image, (0, 0))
-        # draw_button("Générer un code", 250, 600, 200, 50, BLUE, CYAN, screen)
+        #draw_button("Générer un code", 250, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Lancer la partie", 550, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen)
         for event in pygame.event.get():
@@ -136,8 +87,8 @@ def create_game():
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
-                        # Pas d'interet
-                        game_code = None  # Génération d'un code
+                        #Pas d'interet
+                        game_code = None # Génération d'un code
                     elif 550 <= x <= 750:
                         main_game(game_code)  # On lance une partie si un code a été généré
 
@@ -174,17 +125,14 @@ def main_menu():
                         sys.exit()
         pygame.display.flip()
 
-
 def lobby():
     pass
-
-
 def join_game():
     run = True
     while run:
         screen.blit(image, (0, 0))
-        # game_code = "0399"
-        # draw_button(f"Code: {game_code}", 250, 500, 400, 50, BLUE, CYAN, screen)
+        #game_code = "0399"
+        #draw_button(f"Code: {game_code}", 250, 500, 400, 50, BLUE, CYAN, screen)
         draw_button("Rejoindre", 250, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Retour", 550, 600, 200, 50, BLUE, PURPLE, screen)
         for event in pygame.event.get():
@@ -204,13 +152,11 @@ def join_game():
                         main_menu()
         pygame.display.flip()
 
-
 def main_game(game_code):
-    print("Début de la fonction main_game()")
 
     # mixer.init()
     #
-    # mixer.music.load(ressource_path("sound/game_sound.mp3"))
+    # mixer.music.load("sound/game_sound.mp3")
     # mixer.music.set_volume(0.3)
     # mixer.music.play(-1)
     pygame.font.init()
@@ -220,6 +166,20 @@ def main_game(game_code):
 
     n = Network()
     print("Connexion au serveur...")
+
+    # Fonction de décode JSON sécurisée
+    # Cette fonction permet d'éviter les plantages liés à des réponses JSON mal formées
+    # Parfois, le serveur envoie plusieurs objets JSON collés ensemble (ex: {"a":1}{"b":2})
+    # Ce cas provoque une erreur `json.decoder.JSONDecodeError: Extra data`
+    # On utilise `raw_decode()` pour ne lire que le premier objet JSON valide
+
+    def safe_json_load(s):
+        decoder = json.JSONDecoder()
+        try:
+            obj, _ = decoder.raw_decode(s)
+            return obj
+        except json.JSONDecodeError as e:
+            return None
 
     # Demander à l'utilisateur de créer ou rejoindre une partie
     game_code = n.create_party()
@@ -235,8 +195,7 @@ def main_game(game_code):
     # On va récupérer les données de tous les joueurs (par exemple leur position et leur rôle)
     print("demande position serveur")
     all_players_data = n.get_pos()
-    print("Joueurs récupérés :", all_players_data)
-    current_player_adresse = all_players_data["current_player"]  # on récupère l'ip et le port tcp du joueur courant
+    current_player_adresse = all_players_data["current_player"] # on récupère l'ip et le port tcp du joueur courant
     positions_and_roles = all_players_data["players"]
 
     # création de la liste des joueurs
@@ -249,7 +208,7 @@ def main_game(game_code):
     item_manager = ItemManager()
     run = True
 
-    # Boucle principale du jeu
+    #Boucle principale du jeu
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -262,17 +221,29 @@ def main_game(game_code):
                 current_player = player
                 break
 
-        current_player.move(players)
         item_manager.check_collision(current_player)
-        ###
-        all_players_data["players"][0] = {
-            # Mettre à jour les données pour tous les joueurs ici on suppose que le joueur actuel est pacman
+        current_player.coord = (current_player.x, current_player.y)  # Sauvegarde ancienne position
+        current_player.move(players)  # Fait bouger Pac-Man
+        current_player.handle_collisions_with_players(players)  # Gère collisions et rollback si nécessaire
+
+        # Vérifie si Pac-Man a encore des vies
+        if current_player.lives == 0:
+            screen.fill((0, 0, 0))  # Efface l’écran
+            game_over_text = font.render("GAME OVER", True, (255, 0, 0))
+            screen.blit(game_over_text, (WIDTH // 2 - 100, HEIGHT // 2))
+            pygame.display.flip()
+            pygame.time.delay(2000)  #  Pause avant de quitter
+            return
+
+        all_players_data["players"][0] = {  # Mettre à jour les données pour tous les joueurs ici on suppose que le joueur actuel est pacman
             "pos": current_player.coord,
             "roles": "PacMan" if current_player.is_pacman else "Fantôme"
         }
         # mise à jour des données du joueur en local et envoie au serveur ces données pour les synchroniser avec les autres joueurs
         response = n.send(json.dumps(all_players_data))
-        updated_data = json.loads(response)["players"]  # Format étrange ici
+        data = safe_json_load(response)
+        updated_data = data["players"]
+
         # Met à jour les positions des autres joueurs
         for data in updated_data:
             # Chercher le joueur correspondant dans la liste des joueurs en fonction de l'IP et du port TCP
@@ -280,9 +251,9 @@ def main_game(game_code):
                 for player in players:
                     if player.is_pacman:
                         # Mettre à jour la position du joueur
-                        # player.x, player.y = data["pos"]
+                        #player.x, player.y = data["pos"]
                         # Effectuer toute autre mise à jour relevant
-                        # player.update()
+                        #player.update()
                         pass
 
         # Afficher la carte et les joueurs
@@ -291,8 +262,9 @@ def main_game(game_code):
         item_manager.draw_items(screen)
 
         for player in players:
-            # Problème d'affiche, Pacman est affiché deux fois
+            #Problème d'affiche, Pacman est affiché deux fois
             player.draw(screen, current_player)
+            player.update_eaten_state()
 
         # Affiche le code de la partie sous le score
         game_code_text = font.render(f"Code de la partie: {game_code}", True, (255, 255, 0))
@@ -307,7 +279,6 @@ def main_game(game_code):
         pygame.display.flip()
         clock.tick(60)
     return
-
 
 if __name__ == "__main__":
     main_menu()
