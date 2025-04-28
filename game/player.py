@@ -40,6 +40,8 @@ class Player:
         self.invincibility_timer = 0
         self.is_eaten = False
         self.respawn_target = None
+        self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
+        self.current_path = []  # Chemin actuel pour le fantôme
 
     def is_wall(self, x, y):
         cell_size = self.size
@@ -182,14 +184,20 @@ class Player:
         return []  # Aucun chemin trouvé
 
     def ghost_ai_move(self, pacman):
-        start = (int(self.x // CELL_SIZE), int(self.y // CELL_SIZE))
-        goal = (int(pacman.x // CELL_SIZE), int(pacman.y // CELL_SIZE))
+        if self.is_eaten:
+            return  # Ne pas faire d'IA si le fantôme est en train de respawn
 
-        path = self.find_path(start, goal, MAP_DATA)
+        self.pathfinding_timer -= 1
 
-        if path:
-            # Prendre la prochaine étape du chemin
-            next_cell = path[0]
+        if self.pathfinding_timer <= 0 or not self.current_path:
+            # ➔ Recalculer chemin seulement toutes X frames
+            start = (int(self.x // CELL_SIZE), int(self.y // CELL_SIZE))
+            goal = (int(pacman.x // CELL_SIZE), int(pacman.y // CELL_SIZE))
+            self.current_path = self.find_path(start, goal, MAP_DATA)
+            self.pathfinding_timer = 10  # Recalcul toutes les 10 frames (environ 0.15s si tu es en 60 FPS)
+
+        if self.current_path:
+            next_cell = self.current_path[0]
             target_x = next_cell[0] * CELL_SIZE
             target_y = next_cell[1] * CELL_SIZE
 
@@ -207,6 +215,10 @@ class Player:
                 else:
                     self.y -= self.speed
 
+            # Quand il est assez proche de la prochaine case, avancer dans la liste
+            if abs(dx) < 5 and abs(dy) < 5:
+                self.current_path.pop(0)
+
     def move(self, players):
         if self.invincible:
             self.invincibility_timer -= 1
@@ -220,6 +232,10 @@ class Player:
                 self.speed = CELL_SIZE // 6
 
         self.coord = (self.x, self.y)
+
+        # 🛑 Très important : ne pas faire IA si mangé
+        if self.is_phantom and self.is_eaten:
+            return
 
         if self.is_pacman:
             keys = pygame.key.get_pressed()
@@ -250,7 +266,7 @@ class Player:
         self.coord = (self.x, self.y)
 
     def update_eaten_state(self):
-        """Déplace le fantôme mangé vers le centre SANS collisions."""
+        """Déplace le fantôme mangé vers le centre en ligne droite sans collision"""
         if not self.is_phantom or not self.is_eaten or not self.respawn_target:
             return
 
@@ -261,13 +277,14 @@ class Player:
         dy = target_y - self.y
         distance = (dx ** 2 + dy ** 2) ** 0.5
 
-        if distance < 2:
-            # 🎯 Arrivé au centre : le fantôme ressuscite
+        if distance < speed:
+            # 🎯 Fantôme arrivé au centre => il redevient normal
+            self.x, self.y = target_x, target_y  # aligne parfaitement sur le centre
             self.is_eaten = False
             self.respawn_target = None
             return
 
-        # 🔁 Déplacement direct sans vérifier les murs
+        # 🔁 Sinon, continue à se déplacer en ligne droite vers le centre
         move_x = speed * dx / distance
         move_y = speed * dy / distance
         self.x += move_x
