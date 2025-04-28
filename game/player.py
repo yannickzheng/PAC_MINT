@@ -1,4 +1,5 @@
 import pygame
+import random
 from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
 from map import MAP_DATA
 
@@ -17,7 +18,6 @@ class Player:
         self.speed = CELL_SIZE // 6
         self.lives = 3
 
-        # Images
         self.image_right = pygame.transform.scale(pygame.image.load("images/pacman - right.png"), (self.size, self.size))
         self.image_left = pygame.transform.scale(pygame.image.load("images/pacman - left.png"), (self.size, self.size))
         self.image_up = pygame.transform.scale(pygame.image.load("images/pacman - up.png"), (self.size, self.size))
@@ -38,7 +38,23 @@ class Player:
         self.invincible = False
         self.invincibility_timer = 0
         self.is_eaten = False
-        self.respawn_target = None  # Centre à atteindre quand mangé
+        self.respawn_target = None
+
+    def is_wall(self, x, y):
+        cell_size = self.size
+        margin = self.size * 0.15  # tolérance pour passer dans les petits espaces
+
+        try:
+            return (
+                    MAP_DATA[int((y + margin) // cell_size)][int((x + margin) // cell_size)] == 1 or
+                    MAP_DATA[int((y + margin) // cell_size)][int((x + self.size - margin) // cell_size)] == 1 or
+                    MAP_DATA[int((y + self.size - margin) // cell_size)][int((x + margin) // cell_size)] == 1 or
+                    MAP_DATA[int((y + self.size - margin) // cell_size)][
+                        int((x + self.size - margin) // cell_size)] == 1
+            )
+        except IndexError:
+            return True
+
     def lose_life(self):
         if self.invincible:
             return
@@ -70,7 +86,7 @@ class Player:
                     else:
                         self.lose_life()
 
-                    self.x, self.y = self.coord  # Annule le déplacement
+                    self.x, self.y = self.coord
                     return
 
     def activate_super_power(self, duration=200):
@@ -90,7 +106,6 @@ class Player:
         return True
 
     def eat_ghost(self, ghost, players):
-        print("👻 Pac-Man a mangé un fantôme !")
         self.score += 1000
 
         center_x = WIDTH // 2
@@ -119,82 +134,96 @@ class Player:
 
         print("⚠ Aucun point de retour libre trouvé autour du centre.")
 
+    def ghost_ai_move(self, pacman):
+        dx = pacman.x - self.x
+        dy = pacman.y - self.y
+
+        directions = []
+
+        if dx > 0:
+            directions.append((self.speed, 0))
+        else:
+            directions.append((-self.speed, 0))
+
+        if dy > 0:
+            directions.append((0, self.speed))
+        else:
+            directions.append((0, -self.speed))
+
+        random.shuffle(directions)
+
+        for move_x, move_y in directions:
+            new_x = self.x + move_x
+            new_y = self.y + move_y
+
+            if not self.is_wall(new_x, self.y):
+                self.x = new_x
+                break
+            elif not self.is_wall(self.x, new_y):
+                self.y = new_y
+                break
+
     def move(self, players):
-        # 🔁 Gère l'invincibilité
         if self.invincible:
             self.invincibility_timer -= 1
             if self.invincibility_timer <= 0:
                 self.invincible = False
 
-        # 🔁 Gère le super pouvoir
         if self.super_power_active:
             self.super_power_timer -= 1
             if self.super_power_timer <= 0:
                 self.super_power_active = False
                 self.speed = CELL_SIZE // 6
 
-        keys = pygame.key.get_pressed()
-        new_x, new_y = self.x, self.y
-        hitbox_offset = self.size // 4
-
-        def is_wall(x, y):
-            return (
-                    MAP_DATA[y // CELL_SIZE][x // CELL_SIZE] == 1 or
-                    MAP_DATA[y // CELL_SIZE][(x + self.size - hitbox_offset) // CELL_SIZE] == 1 or
-                    MAP_DATA[(y + self.size - hitbox_offset) // CELL_SIZE][x // CELL_SIZE] == 1 or
-                    MAP_DATA[(y + self.size - hitbox_offset) // CELL_SIZE][
-                        (x + self.size - hitbox_offset) // CELL_SIZE] == 1
-            )
-
-        # ✅ 🧠 Sauvegarde position avant déplacement
         self.coord = (self.x, self.y)
 
         if self.is_pacman:
-            if keys[pygame.K_LEFT] and self.x > 0 and not is_wall(self.x - self.speed, self.y):
+            keys = pygame.key.get_pressed()
+            new_x, new_y = self.x, self.y
+            hitbox_offset = self.size // 4
+
+            if keys[pygame.K_LEFT] and self.x > 0 and not self.is_wall(self.x - self.speed, self.y):
                 new_x -= self.speed
-            if keys[pygame.K_RIGHT] and self.x + self.size < WIDTH and not is_wall(self.x + self.speed, self.y):
+            if keys[pygame.K_RIGHT] and self.x + self.size < WIDTH and not self.is_wall(self.x + self.speed, self.y):
                 new_x += self.speed
-            if keys[pygame.K_UP] and self.y > 0 and not is_wall(self.x, self.y - self.speed):
+            if keys[pygame.K_UP] and self.y > 0 and not self.is_wall(self.x, self.y - self.speed):
                 new_y -= self.speed
-            if keys[pygame.K_DOWN] and self.y + self.size < HEIGHT and not is_wall(self.x, self.y + self.speed):
+            if keys[pygame.K_DOWN] and self.y + self.size < HEIGHT and not self.is_wall(self.x, self.y + self.speed):
                 new_y += self.speed
+
+            self.x, self.y = new_x, new_y
 
         elif self.is_phantom:
-            if keys[pygame.K_LEFT] and self.x > 0:
-                new_x -= self.speed
-            if keys[pygame.K_RIGHT] and self.x + self.size < WIDTH:
-                new_x += self.speed
-            if keys[pygame.K_UP] and self.y > 0:
-                new_y -= self.speed
-            if keys[pygame.K_DOWN] and self.y + self.size < HEIGHT:
-                new_y += self.speed
+            if self.is_eaten:
+                return  # NE PAS FAIRE IA si fantôme est mangé
+            pacman = next((p for p in players if p.is_pacman), None)
+            if pacman:
+                self.ghost_ai_move(pacman)
 
-        self.x, self.y = new_x, new_y
         self.update()
 
     def update(self):
         self.coord = (self.x, self.y)
 
-
     def update_eaten_state(self):
-        """Déplace le fantôme mangé vers le centre"""
+        """Déplace le fantôme mangé vers le centre SANS collisions."""
         if not self.is_phantom or not self.is_eaten or not self.respawn_target:
             return
 
         target_x, target_y = self.respawn_target
-        speed = self.speed  # Tu peux mettre une valeur fixe si besoin
+        speed = self.speed
 
         dx = target_x - self.x
         dy = target_y - self.y
         distance = (dx ** 2 + dy ** 2) ** 0.5
 
         if distance < 2:
-            # 🎯 Arrivé au centre
+            # 🎯 Arrivé au centre : le fantôme ressuscite
             self.is_eaten = False
             self.respawn_target = None
             return
 
-        # 🔁 Déplacement vers le centre (normalisé)
+        # 🔁 Déplacement direct sans vérifier les murs
         move_x = speed * dx / distance
         move_y = speed * dy / distance
         self.x += move_x
@@ -231,20 +260,19 @@ class Player:
 
     def draw(self, screen, controlled_player):
         if self.is_pacman:
-            screen.blit(self.get_img_pacman(controlled_player), (self.x, self.y))
+            screen.blit(self.get_img_pacman(controlled_player), (int(self.x), int(self.y)))
         elif self.is_phantom:
             if self.is_eaten:
-                # Fantôme mangé : cercle translucide bleu clair
                 ghost_surface = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
                 pygame.draw.circle(
                     ghost_surface,
-                    (150, 200, 255, 150),  # Couleur + alpha
+                    (150, 200, 255, 150),
                     (self.size // 2, self.size // 2),
                     self.size // 2
                 )
-                screen.blit(ghost_surface, (self.x, self.y))
+                screen.blit(ghost_surface, (int(self.x), int(self.y)))
             else:
-                screen.blit(self.get_img_phantom(), (self.x, self.y))
+                screen.blit(self.get_img_phantom(), (int(self.x), int(self.y)))
 
     def spawn(self, screen, img):
         screen.blit(img, (self.x, self.y))
