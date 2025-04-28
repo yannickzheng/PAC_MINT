@@ -4,6 +4,7 @@ from .forms import PlayerRegistrationForm
 from django.contrib import messages
 from .models import Player
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
 
 def register_player(request):
@@ -28,6 +29,13 @@ def register_player(request):
 
 def home(request):
     return render(request, 'home.html')
+
+
+from django.contrib.auth.views import LoginView
+
+class CustomLoginView(LoginView):
+    template_name = 'login.html'  # ➔ au lieu de 'registration/login.html'
+
 
 
 

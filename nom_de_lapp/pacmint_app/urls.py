@@ -2,8 +2,11 @@ from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
 
+from django.urls import path
+from .views import CustomLoginView, home, register_player
+
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('inscription/', views.register_player, name='register'),
-    path('connexion/', auth_views.LoginView.as_view(), name='login'),
+    path('', home, name='home'),
+    path('inscription/', register_player, name='register'),
+    path('login/', CustomLoginView.as_view(), name='login'),  # <--- Ici
 ]
