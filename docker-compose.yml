@@ -3,8 +3,8 @@ version: '3.8'
 services:
   server:
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: server/Dockerfile
     container_name: pacmint-server
     ports:
       - "5555:5555"
@@ -13,19 +13,22 @@ services:
 
   client:
     build:
-      context: ./game
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: game/Dockerfile
     container_name: pacmint-client
     environment:
-      - DISPLAY=${DISPLAY}
+      - DISPLAY=${DISPLAY:-host.docker.internal:0.0}  #utiliser la variable hôte ou une valeur par défaut
       - SDL_AUDIODRIVER=alsa
       - XDG_RUNTIME_DIR=/tmp
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /tmp/.X11-unix:/tmp/.X11-unix  #affichage X11
+      - /dev/snd:/dev/snd  #pour l'audio
     devices:
       - /dev/snd:/dev/snd
     network_mode: host
-    depends_on: #le serveur est lancé ava,t le client
+    depends_on:
       - server
+    command: >
+      bash -c "sleep 10 && python game/pacmint.py"
     tty: true
     stdin_open: true
