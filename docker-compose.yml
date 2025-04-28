@@ -3,7 +3,7 @@ version: '3.8'
 services:
   server:
     build:
-      context: .
+      context: .  # Contexte racine pour inclure common/
       dockerfile: server/Dockerfile
     container_name: pacmint-server
     ports:
@@ -13,7 +13,7 @@ services:
 
   client:
     build:
-      context: .
+      context: .  # Contexte racine pour inclure game/, common/, etc.
       dockerfile: game/Dockerfile
     container_name: pacmint-client
     environment:
@@ -26,8 +26,8 @@ services:
       - /dev/dri:/dev/dri  # Pour l'accès graphique
     devices:
       - /dev/snd:/dev/snd
-      - /dev/dri:/dev/dri  # Pour l'accès graphique
-    privileged: true  # Pour garantir l'accès audio et graphique
+      - /dev/dri:/dev/dri
+    privileged: true  # Pour l'accès audio et graphique
     network_mode: host
     depends_on:
       - server
