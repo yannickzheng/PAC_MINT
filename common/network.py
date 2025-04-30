@@ -23,53 +23,18 @@ class Network:
 
 
     def _initialize_connection(self):
-            """
-            Configure le socket client et établit la connexion avec le serveur.
-            """
-            self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Socket TCP/IP
-            try:
-                self.client.connect(self.server_address)  # Connexion au serveur
-                print(f"Connecté au serveur {self.SERVER_ADDRESS}:{self.SERVER_PORT}")
-            except socket.error as e:
-                print(f"Erreur lors de la connexion au serveur : {e}")
-                raise
-
-    def send_command(self, request, message = None):
-        """
-        Méthode générique pour envoyer une commande au serveur et recevoir une réponse.
-        :param request: La commande à envoyer
-        :param message: le message à transmettre
-        :return: La réponse du serveur.
-        """
-        # Envoi de la commande au serveur
-        data = json.dumps({"command": request, "message": message})
-        self.client.sendall(data.encode())
-        response = self.receive_j()
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.client.connect(self.server_address)
+        self.sockfile = self.client.makefile('r')  # ← pour readline()
 
 
-        return response
+    def receive_json(self):
+        line = self.sockfile.readline()
+        if not line:
+            raise ConnectionError("Socket closed")
+        return json.loads(line)
 
-    def receive(self):
-        return self.client.recv(Network.BUFFER_SIZE).decode()
-
-    def receive_j(self):
-        buffer = ""
-        open_braces = 0
-        close_braces = 0
-
-        while True:
-            data = self.client.recv(2048)
-            if not data:
-                raise ConnectionError("Socket closed")
-
-            buffer += data.decode()
-
-            # Compter les accolades
-            open_braces += buffer.count('{')
-            close_braces += buffer.count('}')
-
-            # Si le nombre d'accolades ouvrantes = fermantes → JSON complet
-            if open_braces > 0 and open_braces == close_braces:
-                break
-
-        return json.loads(buffer)
+    def send_command(self, request, message=None):
+        payload = {"command": request, "message": message}
+        self.client.sendall(json.dumps(payload).encode() + b'\n')
+        return self.receive_json()

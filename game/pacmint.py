@@ -42,6 +42,9 @@ cherry_size = CELL_SIZE // 2  #  Augmente la taille des cerises
 coin_size = CELL_SIZE*0.65
 fruit_size = CELL_SIZE // 2
 
+coin_offset = (CELL_SIZE - small_size) // 2
+fruit_offset = (CELL_SIZE - fruit_size) // 2  #  Ajusté pour la nouvelle taille
+
 small_size = CELL_SIZE // 4
 
 coin_image = pygame.image.load(os.path.join("images", "piece.png"))
@@ -220,7 +223,8 @@ def main_game(is_created_game, game_code = None):
         print(f"Code de la partie créée : {game_code}")
 
     # Le serveur envoie les positions initiales à chaque joueur
-    welcome = n.receive_j()
+    #welcome = n.receive_j()
+    welcome = n.receive_json()
     print("WELCOME reçu:", welcome)
     all_players_data = welcome
     print("fin")
@@ -238,9 +242,8 @@ def main_game(is_created_game, game_code = None):
         player.lives = data.get("lives", 3)
         players[player.id] = player
 
-    # Initialisation de la police pour afficher le score
-    #coins = all_players_data.get("items", {}).get("coins", [])
-    #fruits = all_players_data.get("items", {}).get("fruits", [])
+    coins = all_players_data.get("items", {}).get("coins", [])
+    fruits = all_players_data.get("items", {}).get("fruits", [])
 
     run = True
 
@@ -271,8 +274,9 @@ def main_game(is_created_game, game_code = None):
 
         print("updated",response)
 
-        coins = response.get("items", {}).get("coins", [])
-        fruits = response.get("items", {}).get("fruits", [])
+        #coins = response.get("items", {}).get("coins", [])
+
+        #fruits = response.get("items", {}).get("fruits", [])
 
         # Met à jour la position des autres joueurs sur l'interface récupéré par le serveur
 
@@ -302,10 +306,10 @@ def main_game(is_created_game, game_code = None):
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
         for coin in coins:
-            screen.blit(coin_image, (coin[0] + offset, coin[1] + offset))
+            screen.blit(coin_image, (coin[0] + coin_offset, coin[1] + coin_offset))
 
         for fruit in fruits:
-            screen.blit(fruit_image, (fruit[0] + offset, fruit[1] + offset))
+            screen.blit(fruit_image, (fruit[0] + fruit_offset, fruit[1] + fruit_offset))
 
         #On affiche sur l'interface l'ensemble des joueurs
         #print(players)
