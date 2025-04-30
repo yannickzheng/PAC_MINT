@@ -10,6 +10,19 @@ import threading
 import json
 import uuid
 
+def send_json(conn, obj):
+    """Envoie un dict JSON suivi d'un saut de ligne."""
+    payload = json.dumps(obj).encode() + b'\n'
+    conn.sendall(payload)
+
+def recv_json(conn):
+    """Lit une ligne (jusqu’à \n) et renvoie le dict."""
+    line = conn.makefile('r').readline()
+    if not line:
+        raise ConnectionError("socket closed")
+    return json.loads(line)
+
+
 #Paramètres
 timeout = 10 #temps en seconde pour considérer un joueur inactif
 max_players = 5 # Limite de joueurs
@@ -54,6 +67,13 @@ def build_state(room, current_id, *, with_action=False):
     }
     if with_action:
         state["action"] = "welcome"
+
+        state["items"] = {
+            "coins": room.item_manager.coins,
+            "fruits": room.item_manager.fruits
+        }
+
+
     return state
 
 def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
@@ -87,14 +107,12 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
 
         #Le serveur envoie les postions initiales aux joueurs
         welcome = build_state(room, joueur_actuel, with_action=True)
-        connexion.sendall(json.dumps(welcome).encode())
+        send_json(connexion, welcome)
 
         while True:
             try:
                 #On écoute le client
-                raw_data = connexion.recv(2048).decode()
-                raw_data = json.loads(raw_data)
-                #print("raw",raw_data)
+                raw_data = recv_json(connexion)
 
                 """
                 if raw_data.get("command", False) == Protocols.Request.GET_POS :
@@ -127,7 +145,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                                 # Active le pouvoir si besoin (à gérer côté client aussi)
 
                     state = build_state(room, joueur_actuel)
-                    connexion.sendall(json.dumps(state).encode())
+                    send_json(connexion, state)
 
             except Exception as erreur:
                 print(f"Erreur avec le joueur {joueur_actuel} : {erreur}")
@@ -147,13 +165,13 @@ def threaded_client(connexion, address):
     Gère la création et la connexion aux parties.
     """
     try:
-        raw_data = connexion.recv(2048).decode()
+        raw_data = recv_json(connexion)
         if not raw_data:
             print("Connexion interrompue avant la réception des données.")
             connexion.close()
             return
 
-        data = json.loads(raw_data)
+        data = raw_data
         if data["command"] == Protocols.Request.CREATE_GAME:
             print("game crée")
 
@@ -166,11 +184,11 @@ def threaded_client(connexion, address):
             if room_manager.join(player_id, room_code) is not None:
                 print("Test")
                 #On envoie le code de la partie au joueur
-                connexion.send(str.encode(json.dumps({"status": "ok", "code": room_code})))
+                send_json(connexion, {"status": "ok", "code": room_code})
                 start_new_thread(threaded_game_client, (connexion, player_id, room_code, address))
                 #return
             else:
-                connexion.send(str.encode(json.dumps({"status": "full"})))
+                send_json(connexion, {"status": "full"})
                 connexion.close()
 
         elif data["command"] == Protocols.Request.JOIN_ROOM:
@@ -178,12 +196,11 @@ def threaded_client(connexion, address):
             room_id = data["message"]
             player_id = str(uuid.uuid4())
             if room_manager.join(player_id, room_id):
-                connexion.send(str.encode(json.dumps({"status": "joined", "message": "Welcome to the room"})))
+                send_json(connexion, {"status": "joined", "message": "Welcome to the room"})
                 threaded_game_client(connexion, player_id, room_id, address)
                 #return
             else:
-                connexion.send(
-                    str.encode(json.dumps({"status": "full" if room_manager.room_exists(room_id) else "not_found"})))
+                send_json(connexion, {"status": "full" if room_manager.room_exists(room_id) else "not_found"})
                 connexion.close()
                 return
     except Exception as e:
