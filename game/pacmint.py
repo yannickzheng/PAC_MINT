@@ -222,9 +222,16 @@ def main_game(game_code):
                 break
 
         item_manager.check_collision(current_player)
-        current_player.coord = (current_player.x, current_player.y)  # Sauvegarde ancienne position
-        current_player.move(players)  # Fait bouger Pac-Man
-        current_player.handle_collisions_with_players(players)  # Gère collisions et rollback si nécessaire
+
+        # Faire bouger tous les joueurs
+        for player in players:
+            if player.is_phantom:
+                player.move(players)
+
+        # Puis gérer uniquement le déplacement de ton Pac-Man avec clavier
+        current_player.coord = (current_player.x, current_player.y)
+        current_player.move(players)
+        current_player.handle_collisions_with_players(players)
 
         # Vérifie si Pac-Man a encore des vies
         if current_player.lives == 0:
