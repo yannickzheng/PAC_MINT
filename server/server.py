@@ -38,22 +38,23 @@ def server_shutdown():
     s.close()
     sys.exit(0)
 
-#Gestion des joueurs inactifs
-
-player_inactive_time = {}
-def check_inactive_players():
-    """Comment voir qu'un joueur est inactif ?
-    Il garde la même position (normalement pas possible dans le vrai pacman, il avance tout le temps) ?
-    ou l'utilisateur ne touche pas à une touche pendant x temps ? Je crois que le client envoie des données
-     quoi qu'il arrive peut-être une modification à apporter au niveau de client"""
-
-    current_time = time.time()
-    for joueur, last_active in list(player_inactive_time.items()):
-        #print(joueur, last_active)
-
-        if current_time - last_active > timeout:
-            print(f"Joueur {joueur} inactif")
-            del player_inactive_time[joueur]
+def build_state(room, current_id, *, with_action=False):
+    state = {
+        "current_player_id": current_id,
+        "players": [
+            {
+                "id": pid,
+                "pos": p.position,
+                "roles": p.role,
+                "ip": p.ip,
+                "tcp_port": p.tcp_port
+            }
+            for pid, p in room.players.items()
+        ]
+    }
+    if with_action:
+        state["action"] = "welcome"
+    return state
 
 def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
     """
@@ -84,45 +85,9 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
             player.tcp_port = address[1]
             player.tcp_socket = connexion
 
-
-        # Crée un dictionnaire avec les données des joueurs
-        datas = {
-            "action": "welcome",
-            "current_player_id": joueur_actuel,
-            "players": [
-                {
-                    "id": p_id,
-                    "pos": p.position,
-                    "roles": p.role,
-                    "ip": p.ip,
-                    "tcp_port": p.tcp_port
-                }
-                for p_id, p in room.players.items()
-            ]
-        }
-
-        connexion.sendall(json.dumps(datas).encode())
-
-        """
-        datas = {
-            "action": "welcome",
-            "current_player_id": joueur_actuel,
-            "players": [
-                {
-                    "id": p_id,
-                    "pos": p.position,
-                    "roles": p.role,
-                    "ip": p.ip,
-                    "tcp_port": p.tcp_port
-                }
-                for p_id, p in room.players.items()
-            ],
-            "items": {
-                "coins": room.item_manager.coins,
-                "fruits": room.item_manager.fruits
-            }
-        }
-        """
+        #Le serveur envoie les postions initiales aux joueurs
+        welcome = build_state(room, joueur_actuel, with_action=True)
+        connexion.sendall(json.dumps(welcome).encode())
 
         while True:
             try:
@@ -131,44 +96,12 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                 raw_data = json.loads(raw_data)
                 #print("raw",raw_data)
 
-
-                # Mettre à jour le paquet datas
                 """
-                update_datas = {
-                    "current_player_id": joueur_actuel,
-                    "players": [
-                        {
-                            "id": p_id,
-                            "pos": p.position,
-                            "roles": p.role,
-                            "ip": p.ip,
-                            "tcp_port": p.tcp_port
-                        } for p_id, p in room.players.items()
-                    ],
-                    "items": {
-                        "coins": room.item_manager.coins,
-                        "fruits": room.item_manager.fruits
-                    }
-                }
-                """
-
-                update_datas = {
-                    "current_player_id": joueur_actuel,
-                    "players": [
-                        {
-                            "id": p_id,
-                            "pos": p.position,
-                            "roles": p.role,
-                            "ip": p.ip,
-                            "tcp_port": p.tcp_port
-                        } for p_id, p in room.players.items()
-                    ]
-                }
-
                 if raw_data.get("command", False) == Protocols.Request.GET_POS :
                     json_data = json.dumps(datas)
                     connexion.send(json_data.encode())
                     #print("Coucouu",json_data)
+                """
 
                 if not raw_data.get("command", False):
                     print(f"Déconnexion du joueur {joueur_actuel}")
@@ -176,7 +109,9 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                 #print(raw_data)
                 if raw_data.get("command") == Protocols.Request.UPDATE_POSITION:
                     #print(raw_data)
-                    for pdata in raw_data.get("players", []):
+                    payload = raw_data.get("message", {})
+                    for pdata in payload.get("players", []):
+
                         pid = pdata["id"]
                         pos = pdata["pos"]
                         if pid in room.players:
@@ -191,8 +126,8 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                                 player.score += 50 * len(collected["fruits"])
                                 # Active le pouvoir si besoin (à gérer côté client aussi)
 
-                    room.broadcast(update_datas, exclude_id=joueur_actuel)
-                    connexion.sendall(json.dumps(update_datas).encode())
+                    state = build_state(room, joueur_actuel)
+                    connexion.sendall(json.dumps(state).encode())
 
             except Exception as erreur:
                 print(f"Erreur avec le joueur {joueur_actuel} : {erreur}")

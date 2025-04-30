@@ -219,11 +219,11 @@ def main_game(is_created_game, game_code = None):
         game_code = response.get("code", "")
         print(f"Code de la partie créée : {game_code}")
 
-    # On demande les positions au serveur
-    print("GET POS")
-    all_players_data = n.send_command(Protocols.Request.GET_POS)
+    # Le serveur envoie les positions initiales à chaque joueur
+    welcome = n.receive_j()
+    print("WELCOME reçu:", welcome)
+    all_players_data = welcome
     print("fin")
-    print(all_players_data)
     print("Joueurs récupérés :", all_players_data["players"])
 
     # création de la liste des joueurs

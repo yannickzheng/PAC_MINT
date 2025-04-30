@@ -135,13 +135,3 @@ class Room:
     def is_player_in_room(self, player_id):
         """Le joueur est il dans la salle?"""
         return player_id in self.players
-
-    def broadcast(self, msg: dict, exclude_id: str | None = None):
-        data = json.dumps(msg).encode()
-        for pid, p in self.players.items():
-            if pid == exclude_id:
-                continue
-            try:
-                p.tcp_socket.sendall(data)
-            except Exception as e:
-                print(f"[ROOM] Impossible d’envoyer au joueur {pid} : {e}")

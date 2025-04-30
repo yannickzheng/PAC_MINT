@@ -1,8 +1,6 @@
 import pygame
 from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
 from game.map import MAP_DATA
-import random
-import string
 
 class Player:
     def __init__(self, ip, tcp_port, role, position, tcp_socket=None):

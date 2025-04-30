@@ -44,7 +44,6 @@ class Network:
         # Envoi de la commande au serveur
         data = json.dumps({"command": request, "message": message})
         self.client.sendall(data.encode())
-        #response = self.read_json_message()
         response = self.receive_j()
 
 
@@ -52,22 +51,6 @@ class Network:
 
     def receive(self):
         return self.client.recv(Network.BUFFER_SIZE).decode()
-
-    def read_json_message(self):
-        """Lit un message JSON complet terminé par '\n'."""
-        buffer = ""
-        while True:
-            chunk = self.client.recv(2048).decode()
-            if not chunk:
-                break
-            buffer += chunk
-            if '\n' in buffer:
-                break
-        try:
-            return json.loads(buffer.strip())
-        except json.JSONDecodeError as e:
-            print(f"[Erreur JSON] {e}\nMessage reçu (tronqué ?) : {buffer}")
-            return None
 
     def receive_j(self):
         buffer = ""
