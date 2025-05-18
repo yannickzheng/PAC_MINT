@@ -1,6 +1,7 @@
 import pygame
 from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
 from game.map import MAP_DATA
+import heapq
 
 class Player:
     def __init__(self, ip, tcp_port, role, position, tcp_socket=None):
@@ -276,7 +277,7 @@ class Player:
         elif self.is_phantom:
             if self.is_eaten:
                 return  # NE PAS FAIRE IA si fantôme est mangé
-            pacman = next((p for p in players if p.is_pacman), None)
+            pacman = next((p for p in players.values() if p.is_pacman), None)
             if pacman:
                 self.ghost_ai_move(pacman)
 
