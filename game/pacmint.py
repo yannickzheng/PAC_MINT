@@ -274,9 +274,9 @@ def main_game(is_created_game, game_code = None):
 
         print("updated",response)
 
-        #coins = response.get("items", {}).get("coins", [])
+        coins = response.get("items", {}).get("coins", [])
 
-        #fruits = response.get("items", {}).get("fruits", [])
+        fruits = response.get("items", {}).get("fruits", [])
 
         # Met à jour la position des autres joueurs sur l'interface récupéré par le serveur
 

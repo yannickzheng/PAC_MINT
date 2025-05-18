@@ -144,7 +144,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                                 player.score += 50 * len(collected["fruits"])
                                 # Active le pouvoir si besoin (à gérer côté client aussi)
 
-                    state = build_state(room, joueur_actuel)
+                    state = build_state(room, joueur_actuel, with_action=True)
                     send_json(connexion, state)
 
             except Exception as erreur:
