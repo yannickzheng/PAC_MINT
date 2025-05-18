@@ -35,20 +35,26 @@ class Player:
         self.image4 = pygame.image.load("images/pacman - down.png")
         self.image5 = pygame.image.load("images/red_ghost.png")
 
-        self.image_super = pygame.image.load("images/Black Pacman.png")
-        self.image_super_left = pygame.image.load("images/Black Pacman-left.png")
-        self.image_super_up = pygame.image.load("images/Black Pacman-up.png")
-        self.image_super_down = pygame.image.load("images/Black Pacman-down.png")
+        self.image_right = pygame.transform.scale(pygame.image.load("images/pacman - right.png"), (self.size, self.size))
+        self.image_left = pygame.transform.scale(pygame.image.load("images/pacman - left.png"), (self.size, self.size))
+        self.image_up = pygame.transform.scale(pygame.image.load("images/pacman - up.png"), (self.size, self.size))
+        self.image_down = pygame.transform.scale(pygame.image.load("images/pacman - down.png"), (self.size, self.size))
+        self.image_red_ghost = pygame.transform.scale(pygame.image.load("images/red_ghost.png"), (self.size, self.size))
 
-        # ✅ Redimensionner toutes les images pour correspondre à Pac-Man normal
-        self.image_super = pygame.transform.scale(self.image_super, (self.size, self.size))
-        self.image_super_left = pygame.transform.scale(self.image_super_left, (self.size, self.size))
-        self.image_super_up = pygame.transform.scale(self.image_super_up, (self.size, self.size))
-        self.image_super_down = pygame.transform.scale(self.image_super_down, (self.size, self.size))
+        self.image_super_right = pygame.transform.scale(pygame.image.load("images/Black Pacman.png"), (self.size, self.size))
+        self.image_super_left = pygame.transform.scale(pygame.image.load("images/Black Pacman-left.png"), (self.size, self.size))
+        self.image_super_up = pygame.transform.scale(pygame.image.load("images/Black Pacman-up.png"), (self.size, self.size))
+        self.image_super_down = pygame.transform.scale(pygame.image.load("images/Black Pacman-down.png"), (self.size, self.size))
 
         self.score = 0
-        self.super_power_active = False  # ✅ Par défaut, Pac-Man n'a pas le super pouvoir
-        self.super_power_timer = 0  # ✅ Timer du super pouvoir initialisé à 0
+        self.super_power_active = False
+        self.super_power_timer = 0
+        self.invincible = False
+        self.invincibility_timer = 0
+        self.is_eaten = False
+        self.respawn_target = None
+        self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
+        self.current_path = []  # Chemin actuel pour le fantôme
 
     def check_collision(self, players):
         """Vérifie si le joueur entre en collision avec un autre joueur"""
@@ -58,12 +64,182 @@ class Player:
                 if distance_squared < (self.hitbox_size + player.hitbox_size) ** 2:
                     return True
         return False
+    def is_wall(self, x, y):
+        cell_size = self.size
+        margin = self.size * 0.15  # tolérance pour passer dans les petits espaces
+
+        try:
+            return (
+                    MAP_DATA[int((y + margin) // cell_size)][int((x + margin) // cell_size)] == 1 or
+                    MAP_DATA[int((y + margin) // cell_size)][int((x + self.size - margin) // cell_size)] == 1 or
+                    MAP_DATA[int((y + self.size - margin) // cell_size)][int((x + margin) // cell_size)] == 1 or
+                    MAP_DATA[int((y + self.size - margin) // cell_size)][
+                        int((x + self.size - margin) // cell_size)] == 1
+            )
+        except IndexError:
+            return True
+
+    def lose_life(self):
+        if self.invincible:
+            return
+        if self.lives > 1:
+            self.lives -= 1
+            self.invincible = True
+            self.invincibility_timer = 180
+        else:
+            self.lives = 0
+
+    def handle_collisions_with_players(self, players):
+        if not self.is_pacman or self.invincible:
+            return
+
+        pacman_center = (self.x + self.size // 2, self.y + self.size // 2)
+
+        for player in players:
+            if player != self and player.is_phantom:
+                ghost_center = (player.x + player.size // 2, player.y + player.size // 2)
+                dx = pacman_center[0] - ghost_center[0]
+                dy = pacman_center[1] - ghost_center[1]
+                distance_squared = dx * dx + dy * dy
+                combined_radius = self.hitbox_size + player.hitbox_size
+                combined_squared = combined_radius ** 2
+
+                if distance_squared <= combined_squared:
+                    if self.super_power_active:
+                        self.eat_ghost(player, players)
+                    else:
+                        self.lose_life()
+
+                    self.x, self.y = self.coord
+                    return
 
     def activate_super_power(self, duration=200):
-        """Active le super pouvoir immédiatement lorsque Pac-Man mange un fruit"""
-        self.super_power_active = True  # ✅ Active le pouvoir
-        self.super_power_timer = duration  # ✅ Durée du pouvoir (ex: 300 frames = 5 secondes à 60 FPS)
-        self.speed = min(int(self.speed * 1.2), CELL_SIZE//5)
+        self.super_power_active = True
+        self.super_power_timer = duration
+        self.speed = min(int(self.speed * 1.2), CELL_SIZE // 5)
+
+    def is_position_free(x, y, ghost, players):
+        for player in players:
+            if player == ghost:
+                continue
+            dx = (player.x + player.size // 2) - (x + ghost.size // 2)
+            dy = (player.y + player.size // 2) - (y + ghost.size // 2)
+            distance_squared = dx * dx + dy * dy
+            if distance_squared < (ghost.size) ** 2:
+                return False
+        return True
+
+    def eat_ghost(self, ghost, players):
+        self.score += 1000
+
+        center_x = WIDTH // 2
+        center_y = HEIGHT // 2
+        cell = CELL_SIZE
+
+        offsets = [
+            (0, 0),
+            (cell, 0), (-cell, 0),
+            (0, cell), (0, -cell),
+            (cell, cell), (-cell, -cell),
+            (cell, -cell), (-cell, cell),
+            (2 * cell, 0), (-2 * cell, 0),
+            (0, 2 * cell), (0, -2 * cell),
+            (cell * 2, cell * 2), (-cell * 2, -cell * 2)
+        ]
+
+        for dx, dy in offsets:
+            target_x = center_x + dx
+            target_y = center_y + dy
+
+            if Player.is_position_free(target_x, target_y, ghost, players):
+                ghost.is_eaten = True
+                ghost.respawn_target = (target_x, target_y)
+                return
+
+        print("⚠ Aucun point de retour libre trouvé autour du centre.")
+
+    def heuristic(self, a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    def find_path(self, start, goal, map_data):
+        """Algorithme A* basique pour trouver un chemin sur ta MAP_DATA"""
+        open_set = []
+        heapq.heappush(open_set, (0, start))
+        came_from = {}
+        g_score = {start: 0}
+
+        while open_set:
+            _, current = heapq.heappop(open_set)
+
+            if current == goal:
+                # Reconstituer le chemin
+                path = []
+                while current in came_from:
+                    path.append(current)
+                    current = came_from[current]
+                path.reverse()
+                return path
+
+            x, y = current
+            neighbors = [
+                (x + 1, y),
+                (x - 1, y),
+                (x, y + 1),
+                (x, y - 1)
+            ]
+
+            for neighbor in neighbors:
+                nx, ny = neighbor
+                # Vérifie que le voisin est dans la carte et n'est pas un mur
+                if 0 <= nx < len(map_data[0]) and 0 <= ny < len(map_data):
+                    if map_data[ny][nx] == 1:
+                        continue
+
+                    tentative_g_score = g_score[current] + 1
+                    if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
+                        came_from[neighbor] = current
+                        g_score[neighbor] = tentative_g_score
+                        f_score = tentative_g_score + self.heuristic(neighbor, goal)
+                        heapq.heappush(open_set, (f_score, neighbor))
+
+        return []  # Aucun chemin trouvé
+
+    def ghost_ai_move(self, pacman):
+        if self.is_eaten:
+            return  # Ne pas faire d'IA si le fantôme est en train de respawn
+
+        self.pathfinding_timer -= 1
+
+        if self.pathfinding_timer <= 0 or not self.current_path:
+            # ➔ Recalculer chemin seulement toutes X frames
+            start = (int(self.x // CELL_SIZE), int(self.y // CELL_SIZE))
+            goal = (int(pacman.x // CELL_SIZE), int(pacman.y // CELL_SIZE))
+            self.current_path = self.find_path(start, goal, MAP_DATA)
+            self.pathfinding_timer = 10  # Recalcul toutes les 10 frames (environ 0.15s si tu es en 60 FPS)
+
+        if self.current_path:
+            next_cell = self.current_path[0]
+            target_x = next_cell[0] * CELL_SIZE
+            target_y = next_cell[1] * CELL_SIZE
+
+            dx = target_x - self.x
+            dy = target_y - self.y
+
+            if abs(dx) > abs(dy):
+                if dx > 0:
+                    self.x += self.speed
+                else:
+                    self.x -= self.speed
+            else:
+                if dy > 0:
+                    self.y += self.speed
+                else:
+                    self.y -= self.speed
+
+            # Quand il est assez proche de la prochaine case, avancer dans la liste
+            if abs(dx) < 5 and abs(dy) < 5:
+                self.current_path.pop(0)
+
     def move(self, players):
         """Déplace Pac-Man en s'assurant qu'il ne traverse pas les murs"""
         keys = pygame.key.get_pressed()
@@ -72,63 +248,39 @@ class Player:
         if self.super_power_active:
             self.super_power_timer -= 1
             if self.super_power_timer <= 0:
-                self.super_power_active = False  # ✅ Désactive le super pouvoir après le temps écoulé
-                self.speed = CELL_SIZE // 6  # ✅ Remet la vitesse normale
-                print("⏳ Fin du super pouvoir ! Pac-Man redevient normal.")
+                self.super_power_active = False
+                self.speed = CELL_SIZE // 6
 
-        def is_wall(x, y):
-            return (
-                    MAP_DATA[y // CELL_SIZE][x // CELL_SIZE] == 1 or  # Point Haut-Gauche
-                    MAP_DATA[y // CELL_SIZE][(x + self.size - hitbox_offset) // CELL_SIZE] == 1 or  # Point Haut-Droit
-                    MAP_DATA[(y + self.size - hitbox_offset) // CELL_SIZE][x // CELL_SIZE] == 1 or  # Point Bas-Gauche
-                    MAP_DATA[(y + self.size - hitbox_offset) // CELL_SIZE][
-                        (x + self.size - hitbox_offset) // CELL_SIZE] == 1  # Point Bas-Droit
-            )
+        self.coord = (self.x, self.y)
 
-        #  Pac-Man ne peut pas traverser les murs
+        # 🛑 Très important : ne pas faire IA si mangé
+        if self.is_phantom and self.is_eaten:
+            return
+
         if self.is_pacman:
-            if keys[pygame.K_LEFT] and self.x > 0:
-                if not is_wall(self.x - self.speed, self.y):
-                    new_x -= self.speed
+            keys = pygame.key.get_pressed()
+            new_x, new_y = self.x, self.y
+            hitbox_offset = self.size // 4
 
-            if keys[pygame.K_RIGHT] and self.x + self.size < WIDTH:
-                if not is_wall(self.x + self.speed, self.y):
-                    new_x += self.speed
+            if keys[pygame.K_LEFT] and self.x > 0 and not self.is_wall(self.x - self.speed, self.y):
+                new_x -= self.speed
+            if keys[pygame.K_RIGHT] and self.x + self.size < WIDTH and not self.is_wall(self.x + self.speed, self.y):
+                new_x += self.speed
+            if keys[pygame.K_UP] and self.y > 0 and not self.is_wall(self.x, self.y - self.speed):
+                new_y -= self.speed
+            if keys[pygame.K_DOWN] and self.y + self.size < HEIGHT and not self.is_wall(self.x, self.y + self.speed):
+                new_y += self.speed
 
-            if keys[pygame.K_UP] and self.y > 0:
-                if not is_wall(self.x, self.y - self.speed):
-                    new_y -= self.speed
+            self.x, self.y = new_x, new_y
 
-            if keys[pygame.K_DOWN] and self.y + self.size < HEIGHT:
-                if not is_wall(self.x, self.y + self.speed):
-                    new_y += self.speed
-
-        #  Les Fantômes ne sont PAS bloqués par les murs
         elif self.is_phantom:
-            if keys[pygame.K_LEFT] and self.x > 0:
-                if not is_wall(self.x - self.speed, self.y):
-                    new_x -= self.speed
+            if self.is_eaten:
+                return  # NE PAS FAIRE IA si fantôme est mangé
+            pacman = next((p for p in players if p.is_pacman), None)
+            if pacman:
+                self.ghost_ai_move(pacman)
 
-            if keys[pygame.K_RIGHT] and self.x + self.size < WIDTH:
-                if not is_wall(self.x + self.speed, self.y):
-                    new_x += self.speed
-
-            if keys[pygame.K_UP] and self.y > 0:
-                if not is_wall(self.x, self.y - self.speed):
-                    new_y -= self.speed
-
-            if keys[pygame.K_DOWN] and self.y + self.size < HEIGHT:
-                if not is_wall(self.x, self.y + self.speed):
-                    new_y += self.speed
-
-        #  Vérification des collisions avec les autres joueurs
-        old_x, old_y = self.x, self.y
-        self.x, self.y = new_x, new_y
-
-        if self.check_collision(players):
-            self.x, self.y = old_x, old_y  #  Annule le déplacement en cas de collision avec un autre joueur
-        else:
-            self.update()  #  Met à jour les coordonnées si le déplacement est valide
+        self.update()
 
     def update_position(self, new_pos):
         self.x, self.y = tuple(new_pos)
@@ -139,52 +291,75 @@ class Player:
         """Met à jour les coordonnées du joueur"""
         self.coord = (self.x, self.y)
 
-    def get_img_pacman(self, controlled_player):
-        """Renvoie l'image de Pac-Man en fonction de la direction uniquement si c'est le joueur contrôlé"""
+    def update_eaten_state(self):
+        """Déplace le fantôme mangé vers le centre en ligne droite sans collision"""
+        if not self.is_phantom or not self.is_eaten or not self.respawn_target:
+            return
 
-        if self != controlled_player:  # ✅ Vérifie que Pac-Man est bien le joueur actif
-            return self.image1  # ✅ Garde son orientation actuelle
+        target_x, target_y = self.respawn_target
+        speed = self.speed
+
+        dx = target_x - self.x
+        dy = target_y - self.y
+        distance = (dx ** 2 + dy ** 2) ** 0.5
+
+        if distance < speed:
+            # 🎯 Fantôme arrivé au centre => il redevient normal
+            self.x, self.y = target_x, target_y  # aligne parfaitement sur le centre
+            self.is_eaten = False
+            self.respawn_target = None
+            return
+
+        # 🔁 Sinon, continue à se déplacer en ligne droite vers le centre
+        move_x = speed * dx / distance
+        move_y = speed * dy / distance
+        self.x += move_x
+        self.y += move_y
+
+    def get_img_pacman(self, controlled_player):
+        if self != controlled_player:
+            return self.image_right
 
         keys = pygame.key.get_pressed()
 
-        if self.super_power_active:  # ✅ Vérifie si le super pouvoir est actif
-            if keys[pygame.K_LEFT]:
-                return self.image_super_left
-            if keys[pygame.K_RIGHT]:
-                return self.image_super
-            if keys[pygame.K_UP]:
-                return self.image_super_up
-            if keys[pygame.K_DOWN]:
-                return self.image_super_down
-            return self.image_super  # ✅ Par défaut, regarde à droite
+        if self.invincible and (self.invincibility_timer // 10) % 2 == 0:
+            if keys[pygame.K_LEFT]: return self.image_super_left
+            if keys[pygame.K_RIGHT]: return self.image_super_right
+            if keys[pygame.K_UP]: return self.image_super_up
+            if keys[pygame.K_DOWN]: return self.image_super_down
+            return self.image_super_right
 
-        # ✅ Si pas de super pouvoir, on retourne les images normales
-        if keys[pygame.K_LEFT]:
-            return self.image2
-        if keys[pygame.K_3]:
-            return self.image1
-        if keys[pygame.K_UP]:
-            return self.image3
-        if keys[pygame.K_DOWN]:
-            return self.image4
-        return self.image1  # ✅ Par défaut, Pac-Man regarde à droite
+        if self.super_power_active:
+            if keys[pygame.K_LEFT]: return self.image_super_left
+            if keys[pygame.K_RIGHT]: return self.image_super_right
+            if keys[pygame.K_UP]: return self.image_super_up
+            if keys[pygame.K_DOWN]: return self.image_super_down
+            return self.image_super_right
+
+        if keys[pygame.K_LEFT]: return self.image_left
+        if keys[pygame.K_RIGHT]: return self.image_right
+        if keys[pygame.K_UP]: return self.image_up
+        if keys[pygame.K_DOWN]: return self.image_down
+        return self.image_right
 
     def get_img_phantom(self):
-        """Renvoie l'image du fantôme"""
-        return self.image5
+        return self.image_red_ghost
 
     def draw(self, screen, controlled_player):
-        """Dessine Pac-Man ou un fantôme sur l'écran"""
         if self.is_pacman:
-            self.spawn(screen, self.get_img_pacman(controlled_player))  # ✅ Passe `controlled_player`
+            screen.blit(self.get_img_pacman(controlled_player), (int(self.x), int(self.y)))
         elif self.is_phantom:
-            self.spawn(screen, self.image5)  # ✅ Les fantômes gardent leur image
-        else:
-            pygame.draw.rect(screen, self.color, (self.x, self.y, self.size, self.size))
+            if self.is_eaten:
+                ghost_surface = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
+                pygame.draw.circle(
+                    ghost_surface,
+                    (150, 200, 255, 150),
+                    (self.size // 2, self.size // 2),
+                    self.size // 2
+                )
+                screen.blit(ghost_surface, (int(self.x), int(self.y)))
+            else:
+                screen.blit(self.get_img_phantom(), (int(self.x), int(self.y)))
 
     def spawn(self, screen, img):
-        """Affiche Pac-Man ou un fantôme"""
         screen.blit(img, (self.x, self.y))
-
-
-

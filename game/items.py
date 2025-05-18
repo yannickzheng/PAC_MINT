@@ -9,8 +9,18 @@
 
 import pygame
 import os
+import sys
+
 from common.global_variable import CELL_SIZE
 from game.map import MAP_DATA
+
+
+
+def resource_path(relative_path): #dupliqué car pas envie de faire un import circulaire
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
 
 small_size = CELL_SIZE // 4  # Taille des pièces
 cherry_size = CELL_SIZE // 2  #  Augmente la taille des cerises

@@ -2,25 +2,36 @@ version: '3.8'
 
 services:
   server:
-    image: pacmint_image
-    container_name: pacmint_server
-    command: python server/server.py
+    build:
+      context: .  # Contexte racine pour inclure common/
+      dockerfile: server/Dockerfile
+    container_name: pacmint-server
     ports:
       - "5555:5555"
-    networks:
-      - pacmint_network
+    restart: unless-stopped
+    network_mode: host
 
   client:
-    image: pacmint_image
-    container_name: pacmint_client
-    command: python client/client.py
+    build:
+      context: .  # Contexte racine pour inclure game/, common/, etc.
+      dockerfile: game/Dockerfile
+    container_name: pacmint-client
+    environment:
+      - DISPLAY=${DISPLAY:-host.docker.internal:0.0}
+      - SDL_AUDIODRIVER=alsa
+      - XDG_RUNTIME_DIR=/tmp
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /dev/snd:/dev/snd
+      - /dev/dri:/dev/dri  # Pour l'accès graphique
+    devices:
+      - /dev/snd:/dev/snd
+      - /dev/dri:/dev/dri
+    privileged: true  # Pour l'accès audio et graphique
+    network_mode: host
     depends_on:
       - server
-    environment:
-      - SERVER_IP=server
-    networks:
-      - pacmint_network
-
-networks:
-  pacmint_network:
-    driver: bridge
+    command: >
+      bash -c "sleep 5 && python game/pacmint.py"
+    tty: true
+    stdin_open: true
