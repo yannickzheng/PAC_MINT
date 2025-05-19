@@ -51,7 +51,7 @@ def server_shutdown():
     s.close()
     sys.exit(0)
 
-def build_state(room, current_id, *, activate_super_power=False, initial=False):
+def build_state(room, current_id, *,with_action = False, initial=False, activate_super_power=False):
     state = {
         "current_player_id": current_id,
         "players": [
@@ -67,15 +67,15 @@ def build_state(room, current_id, *, activate_super_power=False, initial=False):
             for pid, p in room.players.items()
         ]
     }
-
-    if initial:
-        state["action"] = "welcome"
-        state["items"] = {
-            "coins": room.item_manager.coins,
-            "fruits": room.item_manager.fruits
-        }
-    else:
-        state["action"] = "update"
+    if with_action:
+        if initial:
+            state["action"] = "welcome"
+            state["items"] = {
+                "coins": room.item_manager.coins,
+                "fruits": room.item_manager.fruits
+            }
+        else:
+            state["action"] = "update"
 
     return state
 
@@ -110,7 +110,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
             player.tcp_socket = connexion
 
         #Le serveur envoie les postions initiales aux joueurs
-        welcome = build_state(room, joueur_actuel, initial=True)
+        welcome = build_state(room, joueur_actuel,with_action= True, initial=True)
         send_json(connexion, welcome)
 
         while True:
@@ -141,19 +141,25 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                         if pid in room.players:
                             player = room.players[pid]
                             player.update_position(pos)
+                            print(player.role)
 
                             # Vérifie la collecte d’items pour ce joueur (uniquement si c'est Pacman)
-                            collected = room.item_manager.check_collision(player)
-                            if collected["coins"]:
-                                player.score += 10 * len(collected["coins"])
-                            if collected["fruits"]:
-                                player.score += 50 * len(collected["fruits"])
-                                activate_super_power = True
+                            if player.role == "pacman":
+                                collected = room.item_manager.check_collision(player)
+                                if collected["coins"]:
+                                    player.score += 10 * len(collected["coins"])
+                                if collected["fruits"]:
+                                    player.score += 50 * len(collected["fruits"])
+                                    activate_super_power = True
 
-                            state = build_state(room, joueur_actuel, activate_super_power=activate_super_power)
-                            state["items"] = {"collected": collected}
+                                state = build_state(room, joueur_actuel, with_action = True,activate_super_power=activate_super_power)
+                                state["items"] = {"collected": collected}
 
-                            send_json(connexion, state)
+                                send_json(connexion, state)
+                            else:
+                                state = build_state(room, joueur_actuel)
+                                send_json(connexion, state)
+
 
             except Exception as erreur:
                 print(f"Erreur avec le joueur {joueur_actuel} : {erreur}")
