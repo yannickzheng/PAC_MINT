@@ -60,7 +60,8 @@ def build_state(room, current_id, *, with_action=False):
                 "pos": p.position,
                 "roles": p.role,
                 "ip": p.ip,
-                "tcp_port": p.tcp_port
+                "tcp_port": p.tcp_port,
+                "score": p.score,
             }
             for pid, p in room.players.items()
         ]
@@ -140,6 +141,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                             collected = room.item_manager.check_collision(player)
                             if collected["coins"]:
                                 player.score += 10 * len(collected["coins"])
+                                print("test")
                             if collected["fruits"]:
                                 player.score += 50 * len(collected["fruits"])
                                 # Active le pouvoir si besoin (à gérer côté client aussi)
