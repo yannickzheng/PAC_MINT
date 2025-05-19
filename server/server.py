@@ -51,7 +51,7 @@ def server_shutdown():
     s.close()
     sys.exit(0)
 
-def build_state(room, current_id, *, with_action=False, activate_super_power = False):
+def build_state(room, current_id, *, activate_super_power=False, initial=False):
     state = {
         "current_player_id": current_id,
         "players": [
@@ -62,21 +62,23 @@ def build_state(room, current_id, *, with_action=False, activate_super_power = F
                 "ip": p.ip,
                 "tcp_port": p.tcp_port,
                 "score": p.score,
-                "activate_super_power": True if activate_super_power == True else False
+                "activate_super_power": activate_super_power if pid == current_id else False
             }
             for pid, p in room.players.items()
         ]
     }
-    if with_action:
-        state["action"] = "welcome"
 
+    if initial:
+        state["action"] = "welcome"
         state["items"] = {
             "coins": room.item_manager.coins,
             "fruits": room.item_manager.fruits
         }
-
+    else:
+        state["action"] = "update"
 
     return state
+
 
 def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
     """
@@ -108,7 +110,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
             player.tcp_socket = connexion
 
         #Le serveur envoie les postions initiales aux joueurs
-        welcome = build_state(room, joueur_actuel, with_action=True)
+        welcome = build_state(room, joueur_actuel, initial=True)
         send_json(connexion, welcome)
 
         while True:
@@ -147,13 +149,11 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                             if collected["fruits"]:
                                 player.score += 50 * len(collected["fruits"])
                                 activate_super_power = True
-                                print("fruit")
 
+                            state = build_state(room, joueur_actuel, activate_super_power=activate_super_power)
+                            state["items"] = {"collected": collected}
 
-                    state = build_state(room, joueur_actuel, with_action=True, activate_super_power=activate_super_power)
-                    if activate_super_power:
-                        print (state)
-                    send_json(connexion, state)
+                            send_json(connexion, state)
 
             except Exception as erreur:
                 print(f"Erreur avec le joueur {joueur_actuel} : {erreur}")

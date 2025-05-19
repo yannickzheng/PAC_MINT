@@ -272,8 +272,19 @@ def main_game(is_created_game, game_code = None):
         response = n.send_command(Protocols.Request.UPDATE_POSITION, payload)
         print(f"Réponse du serveur : '{response}'")
 
-        coins = response.get("items", {}).get("coins", [])
-        fruits = response.get("items", {}).get("fruits", [])
+        action = response.get("action")
+
+        if action == "welcome":
+            coins = response.get("items", {}).get("coins", [])
+            fruits = response.get("items", {}).get("fruits", [])
+        elif action == "update":
+            collected = response.get("items", {}).get("collected", {})
+            for coin in collected.get("coins", []):
+                if coin in coins:
+                    coins.remove(coin)
+            for fruit in collected.get("fruits", []):
+                if fruit in fruits:
+                    fruits.remove(fruit)
 
         # Met à jour les informations sur les autres joueurs récupérées par le serveur
         for data in response.get("players", []):
