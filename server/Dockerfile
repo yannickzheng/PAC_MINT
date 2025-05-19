@@ -4,6 +4,8 @@ WORKDIR /app
 
 # Copier les fichiers
 COPY server/requirements.txt .
+
+
 COPY server/server.py .
 COPY common/ ./common/
 COPY server/rooms.py .
