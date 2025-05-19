@@ -8,5 +8,6 @@ from .views import CustomLoginView, home, register_player
 urlpatterns = [
     path('', home, name='home'),
     path('inscription/', register_player, name='register'),
-    path('login/', CustomLoginView.as_view(), name='login'),  # <--- Ici
+    path('login/', CustomLoginView.as_view(), name='login'),
+    path('api/submit-score/', submit_score, name='submit_score'),
 ]
