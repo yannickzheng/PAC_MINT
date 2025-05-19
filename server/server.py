@@ -51,7 +51,7 @@ def server_shutdown():
     s.close()
     sys.exit(0)
 
-def build_state(room, current_id, *, with_action=False):
+def build_state(room, current_id, *,with_action = False, initial=False, activate_super_power=False):
     state = {
         "current_player_id": current_id,
         "players": [
@@ -60,21 +60,33 @@ def build_state(room, current_id, *, with_action=False):
                 "pos": p.position,
                 "roles": p.role,
                 "ip": p.ip,
-                "tcp_port": p.tcp_port
+                "tcp_port": p.tcp_port,
+                "score": p.score,
+                "activate_super_power": activate_super_power if pid == current_id else False
             }
             for pid, p in room.players.items()
         ]
     }
     if with_action:
-        state["action"] = "welcome"
-
-        state["items"] = {
-            "coins": room.item_manager.coins,
-            "fruits": room.item_manager.fruits
-        }
-
+        if initial:
+            state["action"] = "welcome"
+            state["items"] = {
+                "coins": room.item_manager.coins,
+                "fruits": room.item_manager.fruits
+            }
+        else:
+            state["action"] = "update"
 
     return state
+
+def broadcast_state(room, current_id, state):
+    for pid, player in room.players.items():
+        if player.tcp_socket:
+            try:
+                send_json(player.tcp_socket, state)
+            except Exception as e:
+                print(f"[Serveur] Erreur d'envoi à {pid}: {e}")
+
 
 def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
     """
@@ -106,7 +118,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
             player.tcp_socket = connexion
 
         #Le serveur envoie les postions initiales aux joueurs
-        welcome = build_state(room, joueur_actuel, with_action=True)
+        welcome = build_state(room, joueur_actuel,with_action= True, initial=True)
         send_json(connexion, welcome)
 
         while True:
@@ -128,6 +140,8 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                 if raw_data.get("command") == Protocols.Request.UPDATE_POSITION:
                     #print(raw_data)
                     payload = raw_data.get("message", {})
+                    activate_super_power = False
+
                     for pdata in payload.get("players", []):
 
                         pid = pdata["id"]
@@ -135,17 +149,24 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                         if pid in room.players:
                             player = room.players[pid]
                             player.update_position(pos)
+                            print(player.role)
 
                             # Vérifie la collecte d’items pour ce joueur (uniquement si c'est Pacman)
-                            collected = room.item_manager.check_collision(player)
-                            if collected["coins"]:
-                                player.score += 10 * len(collected["coins"])
-                            if collected["fruits"]:
-                                player.score += 50 * len(collected["fruits"])
-                                # Active le pouvoir si besoin (à gérer côté client aussi)
+                            if player.role == "pacman":
+                                collected = room.item_manager.check_collision(player)
+                                if collected["coins"]:
+                                    player.score += 10 * len(collected["coins"])
+                                if collected["fruits"]:
+                                    player.score += 50 * len(collected["fruits"])
+                                    activate_super_power = True
 
-                    state = build_state(room, joueur_actuel, with_action=True)
-                    send_json(connexion, state)
+                                state = build_state(room, joueur_actuel, with_action = True,activate_super_power=activate_super_power)
+                                state["items"] = {"collected": collected}
+
+                                #send_json(connexion, state)
+                                broadcast_state(room, joueur_actuel, state)
+
+
 
             except Exception as erreur:
                 print(f"Erreur avec le joueur {joueur_actuel} : {erreur}")
@@ -182,7 +203,6 @@ def threaded_client(connexion, address):
 
             player_id = str(uuid.uuid4())   # Identifiant unique pour le joueur
             if room_manager.join(player_id, room_code) is not None:
-                print("Test")
                 #On envoie le code de la partie au joueur
                 send_json(connexion, {"status": "ok", "code": room_code})
                 start_new_thread(threaded_game_client, (connexion, player_id, room_code, address))

@@ -10,6 +10,7 @@ class Protocols:
         ANSWER_INVALID = 'protocol.answer_invalid'
         WINNER = "protocol.winner"
         OPPONENT_LEFT = "protocol.opponent_left"
+        ACTIVATE_SUPER_POWER = "activate_super_power"
 
     class Request:
         ANSWER = "protocol.answer"
