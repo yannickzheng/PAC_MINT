@@ -79,6 +79,14 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
 
     return state
 
+def broadcast_state(room, current_id, state):
+    for pid, player in room.players.items():
+        if player.tcp_socket:
+            try:
+                send_json(player.tcp_socket, state)
+            except Exception as e:
+                print(f"[Serveur] Erreur d'envoi à {pid}: {e}")
+
 
 def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
     """
@@ -155,10 +163,9 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                                 state = build_state(room, joueur_actuel, with_action = True,activate_super_power=activate_super_power)
                                 state["items"] = {"collected": collected}
 
-                                send_json(connexion, state)
-                            else:
-                                state = build_state(room, joueur_actuel)
-                                send_json(connexion, state)
+                                #send_json(connexion, state)
+                                broadcast_state(room, joueur_actuel, state)
+
 
 
             except Exception as erreur:
