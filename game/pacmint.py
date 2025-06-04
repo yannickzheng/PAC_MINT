@@ -323,6 +323,7 @@ def main_game(is_created_game, game_code = None):
             pid = data["id"]
             if pid == current_player_id:
                 current_player.score = data["score"]
+                current_player.lives = data.get("lives", current_player.lives)
 
                 if data[Protocols.Response.ACTIVATE_SUPER_POWER]:
                     current_player.activate_super_power()

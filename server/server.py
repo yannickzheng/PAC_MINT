@@ -62,6 +62,7 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
                 "ip": p.ip,
                 "tcp_port": p.tcp_port,
                 "score": p.score,
+                "lives": getattr(p, "lives", 3),
                 "activate_super_power": activate_super_power if pid == current_id else False
             }
             for pid, p in room.players.items()
@@ -166,6 +167,17 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                                 #send_json(connexion, state)
                                 broadcast_state(room, joueur_actuel, state)
 
+                    # GESTION COLLISION FANTÔME/PACMAN 
+                    pacman_touche = check_pacman_ghost_collision(room)
+                    if pacman_touche and not getattr(pacman_touche, "invincible", False):
+                        pacman_touche.lives = getattr(pacman_touche, "lives", 3) - 1
+                        # pacman_touche.invincible = True
+                        print(f"Pacman touché ! Vies restantes : {pacman_touche.lives}")
+
+                        # Broadcast l'état à tous les joueurs
+                        state = build_state(room, joueur_actuel, with_action=True)
+                        broadcast_state(room, joueur_actuel, state)
+
 
 
             except Exception as erreur:
@@ -226,6 +238,21 @@ def threaded_client(connexion, address):
     except Exception as e:
         print(f"Erreur lors de la gestion d'un client : {e}")
         connexion.close()
+
+
+def check_pacman_ghost_collision(room):
+    """Renvoie le Pacman touché par un fantôme, ou None."""
+    pacmans = [p for p in room.players.values() if "pacman" in p.role.lower()]
+    ghosts = [p for p in room.players.values() if "fantome" in p.role.lower()]
+    for pacman in pacmans:
+        for ghost in ghosts:
+            dx = pacman.position[0] - ghost.position[0]
+            dy = pacman.position[1] - ghost.position[1]
+            distance_squared = dx * dx + dy * dy
+            # Rayon de collision (ajuste selon la taille de tes sprites)
+            if distance_squared < 30*30:
+                return pacman
+    return None
 
 
 while True:
