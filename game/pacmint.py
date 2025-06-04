@@ -211,6 +211,8 @@ def main_game(is_created_game, game_code = None):
     mixer.music.load("sound/game_sound.mp3")
     mixer.music.set_volume(0.3)
     mixer.music.play(-1)
+    if not music_on:
+        mixer.music.pause()
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
 
