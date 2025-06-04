@@ -1,5 +1,8 @@
 .idea
 /dist
 /build
+__pycache__/
+.DS_Store
+.env/
+db.sqlite3
 nom_de_lapp/db.sqlite3
-
