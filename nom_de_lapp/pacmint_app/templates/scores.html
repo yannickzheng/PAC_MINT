@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <title>Scores - Pac-Mint</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/Logo.png' %}">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'pacmint_app/home.css' %}">
+</head>
+<body class="bg-black text-white text-center">
+
+    <div class="container py-5">
+        <!-- Logo -->
+        <img src="{% static 'images/Logo.png' %}" alt="Logo Pac-Mint" class="img-fluid mb-4 logo-animation" style="width: 120px;">
+
+        <!-- Titre -->
+        <h1 class="display-5 text-warning mb-4" style="font-family: 'Press Start 2P', cursive;">Tableau des Scores</h1>
+
+        <!-- Tableau des scores -->
+        <div class="table-responsive">
+            <table class="table table-dark table-striped table-bordered border-warning">
+                <thead class="table-warning text-black">
+                    <tr>
+                        <th>Joueur</th>
+                        <th>Score</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for score in scores %}
+                        <tr>
+                            <td>{{ score.player.username }}</td>
+                            <td>{{ score.value }}</td>
+                            <td>{{ score.date|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3">Aucun score enregistré pour l’instant.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bouton retour -->
+        <a href="/" class="btn btn-outline-warning mt-4">Retour à l'accueil</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
