@@ -1,4 +1,5 @@
 .idea
 /dist
 /build
-*.sqlite3
+nom_de_lapp/db.sqlite3
+
