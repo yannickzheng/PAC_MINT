@@ -15,23 +15,44 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+music_on = True
+music_loaded = None
+
+def init_music():
+    global music_loaded
+    if not pygame.mixer.get_init():
+        mixer.init()
+    mixer.music.set_volume(0.9)
+    music_loaded = None
+
+def play_music(path, volume=0.9):
+    global music_loaded
+    if music_loaded != path:
+        mixer.music.load(path)
+        music_loaded = path
+    mixer.music.set_volume(volume)
+    mixer.music.play(-1)
+    if not music_on:
+        mixer.music.pause()
+
+def toggle_music():
+    global music_on
+    music_on = not music_on
+    if music_on:
+        mixer.music.unpause()
+    else:
+        mixer.music.pause()
+
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PacMint")
-
 font = pygame.font.SysFont("Arial", 24)
-
 image = pygame.image.load("images/background2.png")
-
-# musique
-mixer.init()
-
-mixer.music.load("sound/background_sound.mp3")
-mixer.music.set_volume(0.9)
-mixer.music.play(-1)
-
 button_click = mixer.Sound("sound/button_click.mp3")
 button_click.set_volume(-10)
+
+init_music()
+play_music("sound/background_sound.mp3", 0.9)
 
 #image
 from common.global_variable import CELL_SIZE
@@ -116,8 +137,10 @@ def create_game():
 
 def main_menu():
     global music_on
+    play_music("sound/background_sound.mp3", 0.9)
+    if not music_on:
+        mixer.music.pause()
     run = True
-    music_on = True
     while run:
         screen.blit(image, (0, 0))
         draw_button("Créer une partie", 250, 600, 200, 50, BLUE, CYAN, screen)
@@ -207,10 +230,7 @@ def join_game():
 
 def main_game(is_created_game, game_code = None):
 
-    mixer.init()
-    mixer.music.load("sound/game_sound.mp3")
-    mixer.music.set_volume(0.3)
-    mixer.music.play(-1)
+    play_music("sound/game_sound.mp3", 0.3)
     if not music_on:
         mixer.music.pause()
     pygame.font.init()
@@ -358,13 +378,7 @@ def main_game(is_created_game, game_code = None):
         clock.tick(60)
     return
 
-def toggle_music():
-    global music_on
-    music_on = not music_on
-    if music_on:
-        mixer.music.unpause()
-    else:
-        mixer.music.pause()
+
 
 if __name__ == "__main__":
     main_menu()
