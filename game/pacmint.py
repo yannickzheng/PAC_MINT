@@ -115,12 +115,17 @@ def create_game():
 
 
 def main_menu():
+    global music_on
     run = True
+    music_on = True
     while run:
         screen.blit(image, (0, 0))
         draw_button("Créer une partie", 250, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Rejoindre une partie", 550, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Quitter", 850, 600, 200, 50, BLUE, PURPLE, screen)
+        # bouton musique
+        music_text = "Musique : ON" if music_on else "Musique : OFF"
+        draw_button(music_text, 1050, 10, 180, 40, BLUE, CYAN, screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -140,6 +145,9 @@ def main_menu():
                         run = False
                         pygame.quit()
                         sys.exit()
+                # Gestion du bouton musique ---
+                if 10 <= y <= 50 and 1050 <= x <= 1230:
+                    toggle_music()
         pygame.display.flip()
 
 def lobby():
@@ -252,6 +260,10 @@ def main_game(is_created_game, game_code = None):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                if 10 <= y <= 50 and 1050 <= x <= 1230:
+                    toggle_music()
 
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
         current_player = players.get(current_player_id)
@@ -336,9 +348,21 @@ def main_game(is_created_game, game_code = None):
         lives_text = font.render(f"Vies: {current_player.lives}", True, (0, 0, 255))
         screen.blit(lives_text, (WIDTH - 180, 1))
 
+        # Affiche le bouton musique en haut à droite
+        music_text = "Musique : ON" if music_on else "Musique : OFF"
+        draw_button(music_text, 1050, 10, 180, 40, BLUE, CYAN, screen)
+
         pygame.display.flip()
         clock.tick(60)
     return
+
+def toggle_music():
+    global music_on
+    music_on = not music_on
+    if music_on:
+        mixer.music.unpause()
+    else:
+        mixer.music.pause()
 
 if __name__ == "__main__":
     main_menu()
