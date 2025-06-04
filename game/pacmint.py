@@ -289,9 +289,7 @@ def main_game(is_created_game, game_code = None):
 
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
         current_player = players.get(current_player_id)
-
-        current_player.move(players)
-        #item_manager.check_collision(current_player)
+        current_player.move(players, controlled=True)
 
         # Envoie les nouvelles positions au serveur
         payload = {
