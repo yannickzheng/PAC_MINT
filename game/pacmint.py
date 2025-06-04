@@ -2,8 +2,8 @@ import pygame
 
 from common.global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
 from common.network import Network
-from player import Player
-from map import MAP_SURFACE
+from game.player import Player
+from game.map import MAP_SURFACE
 from pygame import mixer
 
 from protocols import Protocols
