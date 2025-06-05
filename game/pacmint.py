@@ -380,5 +380,50 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             players[pid] = new_player
             print(f"[CLIENT] Nouveau joueur ajouté : {pid}")
 
+def game_over(score):
+    """Affiche l'écran de Game Over avec le score final."""
+    play_music("sound/game_over.mp3", 0.5)
+    if not music_on:
+        mixer.music.pause()
+    
+    run = True
+    while run:
+        screen.blit(image, (0, 0))
+        
+        # Titre Game Over
+        title_font = pygame.font.SysFont("Arial", 72, bold=True)
+        game_over_text = title_font.render("GAME OVER", True, (255, 0, 0))
+        screen.blit(game_over_text, (WIDTH//2 - game_over_text.get_width()//2, HEIGHT//2 - 100))
+        
+        # Affichage du score
+        score_font = pygame.font.SysFont("Arial", 36)
+        score_text = score_font.render(f"Score final: {score}", True, (255, 255, 0))
+        screen.blit(score_text, (WIDTH//2 - score_text.get_width()//2, HEIGHT//2))
+        
+        # Boutons
+        draw_button("Menu Principal", 400, 500, 200, 50, BLUE, CYAN, screen)
+        draw_button("Quitter", 650, 500, 200, 50, BLUE, PURPLE, screen)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+                sys.exit()
+            
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                button_click.play()
+                
+                if 500 <= y <= 550:
+                    if 400 <= x <= 600:
+                        main_menu()
+                        return
+                    elif 650 <= x <= 850:
+                        pygame.quit()
+                        sys.exit()
+        
+        pygame.display.flip()
+        pygame.time.delay(10)
+
 if __name__ == "__main__":
     main_menu()
