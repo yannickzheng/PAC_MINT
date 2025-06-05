@@ -287,6 +287,11 @@ def main_game(is_created_game, game_code = None):
 
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
         current_player = players.get(current_player_id)
+
+        # Si le joueur est Pacman et n'a plus de vies, afficher l'écran de Game Over
+        if current_player.is_pacman and current_player.lives <= 0:
+            game_over(current_player.score)
+            return  # Quitter la partie
         current_player.move(players, controlled=True)
 
         # Envoie les nouvelles positions au serveur
@@ -382,9 +387,9 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
 
 def game_over(score):
     """Affiche l'écran de Game Over avec le score final."""
-    play_music("sound/game_over.mp3", 0.5)
-    if not music_on:
-        mixer.music.pause()
+    #play_music("sound/game_over.mp3", 0.5)
+    #if not music_on:
+    #    mixer.music.pause()
     
     run = True
     while run:
