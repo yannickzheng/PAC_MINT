@@ -112,12 +112,14 @@ class Player:
                         self.lose_life()
 
                     self.x, self.y = self.coord
-                    return
-
+                    return    
+    
     def activate_super_power(self, duration=200):
+        """Active le super pouvoir de Pacman pour une durée donnée"""
         self.super_power_active = True
         self.super_power_timer = duration
         self.speed = min(int(self.speed * 1.2), CELL_SIZE // 5)
+        print(f"Super pouvoir activé pour {duration//60} secondes!")
 
     def is_position_free(x, y, ghost, players):
         for player in players:

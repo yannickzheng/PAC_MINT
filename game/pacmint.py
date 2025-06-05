@@ -275,9 +275,7 @@ def main_game(is_created_game, game_code = None):
     coins = all_players_data.get("items", {}).get("coins", [])
     fruits = all_players_data.get("items", {}).get("fruits", [])
 
-    run = True
-
-    #Boucle principale du jeu
+    run = True    #Boucle principale du jeu
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -300,52 +298,12 @@ def main_game(is_created_game, game_code = None):
                 }
             ]
         }
-
+        
         response = n.send_command(Protocols.Request.UPDATE_POSITION, payload)
-        print(f"Réponse du serveur : '{response}'")
-
-        action = response.get("action")
-
-        if action == "welcome":
-            coins = response.get("items", {}).get("coins", [])
-            fruits = response.get("items", {}).get("fruits", [])
-        elif action == "update":
-            collected = response.get("items", {}).get("collected", {})
-            for coin in collected.get("coins", []):
-                if coin in coins:
-                    coins.remove(coin)
-            for fruit in collected.get("fruits", []):
-                if fruit in fruits:
-                    fruits.remove(fruit)
-
-        # Met à jour les informations sur les autres joueurs récupérées par le serveur
-        for data in response.get("players", []):
-            pid = data["id"]
-            if pid == current_player_id:
-                current_player.score = data["score"]
-                current_player.lives = data.get("lives", current_player.lives)
-
-                if data[Protocols.Response.ACTIVATE_SUPER_POWER]:
-                    current_player.activate_super_power()
-                continue  # on ignore notre propre joueur
-
-            if pid in players:
-                # Mise à jour de la position
-                players[pid].update_position(tuple(data["pos"]))
-            else:
-                # Nouveau joueur détecté ! On le crée
-                new_player = Player(
-                    ip=data["ip"],
-                    tcp_port=data["tcp_port"],
-                    role=data["roles"],
-                    position=tuple(data["pos"])
-                )
-                new_player.id = pid
-                new_player.score = data.get("score", 0)
-                new_player.lives = data.get("lives", 3)
-                players[pid] = new_player
-                print(f"[CLIENT] Nouveau joueur ajouté : {pid}")
-
+        
+        # Synchroniser l'état du jeu avec les données du serveur
+        update_game_state_from_server(response, players, current_player_id, coins, fruits)
+        
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
@@ -377,7 +335,50 @@ def main_game(is_created_game, game_code = None):
         clock.tick(60)
     return
 
-
+def update_game_state_from_server(state, players, current_player_id, coins, fruits):
+    """Synchronise l'état local du jeu avec les données du serveur"""
+    # Mise à jour des items du jeu
+    if state.get("action") == "welcome":
+        coins[:] = state.get("items", {}).get("coins", [])
+        fruits[:] = state.get("items", {}).get("fruits", [])
+    elif state.get("items"):
+        # Mise à jour des items (coins/fruits)
+        if "coins" in state["items"]:
+            coins[:] = state["items"]["coins"]
+        if "fruits" in state["items"]:
+            fruits[:] = state["items"]["fruits"]
+    
+    # Mise à jour des joueurs
+    for data in state.get("players", []):
+        pid = data["id"]
+        if pid == current_player_id:
+            # Notre joueur
+            current_player = players[pid]
+            current_player.score = data["score"]
+            current_player.lives = data.get("lives", current_player.lives)
+            current_player.invincible = data.get("invincible", False)
+            if data.get("activate_super_power"):
+                current_player.activate_super_power()
+        elif pid in players:
+            # Joueur existant
+            players[pid].update_position(tuple(data["pos"]))
+            players[pid].score = data.get("score", 0)
+            players[pid].lives = data.get("lives", 3)
+            players[pid].invincible = data.get("invincible", False)
+        else:
+            # Nouveau joueur
+            new_player = Player(
+                ip=data["ip"],
+                tcp_port=data["tcp_port"],
+                role=data["roles"],
+                position=tuple(data["pos"])
+            )
+            new_player.id = pid
+            new_player.score = data.get("score", 0)
+            new_player.lives = data.get("lives", 3)
+            new_player.invincible = data.get("invincible", False)
+            players[pid] = new_player
+            print(f"[CLIENT] Nouveau joueur ajouté : {pid}")
 
 if __name__ == "__main__":
     main_menu()
