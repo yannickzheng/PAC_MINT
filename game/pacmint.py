@@ -2,8 +2,8 @@ import pygame
 
 from common.global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
 from common.network import Network
-from player import Player
-from map import MAP_SURFACE
+from game.player import Player
+from game.map import MAP_SURFACE
 from pygame import mixer
 
 from protocols import Protocols
@@ -15,23 +15,44 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+music_on = True
+music_loaded = None
+
+def init_music():
+    global music_loaded
+    if not pygame.mixer.get_init():
+        mixer.init()
+    mixer.music.set_volume(0.9)
+    music_loaded = None
+
+def play_music(path, volume=0.9):
+    global music_loaded
+    if music_loaded != path:
+        mixer.music.load(path)
+        music_loaded = path
+    mixer.music.set_volume(volume)
+    mixer.music.play(-1)
+    if not music_on:
+        mixer.music.pause()
+
+def toggle_music():
+    global music_on
+    music_on = not music_on
+    if music_on:
+        mixer.music.unpause()
+    else:
+        mixer.music.pause()
+
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PacMint")
-
 font = pygame.font.SysFont("Arial", 24)
-
 image = pygame.image.load("images/background2.png")
-
-# musique
-mixer.init()
-
-mixer.music.load("sound/background_sound.mp3")
-mixer.music.set_volume(0.9)
-mixer.music.play(-1)
-
 button_click = mixer.Sound("sound/button_click.mp3")
 button_click.set_volume(-10)
+
+init_music()
+play_music("sound/background_sound.mp3", 0.9)
 
 #image
 from common.global_variable import CELL_SIZE
@@ -115,12 +136,19 @@ def create_game():
 
 
 def main_menu():
+    global music_on
+    play_music("sound/background_sound.mp3", 0.9)
+    if not music_on:
+        mixer.music.pause()
     run = True
     while run:
         screen.blit(image, (0, 0))
         draw_button("Créer une partie", 250, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Rejoindre une partie", 550, 600, 200, 50, BLUE, CYAN, screen)
         draw_button("Quitter", 850, 600, 200, 50, BLUE, PURPLE, screen)
+        # bouton musique
+        music_text = "Musique : ON" if music_on else "Musique : OFF"
+        draw_button(music_text, 1050, 10, 180, 40, BLUE, CYAN, screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -140,6 +168,9 @@ def main_menu():
                         run = False
                         pygame.quit()
                         sys.exit()
+                # Gestion du bouton musique ---
+                if 10 <= y <= 50 and 1050 <= x <= 1230:
+                    toggle_music()
         pygame.display.flip()
 
 def lobby():
@@ -199,10 +230,9 @@ def join_game():
 
 def main_game(is_created_game, game_code = None):
 
-    mixer.init()
-    mixer.music.load("sound/game_sound.mp3")
-    mixer.music.set_volume(0.3)
-    mixer.music.play(-1)
+    play_music("sound/game_sound.mp3", 0.3)
+    if not music_on:
+        mixer.music.pause()
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
 
@@ -245,19 +275,19 @@ def main_game(is_created_game, game_code = None):
     coins = all_players_data.get("items", {}).get("coins", [])
     fruits = all_players_data.get("items", {}).get("fruits", [])
 
-    run = True
-
-    #Boucle principale du jeu
+    run = True    #Boucle principale du jeu
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                if 10 <= y <= 50 and 1050 <= x <= 1230:
+                    toggle_music()
 
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
         current_player = players.get(current_player_id)
-
-        current_player.move(players)
-        #item_manager.check_collision(current_player)
+        current_player.move(players, controlled=True)
 
         # Envoie les nouvelles positions au serveur
         payload = {
@@ -268,51 +298,12 @@ def main_game(is_created_game, game_code = None):
                 }
             ]
         }
-
+        
         response = n.send_command(Protocols.Request.UPDATE_POSITION, payload)
-        print(f"Réponse du serveur : '{response}'")
-
-        action = response.get("action")
-
-        if action == "welcome":
-            coins = response.get("items", {}).get("coins", [])
-            fruits = response.get("items", {}).get("fruits", [])
-        elif action == "update":
-            collected = response.get("items", {}).get("collected", {})
-            for coin in collected.get("coins", []):
-                if coin in coins:
-                    coins.remove(coin)
-            for fruit in collected.get("fruits", []):
-                if fruit in fruits:
-                    fruits.remove(fruit)
-
-        # Met à jour les informations sur les autres joueurs récupérées par le serveur
-        for data in response.get("players", []):
-            pid = data["id"]
-            if pid == current_player_id:
-                current_player.score = data["score"]
-
-                if data[Protocols.Response.ACTIVATE_SUPER_POWER]:
-                    current_player.activate_super_power()
-                continue  # on ignore notre propre joueur
-
-            if pid in players:
-                # Mise à jour de la position
-                players[pid].update_position(tuple(data["pos"]))
-            else:
-                # Nouveau joueur détecté ! On le crée
-                new_player = Player(
-                    ip=data["ip"],
-                    tcp_port=data["tcp_port"],
-                    role=data["roles"],
-                    position=tuple(data["pos"])
-                )
-                new_player.id = pid
-                new_player.score = data.get("score", 0)
-                new_player.lives = data.get("lives", 3)
-                players[pid] = new_player
-                print(f"[CLIENT] Nouveau joueur ajouté : {pid}")
-
+        
+        # Synchroniser l'état du jeu avec les données du serveur
+        update_game_state_from_server(response, players, current_player_id, coins, fruits)
+        
         # Afficher la carte et les joueurs
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
@@ -336,9 +327,58 @@ def main_game(is_created_game, game_code = None):
         lives_text = font.render(f"Vies: {current_player.lives}", True, (0, 0, 255))
         screen.blit(lives_text, (WIDTH - 180, 1))
 
+        # Affiche le bouton musique en haut à droite
+        music_text = "Musique : ON" if music_on else "Musique : OFF"
+        draw_button(music_text, 1050, 10, 180, 40, BLUE, CYAN, screen)
+
         pygame.display.flip()
         clock.tick(60)
     return
+
+def update_game_state_from_server(state, players, current_player_id, coins, fruits):
+    """Synchronise l'état local du jeu avec les données du serveur"""
+    # Mise à jour des items du jeu
+    if state.get("action") == "welcome":
+        coins[:] = state.get("items", {}).get("coins", [])
+        fruits[:] = state.get("items", {}).get("fruits", [])
+    elif state.get("items"):
+        # Mise à jour des items (coins/fruits)
+        if "coins" in state["items"]:
+            coins[:] = state["items"]["coins"]
+        if "fruits" in state["items"]:
+            fruits[:] = state["items"]["fruits"]
+    
+    # Mise à jour des joueurs
+    for data in state.get("players", []):
+        pid = data["id"]
+        if pid == current_player_id:
+            # Notre joueur
+            current_player = players[pid]
+            current_player.score = data["score"]
+            current_player.lives = data.get("lives", current_player.lives)
+            current_player.invincible = data.get("invincible", False)
+            if data.get("activate_super_power"):
+                current_player.activate_super_power()
+        elif pid in players:
+            # Joueur existant
+            players[pid].update_position(tuple(data["pos"]))
+            players[pid].score = data.get("score", 0)
+            players[pid].lives = data.get("lives", 3)
+            players[pid].invincible = data.get("invincible", False)
+        else:
+            # Nouveau joueur
+            new_player = Player(
+                ip=data["ip"],
+                tcp_port=data["tcp_port"],
+                role=data["roles"],
+                position=tuple(data["pos"])
+            )
+            new_player.id = pid
+            new_player.score = data.get("score", 0)
+            new_player.lives = data.get("lives", 3)
+            new_player.invincible = data.get("invincible", False)
+            players[pid] = new_player
+            print(f"[CLIENT] Nouveau joueur ajouté : {pid}")
 
 if __name__ == "__main__":
     main_menu()

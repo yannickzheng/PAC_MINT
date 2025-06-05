@@ -112,12 +112,14 @@ class Player:
                         self.lose_life()
 
                     self.x, self.y = self.coord
-                    return
-
+                    return    
+    
     def activate_super_power(self, duration=200):
+        """Active le super pouvoir de Pacman pour une durée donnée"""
         self.super_power_active = True
         self.super_power_timer = duration
         self.speed = min(int(self.speed * 1.2), CELL_SIZE // 5)
+        print(f"Super pouvoir activé pour {duration//60} secondes!")
 
     def is_position_free(x, y, ghost, players):
         for player in players:
@@ -241,11 +243,12 @@ class Player:
             if abs(dx) < 5 and abs(dy) < 5:
                 self.current_path.pop(0)
 
-    def move(self, players):
-        """Déplace Pac-Man en s'assurant qu'il ne traverse pas les murs"""
+    def move(self, players, controlled=False):
+        """Déplace le joueur (Pacman ou Fantôme) contrôlé par le client."""
         keys = pygame.key.get_pressed()
         new_x, new_y = self.x, self.y
-        hitbox_offset = self.size // 4  #  Réduit la hitbox pour éviter l'entrée partielle dans les murs
+        hitbox_offset = self.size // 4
+
         if self.super_power_active:
             self.super_power_timer -= 1
             if self.super_power_timer <= 0:
@@ -254,15 +257,11 @@ class Player:
 
         self.coord = (self.x, self.y)
 
-        # 🛑 Très important : ne pas faire IA si mangé
         if self.is_phantom and self.is_eaten:
             return
 
-        if self.is_pacman:
-            keys = pygame.key.get_pressed()
-            new_x, new_y = self.x, self.y
-            hitbox_offset = self.size // 4
-
+        if self.is_pacman or (self.is_phantom and controlled):
+            # Controle clavier pour Pacman et pour le fantôme contrôlé par le joueur
             if keys[pygame.K_LEFT] and self.x > 0 and not self.is_wall(self.x - self.speed, self.y):
                 new_x -= self.speed
             if keys[pygame.K_RIGHT] and self.x + self.size < WIDTH and not self.is_wall(self.x + self.speed, self.y):
@@ -275,8 +274,7 @@ class Player:
             self.x, self.y = new_x, new_y
 
         elif self.is_phantom:
-            if self.is_eaten:
-                return  # NE PAS FAIRE IA si fantôme est mangé
+            # IA uniquement pour les fantômes non contrôlés par le joueur
             pacman = next((p for p in players.values() if p.is_pacman), None)
             if pacman:
                 self.ghost_ai_move(pacman)
