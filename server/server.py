@@ -2,13 +2,18 @@ import socket
 import time
 import sys
 from _thread import start_new_thread
-from rooms import RoomManager
+from server.rooms import RoomManager
 from protocols import Protocols
 
 import threading
 
 import json
 import uuid
+
+# Configuration pour la journalisation
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger('pacmint_server')
 
 def send_json(conn, obj):
     """Envoie un dict JSON suivi d'un saut de ligne."""
@@ -38,20 +43,20 @@ try:
     # Liaison du socket à l'adresse IP et au port définis précédemment
     s.bind((server, port))
 except socket.error as e:
-    print("Erreur de liaison du socket :")
+    logger.error("Erreur de liaison du socket :")
     sys.exit(1)
 
 # Nombre de connexions simultanées maximales
 s.listen(max_players)
-print("Serveur démarré, en attente de connexions...")
+logger.info("Serveur démarré, en attente de connexions...")
 
 #Gestion de l'arrêt du serveur
 def server_shutdown():
-    print("Arrêt du serveur...")
+    logger.info("Arrêt du serveur...")
     s.close()
     sys.exit(0)
 
-def build_state(room, current_id, *,with_action = False, initial=False, activate_super_power=False):
+def build_state(room, current_id, *,with_action = False, initial=False, activate_super_power=False, event=None):
     state = {
         "current_player_id": current_id,
         "players": [
@@ -62,6 +67,8 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
                 "ip": p.ip,
                 "tcp_port": p.tcp_port,
                 "score": p.score,
+                "lives": getattr(p, "lives", 3),
+                "invincible": getattr(p, "invincible", False),
                 "activate_super_power": activate_super_power if pid == current_id else False
             }
             for pid, p in room.players.items()
@@ -76,7 +83,11 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
             }
         else:
             state["action"] = "update"
-
+    
+    # Ajouter des événements spécifiques si nécessaire
+    if event:
+        state["event"] = event
+    
     return state
 
 def broadcast_state(room, current_id, state):
@@ -85,7 +96,7 @@ def broadcast_state(room, current_id, state):
             try:
                 send_json(player.tcp_socket, state)
             except Exception as e:
-                print(f"[Serveur] Erreur d'envoi à {pid}: {e}")
+                logger.warning(f"[Serveur] Erreur d'envoi à {pid}: {e}")
 
 
 def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
@@ -95,7 +106,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
        :param joueur_actuel: joueur actuel (entier)
        :return:
     """
-    print(f"Connexion établie avec le joueur {joueur_actuel} depuis {address}")
+    logger.info(f"Connexion établie avec le joueur {joueur_actuel} depuis {address}")
 
     #Sécurité, on impose que room_id est bien un int
     room_id = int(room_id)
@@ -103,7 +114,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
     try:
         # On vérifie que la salle existe bien sinon on ferme la session
         if not room_manager.room_exists(room_id):
-            print("Partie introuvable")
+            logger.warning(f"Partie introuvable pour room_id={room_id}")
             connexion.close()
             return
 
@@ -134,7 +145,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                 """
 
                 if not raw_data.get("command", False):
-                    print(f"Déconnexion du joueur {joueur_actuel}")
+                    logger.info(f"Déconnexion du joueur {joueur_actuel}")
                     break
                 #print(raw_data)
                 if raw_data.get("command") == Protocols.Request.UPDATE_POSITION:
@@ -143,15 +154,14 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                     activate_super_power = False
 
                     for pdata in payload.get("players", []):
-
                         pid = pdata["id"]
                         pos = pdata["pos"]
                         if pid in room.players:
                             player = room.players[pid]
                             player.update_position(pos)
-                            print(player.role)
+                            logger.debug(f"Position mise à jour pour le joueur {pid}: {pos}")
 
-                            # Vérifie la collecte d’items pour ce joueur (uniquement si c'est Pacman)
+                            # Vérifie la collecte d'items pour ce joueur (uniquement si c'est Pacman)
                             if player.role == "pacman":
                                 collected = room.item_manager.check_collision(player)
                                 if collected["coins"]:
@@ -159,26 +169,58 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                                 if collected["fruits"]:
                                     player.score += 50 * len(collected["fruits"])
                                     activate_super_power = True
+                                    player.super_power_active = True
+                                    player.super_power_timer = 300  # 5 secondes à 60 FPS
 
-                                state = build_state(room, joueur_actuel, with_action = True,activate_super_power=activate_super_power)
-                                state["items"] = {"collected": collected}
+                    # Mise à jour des états des joueurs (timers, etc.)
+                    update_player_states(room)
+                    
+                    # GESTION COLLISION FANTÔME/PACMAN 
+                    pacman_touche = check_pacman_ghost_collision(room)
+                    if pacman_touche and not getattr(pacman_touche, "invincible", False):
+                        pacman_touche.lives = getattr(pacman_touche, "lives", 3) - 1
+                        pacman_touche.invincible = True
+                        pacman_touche.invincibility_timer = 180  # 3 secondes à 60 FPS
+                        logger.info(f"Pacman touché ! Vies restantes : {pacman_touche.lives}")
+                        event = "pacman_hit"
+                    else:
+                        event = None
+                    
+                    # Synchronisation complète pour tous les joueurs
+                    state = sync_game_state(room, joueur_actuel, event=event)
+                    if activate_super_power:
+                        state["activate_super_power"] = True
+                        send_json(connexion, state)
+<<<<<<< HEAD
+                        #broadcast_state(room, joueur_actuel, state)      
+                    
+=======
+                        #broadcast_state(room, joueur_actuel, state)                    # GESTION COLLISION FANTÔME/PACMAN 
+                    """
+                    pacman_touche = check_pacman_ghost_collision(room)
+                    if pacman_touche and not getattr(pacman_touche, "invincible", False):
+                        pacman_touche.lives = getattr(pacman_touche, "lives", 3) - 1
+                        pacman_touche.invincible = True
+                        pacman_touche.invincibility_timer = 180  # 3 secondes à 60 FPS
+                        logger.info(f"Pacman touché ! Vies restantes : {pacman_touche.lives}")
 
-                                #send_json(connexion, state)
-                                broadcast_state(room, joueur_actuel, state)
-
-
+                        # Broadcast l'état à tous les joueurs avec événement de collision
+                        state = build_state(room, joueur_actuel, with_action=True, event="pacman_hit")
+                        broadcast_state(room, joueur_actuel, state)
+                    """
+>>>>>>> d725b0a49a4b9e04f70ab835d4ba83649aa801d1
 
             except Exception as erreur:
-                print(f"Erreur avec le joueur {joueur_actuel} : {erreur}")
+                logger.error(f"Erreur avec le joueur {joueur_actuel} : {erreur}")
                 break
 
         connexion.close()
         room.leave(joueur_actuel)  # Supprime le joueur de la salle
-        print(f"Connexion fermée pour le joueur {joueur_actuel}")
+        logger.info(f"Connexion fermée pour le joueur {joueur_actuel}")
 
 
     except Exception as e:
-        print(f"Erreur dans la gestion de la partie : {e}")
+        logger.error(f"Erreur dans la gestion de la partie : {e}")
         connexion.close()
 
 def threaded_client(connexion, address):
@@ -188,13 +230,13 @@ def threaded_client(connexion, address):
     try:
         raw_data = recv_json(connexion)
         if not raw_data:
-            print("Connexion interrompue avant la réception des données.")
+            logger.warning("Connexion interrompue avant la réception des données.")
             connexion.close()
             return
 
         data = raw_data
         if data["command"] == Protocols.Request.CREATE_GAME:
-            print("game crée")
+            logger.info("Création d'une nouvelle partie")
 
             #On crée la partie
             room_name = "Test Room"
@@ -212,7 +254,7 @@ def threaded_client(connexion, address):
                 connexion.close()
 
         elif data["command"] == Protocols.Request.JOIN_ROOM:
-            #print(data)
+            logger.info(f"Un joueur tente de rejoindre la room {data['message']}")
             room_id = data["message"]
             player_id = str(uuid.uuid4())
             if room_manager.join(player_id, room_id):
@@ -224,14 +266,68 @@ def threaded_client(connexion, address):
                 connexion.close()
                 return
     except Exception as e:
-        print(f"Erreur lors de la gestion d'un client : {e}")
+        logger.error(f"Erreur lors de la gestion d'un client : {e}")
         connexion.close()
+
+
+def update_player_states(room):
+    """Met à jour les timers et états des joueurs (invincibilité, super-pouvoir)"""
+    for pid, player in room.players.items():
+        # Mise à jour du timer d'invincibilité
+        if getattr(player, "invincible", False):
+            player.invincibility_timer -= 1
+            if player.invincibility_timer <= 0:
+                player.invincible = False
+                logger.info(f"Joueur {pid} n'est plus invincible")
+        
+        # Mise à jour du timer de super-pouvoir
+        if getattr(player, "super_power_active", False):
+            player.super_power_timer -= 1
+            if player.super_power_timer <= 0:
+                player.super_power_active = False
+                logger.info(f"Super-pouvoir désactivé pour le joueur {pid}")
+
+def check_pacman_ghost_collision(room):
+    """Renvoie le Pacman touché par un fantôme, ou None."""
+    pacmans = [p for p in room.players.values() if "pacman" in p.role.lower()]
+    ghosts = [p for p in room.players.values() if "fantome" in p.role.lower()]
+    for pacman in pacmans:
+        for ghost in ghosts:
+            dx = pacman.position[0] - ghost.position[0]
+            dy = pacman.position[1] - ghost.position[1]
+            distance_squared = dx * dx + dy * dy
+            # Rayon de collision (ajuste selon la taille de tes sprites)
+            if distance_squared < 30*30:
+                return pacman
+    return None
+
+def sync_game_state(room, current_id, event=None):
+    """
+    Synchronise l'état du jeu pour tous les joueurs.
+    Envoie une mise à jour complète à tous les joueurs.
+    """
+    # Mettre à jour les états des joueurs (timers d'invincibilité, etc.)
+    update_player_states(room)
+    
+    # Construire l'état actuel du jeu
+    state = build_state(room, current_id, with_action=True, event=event)
+    
+    # Ajouter les informations sur les items
+    state["items"] = {
+        "coins": room.item_manager.coins,
+        "fruits": room.item_manager.fruits
+    }
+    
+    # Diffuser l'état à tous les joueurs
+    broadcast_state(room, current_id, state)
+    
+    return state
 
 
 while True:
     connexion, address = s.accept()
-    print("Connecté à:", address)
-    print("Room Manager",room_manager.rooms)
+    logger.info(f"Connecté à: {address}")
+    logger.debug(f"Room Manager état actuel: {room_manager.rooms}")
     thread = threading.Thread(target=threaded_client, args=(connexion,address))
     thread.start()
 

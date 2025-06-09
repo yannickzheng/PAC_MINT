@@ -3,6 +3,16 @@ from django.db import models
 # Create your models here.
 
 from django.db import models
+from django.contrib.auth.models import User
+
+class Score(models.Model):
+    player = models.ForeignKey(User, on_delete=models.CASCADE)
+    value = models.IntegerField()
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.player.username} - {self.value}"
+
 
 class Player(models.Model):
     player_id = models.AutoField(primary_key=True)
