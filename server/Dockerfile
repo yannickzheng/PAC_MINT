@@ -1,18 +1,30 @@
 FROM python:3.9-slim
 
+# Install system dependencies for pygame
+RUN apt-get update && apt-get install -y \
+    libjpeg-dev \
+    zlib1g-dev \
+    libpng-dev \
+    libsdl2-dev \
+    libsdl2-image-dev \
+    libsdl2-mixer-dev \
+    libsdl2-ttf-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Copier les fichiers
+# Copy files
 COPY server/requirements.txt .
-
-
-COPY server/server.py .
 COPY common/ ./common/
-COPY server/rooms.py .
+COPY server/ ./server/
+COPY game/ ./game/
+COPY images/ ./images/
 
-# Installer les dépendances
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Lancer server.py
-CMD ["python", "server.py"]
+# Configure PYTHONPATH
+ENV PYTHONPATH=/app
 
+# Run server.py
+CMD ["python", "server/server.py"]
