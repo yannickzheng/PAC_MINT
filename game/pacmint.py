@@ -4,11 +4,9 @@ from common.global_variable import WIDTH, HEIGHT, WHITE, BLUE, CYAN, PURPLE
 from common.network import Network
 from player import Player
 from map import MAP_SURFACE
-from pygame import mixer
+# from pygame import mixer
 
-from protocols import Protocols
-
-import json
+from common.protocols import Protocols
 
 import sys
 import os
@@ -24,14 +22,14 @@ font = pygame.font.SysFont("Arial", 24)
 image = pygame.image.load("images/background2.png")
 
 # musique
-mixer.init()
+# mixer.init()
 
-mixer.music.load("sound/background_sound.mp3")
-mixer.music.set_volume(0.9)
-mixer.music.play(-1)
-
-button_click = mixer.Sound("sound/button_click.mp3")
-button_click.set_volume(-10)
+# mixer.music.load("sound/background_sound.mp3")
+# mixer.music.set_volume(0.9)
+# mixer.music.play(-1)
+#
+# button_click = mixer.Sound("sound/button_click.mp3")
+# button_click.set_volume(-10)
 
 #image
 from common.global_variable import CELL_SIZE
@@ -98,7 +96,7 @@ def create_game():
                 run = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                button_click.play()
+                # button_click.play()
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
@@ -129,7 +127,7 @@ def main_menu():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                button_click.play()
+                # button_click.play()
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
@@ -172,7 +170,7 @@ def join_game():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                button_click.play()
+                # button_click.play()
                 if input_box.collidepoint(event.pos):
                     input_active = not input_active
                 else:
@@ -199,10 +197,10 @@ def join_game():
 
 def main_game(is_created_game, game_code = None):
 
-    mixer.init()
-    mixer.music.load("sound/game_sound.mp3")
-    mixer.music.set_volume(0.3)
-    mixer.music.play(-1)
+    # mixer.init()
+    # mixer.music.load("sound/game_sound.mp3")
+    # mixer.music.set_volume(0.3)
+    # mixer.music.play(-1)
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
 
