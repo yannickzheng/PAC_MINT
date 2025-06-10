@@ -237,22 +237,26 @@ def main_game(is_created_game, game_code = None):
     font = pygame.font.SysFont("Arial", 24)
 
     clock = pygame.time.Clock()
-
+    
+    # Afficher un écran de chargement pendant la connexion
+    display_loading_screen("Connexion au serveur...")
+    
     n = Network()
-
     if not is_created_game:
-
+        display_loading_screen("Connexion à la partie en cours...")
         response = n.send_command(Protocols.Request.JOIN_ROOM, game_code)
         print(response)
     #Si le joueur souhaite créer une partie, il envoie une demande au serveur
     if is_created_game:
         # Le client demande la création d'une partie au serveur
+        display_loading_screen("Création de la partie en cours...")
         print("Game started")
         response = n.send_command(Protocols.Request.CREATE_GAME)
         game_code = response.get("code", "")
         print(f"Code de la partie créée : {game_code}")
 
     # Le serveur envoie les positions initiales à chaque joueur
+    display_loading_screen("Chargement des données de jeu...")
     #welcome = n.receive_j()
     welcome = n.receive_json()
     print("WELCOME reçu:", welcome)
@@ -430,5 +434,58 @@ def game_over(score):
         pygame.display.flip()
         pygame.time.delay(10)
 
+def display_loading_screen(message="Chargement en cours..."):
+    """Affiche un écran de chargement avec un message personnalisable"""
+    screen.fill((0, 0, 0))
+    loading_font = pygame.font.SysFont("Arial", 36)
+    loading_text = loading_font.render(message, True, (255, 255, 255))
+    screen.blit(loading_text, (WIDTH//2 - loading_text.get_width()//2, HEIGHT//2))
+    
+    # Afficher un petit indicateur de chargement animé
+    current_time = pygame.time.get_ticks()
+    dots = "." * (1 + (current_time // 500) % 3)  # Animation de points (1-3 points)
+    dots_text = loading_font.render(dots, True, (255, 255, 255))
+    screen.blit(dots_text, (WIDTH//2 + loading_text.get_width()//2, HEIGHT//2))
+    
+    pygame.display.flip()
+    pygame.event.pump()  # Permet à pygame de traiter les événements pendant le chargement
+
+def preload_assets():
+    """Précharge les ressources du jeu pour accélérer le démarrage"""
+    display_loading_screen("Chargement des ressources...")
+    # Préchargement des images
+    images = [
+        "images/pacman - right.png",
+        "images/pacman - left.png",
+        "images/pacman - up.png",
+        "images/pacman - down.png",
+        "images/red_ghost.png",
+        "images/Black Pacman.png",
+        "images/Black Pacman-left.png",
+        "images/Black Pacman-up.png",
+        "images/Black Pacman-down.png"
+    ]
+    
+    for img_path in images:
+        pygame.image.load(img_path)
+    
+    # Préchargement des sons
+    sounds = [
+        "sound/button_click.mp3",
+        "sound/game_sound.mp3",
+        "sound/background_sound.mp3"
+    ]
+    
+    for sound_path in sounds:
+        try:
+            if sound_path.endswith(".mp3"):
+                mixer.Sound(sound_path)
+        except:
+            print(f"Impossible de charger le son: {sound_path}")
+    
+    # Attendre un peu pour que l'utilisateur puisse voir l'écran de chargement
+    pygame.time.delay(500)
+
 if __name__ == "__main__":
+    preload_assets()  # Précharger les ressources au démarrage
     main_menu()
