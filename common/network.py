@@ -24,8 +24,18 @@ class Network:
 
     def _initialize_connection(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect(self.server_address)
-        self.sockfile = self.client.makefile('r')  # ← pour readline()
+        self.client.settimeout(5)  # Timeout de 5 secondes pour éviter de bloquer trop longtemps
+        try:
+            self.client.connect(self.server_address)
+            self.client.settimeout(None)  # Remettre en mode bloquant après connexion
+            self.sockfile = self.client.makefile('r') # Créer un fichier pour lire les données du socket
+            print("Connexion au serveur établie!")
+        except socket.timeout:
+            print("ERREUR: Timeout de connexion au serveur. Vérifiez que le serveur est bien démarré.")
+            raise ConnectionError("Timeout lors de la connexion au serveur")
+        except ConnectionRefusedError:
+            print("ERREUR: Connexion refusée. Vérifiez que le serveur est bien démarré.")
+            raise ConnectionError("Connexion au serveur refusée")
 
 
     def receive_json(self):

@@ -191,24 +191,8 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                     if activate_super_power:
                         state["activate_super_power"] = True
                         send_json(connexion, state)
-<<<<<<< HEAD
                         #broadcast_state(room, joueur_actuel, state)      
                     
-=======
-                        #broadcast_state(room, joueur_actuel, state)                    # GESTION COLLISION FANTÔME/PACMAN 
-                    """
-                    pacman_touche = check_pacman_ghost_collision(room)
-                    if pacman_touche and not getattr(pacman_touche, "invincible", False):
-                        pacman_touche.lives = getattr(pacman_touche, "lives", 3) - 1
-                        pacman_touche.invincible = True
-                        pacman_touche.invincibility_timer = 180  # 3 secondes à 60 FPS
-                        logger.info(f"Pacman touché ! Vies restantes : {pacman_touche.lives}")
-
-                        # Broadcast l'état à tous les joueurs avec événement de collision
-                        state = build_state(room, joueur_actuel, with_action=True, event="pacman_hit")
-                        broadcast_state(room, joueur_actuel, state)
-                    """
->>>>>>> d725b0a49a4b9e04f70ab835d4ba83649aa801d1
 
             except Exception as erreur:
                 logger.error(f"Erreur avec le joueur {joueur_actuel} : {erreur}")
