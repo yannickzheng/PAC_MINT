@@ -126,19 +126,26 @@ def create_game():
                 run = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                # button_click.play()
-                # Vérifier si un bouton est cliqué
-                if 600 <= y <= 650:
-                    if 250 <= x <= 450:
-                        #Pas d'interet
-                        game_code = None # Génération d'un code
-                    elif 550 <= x <= 750:
-                        #On lance la partie ici
-                        #Le client demande au serveur de créer un code de partie, le serveur crée un code et l'envoit au client
-                        main_game(is_created_game=True)
-
-                    elif 850 <= x <= 1050:
-                        main_menu()
+                #button_click.play()
+                
+                # Vérifier si le bouton musique est cliqué
+                if 10 <= y <= 50 and 1050 <= x <= 1230:
+                    toggle_music()
+                
+                # Vérifier les boutons principaux
+                if HEIGHT//2 <= y <= HEIGHT//2 + 70:
+                    if WIDTH//2 - 250 <= x <= WIDTH//2 - 50:  # Mode Hors Ligne
+                        offline_game()
+                    elif WIDTH//2 + 50 <= x <= WIDTH//2 + 250:  # Mode En Ligne
+                        online_menu()
+                
+                # Bouton Quitter
+                if HEIGHT//2 + 100 <= y <= HEIGHT//2 + 170:
+                    if WIDTH//2 - 100 <= x <= WIDTH//2 + 100:
+                        run = False
+                        pygame.quit()
+                        sys.exit()
+                        
         pygame.display.flip()
 
 
