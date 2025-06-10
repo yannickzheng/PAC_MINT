@@ -7,9 +7,7 @@ from game.player import Player
 from game.map import MAP_SURFACE, MAP_DATA
 from pygame import mixer
 
-from protocols import Protocols
-
-import json
+from common.protocols import Protocols
 
 import sys
 import os
@@ -49,8 +47,16 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PacMint")
 font = pygame.font.SysFont("Arial", 24)
 image = pygame.image.load("images/background2.png")
-button_click = mixer.Sound("sound/button_click.mp3")
-button_click.set_volume(-10)
+
+# musique
+# mixer.init()
+
+# mixer.music.load("sound/background_sound.mp3")
+# mixer.music.set_volume(0.9)
+# mixer.music.play(-1)
+#
+# button_click = mixer.Sound("sound/button_click.mp3")
+# button_click.set_volume(-10)
 
 init_music()
 play_music("sound/background_sound.mp3", 0.9)
@@ -120,7 +126,7 @@ def create_game():
                 run = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                button_click.play()
+                # button_click.play()
                 # Vérifier si un bouton est cliqué
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:
@@ -167,22 +173,14 @@ def main_menu():
                 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                button_click.play()
-                
-                # Vérifier si le bouton musique est cliqué
-                if 10 <= y <= 50 and 1050 <= x <= 1230:
-                    toggle_music()
-                
-                # Vérifier les boutons principaux
-                if HEIGHT//2 <= y <= HEIGHT//2 + 70:
-                    if WIDTH//2 - 250 <= x <= WIDTH//2 - 50:  # Mode Hors Ligne
-                        offline_game()
-                    elif WIDTH//2 + 50 <= x <= WIDTH//2 + 250:  # Mode En Ligne
-                        online_menu()
-                
-                # Bouton Quitter
-                if HEIGHT//2 + 100 <= y <= HEIGHT//2 + 170:
-                    if WIDTH//2 - 100 <= x <= WIDTH//2 + 100:
+                # button_click.play()
+                # Vérifier si un bouton est cliqué
+                if 600 <= y <= 650:
+                    if 250 <= x <= 450:
+                        create_game()
+                    elif 550 <= x <= 750:
+                        join_game()
+                    elif 850 <= x <= 1050:
                         run = False
                         pygame.quit()
                         sys.exit()
@@ -219,7 +217,7 @@ def join_game():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                button_click.play()
+                # button_click.play()
                 if input_box.collidepoint(event.pos):
                     input_active = not input_active
                 else:
@@ -245,10 +243,10 @@ def join_game():
         pygame.display.flip()
 
 def main_game(is_created_game, game_code = None):
-
-    play_music("sound/game_sound.mp3", 0.3)
-    if not music_on:
-        mixer.music.pause()
+    # mixer.init()
+    # mixer.music.load("sound/game_sound.mp3")
+    # mixer.music.set_volume(0.3)
+    # mixer.music.play(-1)
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
 
@@ -437,7 +435,7 @@ def game_over(score):
             
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                button_click.play()
+                #button_click.play()
                 
                 if 500 <= y <= 550:
                     if 400 <= x <= 600:
@@ -690,7 +688,7 @@ def online_menu():
                 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                button_click.play()
+                #button_click.play()
                 
                 # Vérifier si le bouton musique est cliqué
                 if 10 <= y <= 50 and 1050 <= x <= 1230:
@@ -746,7 +744,7 @@ def online_menu():
                 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                button_click.play()
+                # button_click.play()
                 
                 # Vérifier si le bouton musique est cliqué
                 if 10 <= y <= 50 and 1050 <= x <= 1230:
