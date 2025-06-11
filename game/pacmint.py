@@ -163,10 +163,10 @@ def main_menu():
         title_text = title_font.render("PAC-MINT", True, (255, 255, 0))
         screen.blit(title_text, (WIDTH//2 - title_text.get_width()//2, HEIGHT//2 - 200))
         
-        # Seulement deux options principales
-        draw_button("Mode Hors Ligne", WIDTH//2 - 250, HEIGHT//2, 200, 70, BLUE, CYAN, screen)  
-        draw_button("Mode En Ligne", WIDTH//2 + 50, HEIGHT//2, 200, 70, BLUE, CYAN, screen)
-        draw_button("Quitter", WIDTH//2 - 100, HEIGHT//2 + 100, 200, 70, BLUE, PURPLE, screen)
+        
+        draw_button("Mode Hors Ligne", 250, 600, 200, 50, BLUE, CYAN, screen)  
+        draw_button("Mode En Ligne", 550, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Quitter", 850, 600, 200, 50, BLUE, PURPLE, screen)
         
         # bouton musique
         music_text = "Musique : ON" if music_on else "Musique : OFF"
@@ -180,14 +180,16 @@ def main_menu():
                 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                # button_click.play()
-                # Vérifier si un bouton est cliqué
+                # Vérifier si le bouton musique est cliqué
+                if 10 <= y <= 50 and 1050 <= x <= 1230:
+                    toggle_music()
+                # Vérifier les boutons principaux en bas de l'écran
                 if 600 <= y <= 650:
-                    if 250 <= x <= 450:
-                        create_game()
-                    elif 550 <= x <= 750:
-                        join_game()
-                    elif 850 <= x <= 1050:
+                    if 250 <= x <= 450:  # Mode Hors Ligne
+                        offline_game()
+                    elif 550 <= x <= 750:  # Mode En Ligne
+                        online_menu()
+                    elif 850 <= x <= 1050:  # Quitter
                         run = False
                         pygame.quit()
                         sys.exit()
