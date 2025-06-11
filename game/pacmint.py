@@ -132,19 +132,14 @@ def create_game():
                 if 10 <= y <= 50 and 1050 <= x <= 1230:
                     toggle_music()
                 
-                # Vérifier les boutons principaux
-                if HEIGHT//2 <= y <= HEIGHT//2 + 70:
-                    if WIDTH//2 - 250 <= x <= WIDTH//2 - 50:  # Mode Hors Ligne
-                        offline_game()
-                    elif WIDTH//2 + 50 <= x <= WIDTH//2 + 250:  # Mode En Ligne
+                # Vérifier les boutons en bas de l'écran
+                if 600 <= y <= 650:
+                    if 550 <= x <= 750:  # Lancer la partie
+                        main_game(is_created_game=True)
+                        return
+                    elif 850 <= x <= 1050:  # Retour
                         online_menu()
-                
-                # Bouton Quitter
-                if HEIGHT//2 + 100 <= y <= HEIGHT//2 + 170:
-                    if WIDTH//2 - 100 <= x <= WIDTH//2 + 100:
-                        run = False
-                        pygame.quit()
-                        sys.exit()
+                        return
                         
         pygame.display.flip()
 
@@ -680,66 +675,10 @@ def online_menu():
         title_text = title_font.render("Mode En Ligne", True, (255, 255, 0))
         screen.blit(title_text, (WIDTH//2 - title_text.get_width()//2, HEIGHT//2 - 200))
         
-        # Options
-        draw_button("Créer une partie", WIDTH//2 - 250, HEIGHT//2, 200, 70, BLUE, CYAN, screen)
-        draw_button("Rejoindre une partie", WIDTH//2 + 50, HEIGHT//2, 200, 70, BLUE, CYAN, screen)
-        draw_button("Retour", WIDTH//2 - 100, HEIGHT//2 + 100, 200, 70, BLUE, PURPLE, screen)
-        
-        # Bouton musique
-        music_text = "Musique : ON" if music_on else "Musique : OFF"
-        draw_button(music_text, 1050, 10, 180, 40, BLUE, CYAN, screen)
-        
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-                pygame.quit()
-                sys.exit()
-                
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = event.pos
-                #button_click.play()
-                
-                # Vérifier si le bouton musique est cliqué
-                if 10 <= y <= 50 and 1050 <= x <= 1230:
-                    toggle_music()
-                
-                # Boutons principaux
-                if HEIGHT//2 <= y <= HEIGHT//2 + 70:
-                    if WIDTH//2 - 250 <= x <= WIDTH//2 - 50:
-                        create_game()
-                    elif WIDTH//2 + 50 <= x <= WIDTH//2 + 250:
-                        join_game()
-                
-                # Bouton Retour
-                if HEIGHT//2 + 100 <= y <= HEIGHT//2 + 170:
-                    if WIDTH//2 - 100 <= x <= WIDTH//2 + 100:
-                        return  # Retour au menu principal
-                        
-        pygame.display.flip()
-
-if __name__ == "__main__":
-    preload_assets()  # Précharger les ressources au démarrage
-    main_menu()
-
-def online_menu():
-    """Page de sélection pour le mode en ligne (créer ou rejoindre une partie)"""
-    play_music("sound/background_sound.mp3", 0.9)
-    if not music_on:
-        mixer.music.pause()
-        
-    run = True
-    while run:
-        screen.blit(image, (0, 0))
-        
-        # Titre
-        title_font = pygame.font.SysFont("Arial", 48, bold=True)
-        title_text = title_font.render("Mode En Ligne", True, (255, 255, 0))
-        screen.blit(title_text, (WIDTH//2 - title_text.get_width()//2, HEIGHT//2 - 200))
-        
-        # Options
-        draw_button("Créer une partie", WIDTH//2 - 250, HEIGHT//2, 200, 70, BLUE, CYAN, screen)
-        draw_button("Rejoindre une partie", WIDTH//2 + 50, HEIGHT//2, 200, 70, BLUE, CYAN, screen)
-        draw_button("Retour", WIDTH//2 - 100, HEIGHT//2 + 100, 200, 70, BLUE, PURPLE, screen)
+        # Boutons positionnés en bas de l'écran
+        draw_button("Créer une partie", 250, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Rejoindre une partie", 550, 600, 200, 50, BLUE, CYAN, screen)
+        draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen)
         
         # Bouton musique
         music_text = "Musique : ON" if music_on else "Musique : OFF"
@@ -759,16 +698,17 @@ def online_menu():
                 if 10 <= y <= 50 and 1050 <= x <= 1230:
                     toggle_music()
                 
-                # Boutons principaux
-                if HEIGHT//2 <= y <= HEIGHT//2 + 70:
-                    if WIDTH//2 - 250 <= x <= WIDTH//2 - 50:
+                # Vérifier les boutons en bas de l'écran
+                if 600 <= y <= 650:
+                    if 250 <= x <= 450:  # Créer une partie
                         create_game()
-                    elif WIDTH//2 + 50 <= x <= WIDTH//2 + 250:
+                    elif 550 <= x <= 750:  # Rejoindre une partie
                         join_game()
-                
-                # Bouton Retour
-                if HEIGHT//2 + 100 <= y <= HEIGHT//2 + 170:
-                    if WIDTH//2 - 100 <= x <= WIDTH//2 + 100:
+                    elif 850 <= x <= 1050:  # Retour
                         return  # Retour au menu principal
                         
         pygame.display.flip()
+
+if __name__ == "__main__":
+    preload_assets()  # Précharger les ressources au démarrage
+    main_menu()
