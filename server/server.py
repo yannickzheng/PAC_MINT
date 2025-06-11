@@ -3,7 +3,7 @@ import time
 import sys
 from _thread import start_new_thread
 from server.rooms import RoomManager
-from protocols import Protocols
+from common.protocols import Protocols
 
 import threading
 
