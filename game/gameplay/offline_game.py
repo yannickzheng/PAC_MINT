@@ -18,6 +18,10 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
     font = pygame.font.SysFont("Arial", 24)
     clock = pygame.time.Clock()
     
+    # Calculer les offsets identiques à la version online
+    coin_offset = (CELL_SIZE - coin_size) // 2
+    fruit_offset = (CELL_SIZE - fruit_size) // 2
+    
     display_loading_screen("Préparation du jeu hors ligne...", screen, font)
     
     # Création d'un joueur Pacman pour le mode hors ligne
@@ -121,10 +125,10 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
         
         # Affichage des pièces et fruits
         for coin in coins:
-            screen.blit(coin_image, (coin[0] - coin_size//2, coin[1] - coin_size//2))
+            screen.blit(coin_image, (coin[0] + coin_offset, coin[1] + coin_offset))
         
         for fruit in fruits:
-            screen.blit(fruit_image, (fruit[0] - fruit_size//2, fruit[1] - fruit_size//2))
+            screen.blit(fruit_image, (fruit[0] + fruit_offset, fruit[1] + fruit_offset))
         
         # Affichage des joueurs
         for player in players.values():
