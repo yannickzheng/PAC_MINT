@@ -3,17 +3,12 @@ import random
 from common.global_variable import WIDTH, HEIGHT, CELL_SIZE, BLUE, CYAN
 from game.player import Player
 from game.map import MAP_SURFACE, MAP_DATA
-from game.core.music import music_on, play_music, toggle_music
 from game.ui.components import display_loading_screen, draw_button, game_over
 from game.utils.helpers import distance, is_wall_at_position
 import os
 
 def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
     """Mode de jeu hors ligne sans besoin de serveur"""
-    play_music("sound/game_sound.mp3", 0.3)
-    if not music_on:
-        pygame.mixer.music.pause()
-    
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
     clock = pygame.time.Clock()
@@ -52,11 +47,6 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = event.pos
-                if 10 <= y <= 50 and 1050 <= x <= 1230:
-                    toggle_music()
-        
         # Vérifier si Pacman a perdu toutes ses vies
         if pacman.lives <= 0:
             game_over(pacman.score, screen, font)
@@ -137,10 +127,8 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
         lives_text = font.render(f"Vies: {pacman.lives}", True, (255, 255, 255))
         screen.blit(lives_text, (WIDTH - 180, 10))
         
-        # Affichage du bouton musique
-        music_text = "Musique : ON" if music_on else "Musique : OFF"
-        draw_button(music_text, 1050, 10, 180, 40, BLUE, CYAN, screen, font)
-        
+
+
         pygame.display.flip()
         clock.tick(60)
     

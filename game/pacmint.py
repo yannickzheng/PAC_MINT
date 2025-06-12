@@ -6,7 +6,6 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from common.global_variable import WIDTH, HEIGHT
-from game.core.music import init_music, play_music
 from game.core.assets import load_game_assets
 from game.menus.main_menu import main_menu
 from game.menus.online_menu import online_menu, create_game, join_game
@@ -19,10 +18,6 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PacMint")
 font = pygame.font.SysFont("Arial", 24)
-
-# Initialisation de la musique
-init_music()
-play_music("sound/background_sound.mp3", 0.9)
 
 # Chargement des ressources
 assets = load_game_assets()

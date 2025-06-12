@@ -1,7 +1,6 @@
 import pygame
 from game.map import MAP_DATA
 from common.global_variable import CELL_SIZE
-from pygame import mixer
 from game.ui.components import display_loading_screen
 
 def is_wall_at_position(x, y):
@@ -39,20 +38,6 @@ def preload_assets(screen, font):
     
     for img_path in images:
         pygame.image.load(img_path)
-    
-    # Préchargement des sons
-    sounds = [
-        "sound/button_click.mp3",
-        "sound/game_sound.mp3",
-        "sound/background_sound.mp3"
-    ]
-    
-    for sound_path in sounds:
-        try:
-            if sound_path.endswith(".mp3"):
-                mixer.Sound(sound_path)
-        except:
-            print(f"Impossible de charger le son: {sound_path}")
-    
+
     # Attendre un peu pour que l'utilisateur puisse voir l'écran de chargement
     pygame.time.delay(500)

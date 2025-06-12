@@ -5,7 +5,6 @@ from common.network import Network
 from common.protocols import Protocols
 from game.player import Player
 from game.map import MAP_SURFACE
-from game.core.music import toggle_music
 from game.ui.components import display_loading_screen, draw_button, game_over
 
 def update_game_state_from_server(state, players, current_player_id, coins, fruits):
@@ -104,10 +103,6 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = event.pos
-                if 10 <= y <= 50 and 1050 <= x <= 1230:
-                    toggle_music()
 
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
         current_player = players.get(current_player_id)
@@ -158,9 +153,6 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
         screen.blit(lives_text, (WIDTH - 180, 1))
 
         # Affiche le bouton musique en haut à droite
-        from game.core.music import music_on
-        music_text = "Musique : ON" if music_on else "Musique : OFF"
-        draw_button(music_text, 1050, 10, 180, 40, BLUE, CYAN, screen, font)
 
         pygame.display.flip()
         clock.tick(60)
