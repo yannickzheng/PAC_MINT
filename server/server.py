@@ -2,7 +2,7 @@ import socket
 import time
 import sys
 from _thread import start_new_thread
-from server.rooms import RoomManager
+from rooms import RoomManager
 from common.protocols import Protocols
 
 import threading
