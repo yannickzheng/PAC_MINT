@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libsdl2-2.0-0 \
     libsdl2-mixer-2.0-0 \
-    libasound2 \
     mesa-utils \
     libgl1-mesa-dri \
     && apt-get clean \
@@ -19,7 +18,7 @@ COPY game/requirements.txt .
 COPY game/ ./game/
 COPY common/ ./common/
 COPY images/ ./images/
-COPY sound/ ./sound/
+
 
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
