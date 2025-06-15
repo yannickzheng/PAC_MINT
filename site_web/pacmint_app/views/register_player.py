@@ -11,14 +11,18 @@ def register_player(request):
             username = form.cleaned_data['username']
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
-
-            # Créer un nouveau joueur et le sauvegarder
+            confirm_password = form.cleaned_data['confirm_password']
+            if password != confirm_password:
+                messages.error(request, "Les mots de passe ne correspondent pas, veuillez vérifier votre saisie.")
+                return redirect('register')
             player = Player(username=username, email=email, password=make_password(password))
             player.save()
-
             messages.success(request, "Votre inscription a été réussie ! Vous pouvez maintenant vous connecter.")
             return redirect('login')  #  l'URL de la page de connexion
+
     else:
         form = PlayerRegistrationForm()
-
-    return render(request, 'register.html', {'form': form})
+    return render(
+        request,
+        'register.html',
+        {'formulaire': form})
