@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-ul=zxejo6+&qwo0*8vt2lqn^yfzhq4ny-ycza4t3fyo#o@wea&
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+app_name = 'pacmint_app'
 
 # Application definition
 

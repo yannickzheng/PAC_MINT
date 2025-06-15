@@ -1,14 +1,11 @@
 from django.urls import path
 from . import views
-from django.contrib.auth import views as auth_views
 
-from django.urls import path
-from .views import CustomLoginView, home, register_player, score_list,submit_score
+app_name = 'pacmint_app'
 
 urlpatterns = [
-    path('', home, name='home'),
-    path('inscription/', register_player, name='register'),
-    path('login/', CustomLoginView.as_view(), name='login'),
-    path('api/submit-score/', submit_score, name='submit_score'),
-    path('scores/', score_list, name='score_list'),
+    path('home', views.home, name='home'),
+    path('inscription/', views.register_player, name='register'),
+    path('api/submit-score/', views.submit_score, name='submit_score'),
+    path('scores/', views.score_list, name='score_list'),
 ]
