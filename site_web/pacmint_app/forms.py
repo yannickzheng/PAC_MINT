@@ -37,10 +37,10 @@ class PlayerRegistrationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_method = 'post'
-        self.helper.add_input(Submit('submit', 'S\'inscrire', css_class='btn btn-primary'))
         self.helper.layout = Layout(
             Field('username', css_class='form-control'),
             Field('email', css_class='form-control'),
             Field('password', css_class='form-control'),
+            Field('confirm_password', css_class='form-control'),
 
         )

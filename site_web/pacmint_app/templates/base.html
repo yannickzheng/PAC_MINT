@@ -10,20 +10,31 @@
     <link rel="stylesheet" href="{% static 'pacmint_app/home.css' %}">
 </head>
 <body class="bg-black text-white text-center">
-    <div class="container py-5">
-        <!-- Logo et titre communs -->
-        <img src="{% static 'images/Logo.png' %}" alt="Logo Pac‑Mint"
-             class="img-fluid mb-4 logo-animation" style="width:150px;">
-        <h1 class="display-4 fw-bold text-warning mb-5"
-            style="font-family:'Press Start 2P', cursive;">PAC‑MINT</h1>
-
-        {# sous-titre #}
-        {% block subtitle %}{% endblock subtitle %}
-
-        {# contenu principal #}
-        {% block main %}{% endblock main %}
+<div class="container py-5">
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Logo et titre communs -->
+    <img src="{% static 'images/Logo.png' %}" alt="Logo Pac‑Mint"
+         class="img-fluid mb-4 logo-animation" style="width:150px;">
+    <h1 class="display-4 fw-bold text-warning mb-5"
+        style="font-family:'Press Start 2P', cursive;">PAC‑MINT</h1>
+
+    {# sous-titre #}
+    {% block subtitle %}{% endblock subtitle %}
+
+    {# contenu principal #}
+    {% block main %}{% endblock main %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

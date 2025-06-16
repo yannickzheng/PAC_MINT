@@ -19,6 +19,7 @@ class Player(models.Model):
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    password = models.CharField(max_length=256)  # Store hashed passwords
 
     def __str__(self):
         return self.username
