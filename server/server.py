@@ -1,6 +1,11 @@
+import sys
+import os
+
+# Configuration robuste des imports - DOIT ÊTRE EN PREMIER
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import socket
 import time
-import sys
 from _thread import start_new_thread
 from rooms import RoomManager
 from common.protocols import Protocols
