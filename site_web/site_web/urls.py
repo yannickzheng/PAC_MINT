@@ -21,3 +21,6 @@ urlpatterns = [
     path('', include('pacmint_app.urls')),
     path('admin/', admin.site.urls),
 ]
+
+# Gestionnaires d'erreurs personnalisés
+handler404 = 'pacmint_app.views.error_views.custom_404_view'

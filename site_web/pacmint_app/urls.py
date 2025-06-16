@@ -1,4 +1,5 @@
 from django.urls import path
+from django.conf import settings
 from . import views
 
 app_name = 'pacmint_app'
@@ -11,3 +12,10 @@ urlpatterns = [
     path('api/submit-score/', views.submit_score, name='submit_score'),
     path('scores/', views.score_list, name='score_list'),
 ]
+
+# URLs de test seulement en mode DEBUG
+if settings.DEBUG:
+    from .views.test_views import test_404_view
+    urlpatterns += [
+        path('test-404/', test_404_view, name='test_404'),
+    ]
