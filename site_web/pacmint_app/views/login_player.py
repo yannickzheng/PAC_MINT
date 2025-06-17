@@ -1,15 +1,19 @@
 from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect, render
 from django.contrib import messages
-from ..forms import PlayerRegistrationForm
+from ..forms import PlayerLoginForm
+
 
 def login_player(request):
     if request.method == 'POST':
-        form = PlayerRegistrationForm(request.POST)
+        form = PlayerLoginForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             user = authenticate(request, username=username, password=password)
+            # Test if the user is in the database
+
+
             if user is not None:
                 login(request, user)
                 return redirect('pacmint_app:welcome')
@@ -17,5 +21,5 @@ def login_player(request):
                 messages.error(request, "Nom d'utilisateur ou mot de passe incorrect.")
                 return redirect('pacmint_app:login')
     else:
-        form = PlayerRegistrationForm()
+        form = PlayerLoginForm()
     return render(request, "login.html", {'formulaire': form})
