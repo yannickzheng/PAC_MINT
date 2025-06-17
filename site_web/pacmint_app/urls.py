@@ -6,7 +6,7 @@ app_name = 'pacmint_app'
 
 urlpatterns = [
     path('', views.home, name='home'),
-    path('inscription/', views.register_player, name='register'),
+    path('register/', views.register_player, name='register'),
     path('welcome/', views.welcome_player, name='welcome'),
     path('api/submit-score/', views.submit_score, name='submit_score'),
     path('scores/', views.score_list, name='score_list'),

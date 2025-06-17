@@ -8,7 +8,9 @@ from django.db import IntegrityError
 def register_player(request):
     if request.method == 'POST':
         form = PlayerRegistrationForm(request.POST)
+        print("Données POST :", request.POST)  # Débogage : affiche les données envoyées
         if form.is_valid():
+            print("Formulaire valide")  # Débogage
             username = form.cleaned_data['username']
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
@@ -24,6 +26,9 @@ def register_player(request):
             except IntegrityError:
                 messages.error(request, "Ce nom d'utilisateur ou cet email est déjà utilisé.")
                 return redirect('pacmint_app:register')
+        else:
+            print("Formulaire non valide :", form.errors)  # Débogage : affiche les erreurs
+            messages.error(request, "Erreur dans le formulaire. Veuillez vérifier vos informations.")
     else:
         form = PlayerRegistrationForm()
     return render(request, 'register.html', {'formulaire': form})
