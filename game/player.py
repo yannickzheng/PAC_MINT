@@ -16,7 +16,7 @@ class Player:
         self.role = role
         self.id = None
         self.is_pacman = "pacman" in role.lower()
-        self.is_phantom = "fantome" in role.lower()
+        self.is_phantom = "fantôme" in role.lower()
         self.is_coin = role == "Pièce"
 
         #Position

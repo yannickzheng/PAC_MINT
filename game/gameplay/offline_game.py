@@ -18,9 +18,12 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
     fruit_offset = (CELL_SIZE - fruit_size) // 2
     
     display_loading_screen("Préparation du jeu hors ligne...", screen, font)
-    
+
     # Création d'un joueur Pacman pour le mode hors ligne
-    pacman = Player("127.0.0.1", 0, "PacMan", (WIDTH // 2, HEIGHT // 2))
+    # ✅ Position de spawn plus naturelle (par exemple, à l'entrée d’un couloir)
+    spawn_pos = (CELL_SIZE * 9, CELL_SIZE * 10)
+
+    pacman = Player("127.0.0.1", 0, "PacMan", spawn_pos)
     pacman.id = "player1"
     pacman.lives = 3
     pacman.score = 0
@@ -84,17 +87,16 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
                 pacman.activate_super_power()
         
         # Vérification des collisions avec les fantômes
-        if distance(pacman.x, pacman.y, ghost.x, ghost.y) < CELL_SIZE and not pacman.invincible:
-            if pacman.super_power_active:
-                # Le fantôme retourne à sa position de départ
-                ghost.x, ghost.y = WIDTH//2 - 100, HEIGHT//2 - 100
-                pacman.score += 200
-            else:
-                # Pacman perd une vie
-                pacman.lose_life()
-                pacman.invincible = True
-                pacman.invincibility_timer = 180  # 3 secondes d'invincibilité
-        
+        for ghost in ghosts:
+            if distance(pacman.x, pacman.y, ghost.x, ghost.y) < CELL_SIZE and not pacman.invincible:
+                if pacman.super_power_active:
+                    ghost.x, ghost.y = WIDTH // 2 - 100, HEIGHT // 2 - 100  # Ou stocke une position initiale propre à chaque ghost
+                    pacman.score += 200
+                else:
+                    pacman.lose_life()
+                    pacman.invincible = True
+                    pacman.invincibility_timer = 180
+
         # Mise à jour des timers
         if pacman.invincible:
             pacman.invincibility_timer -= 1
@@ -116,11 +118,12 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
         
         for fruit in fruits:
             screen.blit(fruit_image, (fruit[0] + fruit_offset, fruit[1] + fruit_offset))
-        
+
         # Affichage des joueurs
         for player in players.values():
+            player.update_eaten_state()
             player.draw(screen, pacman)
-        
+
         # Affichage du score et des vies
         score_text = font.render(f"Score: {pacman.score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
