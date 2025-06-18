@@ -11,13 +11,14 @@ def login_player(request):
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             user = authenticate(request, username=username, password=password)
-
             if user is not None:
                 login(request, user)
+                messages.success(request,f"Bonjour {user.username}, vous êtes connecté avec succès !")
                 return redirect('pacmint_app:welcome')
             else:
                 messages.error(request, "Nom d'utilisateur ou mot de passe incorrect.")
-                return redirect('pacmint_app:login')
+        else :
+            messages.error(request,"Veuillez corriger les erreurs dans le formulaire.")
     else:
         form = PlayerLoginForm()
     return render(request, "login.html", {'formulaire': form})
