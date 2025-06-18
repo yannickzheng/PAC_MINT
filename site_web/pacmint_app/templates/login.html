@@ -10,9 +10,15 @@
 {% endblock %}
 
 {% block main %}
-    <form action="{% url 'pacmint_app:welcome' %}" method="post" class="w-100">
+    {% if messages %}
+        <div class="alert alert-danger" role="alert">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+    <form action="{% url 'pacmint_app:login' %}" method="post" class="w-100">
         {% csrf_token %}
         {% crispy formulaire %}
-
     </form>
 {% endblock %}
