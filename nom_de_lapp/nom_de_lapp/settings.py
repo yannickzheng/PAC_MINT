@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-ul=zxejo6+&qwo0*8vt2lqn^yfzhq4ny-ycza4t3fyo#o@wea&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -122,7 +122,7 @@ import os
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'pacmint_app/static')
 ]
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Pour collectstatic
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
