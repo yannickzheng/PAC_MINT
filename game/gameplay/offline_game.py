@@ -20,19 +20,25 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
     display_loading_screen("Préparation du jeu hors ligne...", screen, font)
     
     # Création d'un joueur Pacman pour le mode hors ligne
-    pacman = Player(ip="127.0.0.1", tcp_port=0, role="pacman", position=(WIDTH//2, HEIGHT//2))
+    pacman = Player("127.0.0.1", 0, "PacMan", (WIDTH // 2, HEIGHT // 2))
     pacman.id = "player1"
     pacman.lives = 3
     pacman.score = 0
     
     # Création d'un fantôme contrôlé par l'IA
-    ghost = Player(ip="127.0.0.1", tcp_port=0, role="fantome", position=(WIDTH//2 - 100, HEIGHT//2 - 100))
-    ghost.id = "ghost1"
-    
-    players = {
-        pacman.id: pacman,
-        ghost.id: ghost
-    }
+    ghost_positions = [
+        (WIDTH // 2 - 100, HEIGHT // 2 - 100),
+        (WIDTH // 2 + 100, HEIGHT // 2 - 100),
+        (WIDTH // 2 - 100, HEIGHT // 2 + 100),
+        (WIDTH // 2 + 100, HEIGHT // 2 + 100)
+    ]
+    ghosts = []
+    players = {pacman.id: pacman}
+    for i, pos in enumerate(ghost_positions):
+        ghost = Player("127.0.0.1", 0, "Fantôme", pos)
+        ghost.id = f"ghost{i + 1}"
+        ghosts.append(ghost)
+        players[ghost.id] = ghost
     
     # Génération des pièces et fruits pour le mode hors ligne identique au serveur
     coins = []
@@ -58,19 +64,10 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
         
         # Déplacement du joueur Pacman
         pacman.move(players, controlled=True)
-        
-        # Déplacement du fantôme par l'IA simple
-        if hasattr(ghost, "ghost_ai_move"):
-            ghost.ghost_ai_move(pacman)
-        else:
-            # Mouvement aléatoire simple si la méthode ghost_ai_move n'existe pas
-            directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
-            if random.random() < 0.05:  # 5% de chance de changer de direction
-                dx, dy = random.choice(directions)
-                new_x = ghost.x + dx * ghost.speed
-                new_y = ghost.y + dy * ghost.speed
-                if not is_wall_at_position(new_x, new_y):
-                    ghost.x, ghost.y = new_x, new_y
+
+        # Tous les fantômes utilisent leur IA intégrée
+        for ghost in ghosts:
+            ghost.move(players)
         
         # Vérification des collisions avec les pièces
         for coin in coins[:]:
