@@ -2,14 +2,16 @@ from django import forms
 from .models import Player
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit, Layout, Field
+from django.contrib.auth.models import User
+
 
 class PlayerRegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, max_length=50, label="Mot de passe", required=True)
     confirm_password = forms.CharField(widget=forms.PasswordInput, max_length=50, label="Confirmez le mot de passe", required=True)
 
     class Meta:
-        model = Player
-        fields = ['username', 'email', 'password', 'confirm_password']
+        model = User
+        fields = ['username', 'email', 'password']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -30,6 +32,14 @@ class PlayerRegistrationForm(forms.ModelForm):
         if password and confirm_password and password != confirm_password:
             raise forms.ValidationError("Les mots de passe ne correspondent pas.")
         return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+        if commit:
+            user.save()
+            Player.objects.create(user=user, email=self.cleaned_data['email'])
+        return user
 
 
 class PlayerLoginForm(forms.Form):
