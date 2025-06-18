@@ -20,7 +20,6 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
     display_loading_screen("Préparation du jeu hors ligne...", screen, font)
 
     # Création d'un joueur Pacman pour le mode hors ligne
-    # ✅ Position de spawn plus naturelle (par exemple, à l'entrée d’un couloir)
     spawn_pos = (CELL_SIZE * 9, CELL_SIZE * 10)
 
     pacman = Player("127.0.0.1", 0, "PacMan", spawn_pos)
@@ -90,7 +89,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
         for ghost in ghosts:
             if distance(pacman.x, pacman.y, ghost.x, ghost.y) < CELL_SIZE and not pacman.invincible:
                 if pacman.super_power_active:
-                    ghost.x, ghost.y = WIDTH // 2 - 100, HEIGHT // 2 - 100  # Ou stocke une position initiale propre à chaque ghost
+                    pacman.eat_ghost(ghost, players)
                     pacman.score += 200
                 else:
                     pacman.lose_life()

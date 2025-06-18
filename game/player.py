@@ -122,7 +122,7 @@ class Player:
         print(f"Super pouvoir activé pour {duration//60} secondes!")
 
     def is_position_free(x, y, ghost, players):
-        for player in players:
+        for player in players.values():
             if player == ghost:
                 continue
             dx = (player.x + player.size // 2) - (x + ghost.size // 2)
@@ -211,14 +211,33 @@ class Player:
         if self.is_eaten:
             return  # Ne pas faire d'IA si le fantôme est en train de respawn
 
+        # 🔁 Forcer le recalcul si changement de stratégie (fuite vs poursuite)
+        if pacman.super_power_active and self.pathfinding_timer > 0:
+            self.pathfinding_timer = 0
+
         self.pathfinding_timer -= 1
 
         if self.pathfinding_timer <= 0 or not self.current_path:
-            # ➔ Recalculer chemin seulement toutes X frames
             start = (int(self.x // CELL_SIZE), int(self.y // CELL_SIZE))
-            goal = (int(pacman.x // CELL_SIZE), int(pacman.y // CELL_SIZE))
+
+            if pacman.super_power_active:
+                # 🔁 Fuite : aller dans la direction opposée à Pacman
+                dx = self.x - pacman.x
+                dy = self.y - pacman.y
+                flee_x = self.x + dx * 3
+                flee_y = self.y + dy * 3
+
+                # Clamp les coordonnées dans les limites de la carte
+                goal = (
+                    max(0, min(int(flee_x // CELL_SIZE), len(MAP_DATA[0]) - 1)),
+                    max(0, min(int(flee_y // CELL_SIZE), len(MAP_DATA) - 1))
+                )
+            else:
+                # 🎯 Poursuite normale de Pacman
+                goal = (int(pacman.x // CELL_SIZE), int(pacman.y // CELL_SIZE))
+
             self.current_path = self.find_path(start, goal, MAP_DATA)
-            self.pathfinding_timer = 10  # Recalcul toutes les 10 frames (environ 0.15s si tu es en 60 FPS)
+            self.pathfinding_timer = 5  # Recalcul toutes les 10 frames
 
         if self.current_path:
             next_cell = self.current_path[0]
@@ -239,7 +258,7 @@ class Player:
                 else:
                     self.y -= self.speed
 
-            # Quand il est assez proche de la prochaine case, avancer dans la liste
+            # Si on est proche de la prochaine case, on passe à la suivante
             if abs(dx) < 5 and abs(dy) < 5:
                 self.current_path.pop(0)
 
