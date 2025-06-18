@@ -10,11 +10,21 @@ def main_menu(screen, image, font):
     run = True
     while run:
         screen.blit(image, (0, 0))
-        
+
         # Titre du jeu
-        title_font = pygame.font.SysFont("Arial", 72, bold=True)
-        title_text = title_font.render("PAC-MINT", True, (255, 255, 0))
-        screen.blit(title_text, (WIDTH//2 - title_text.get_width()//2, HEIGHT//2 - 200))
+        title_image = pygame.image.load("images/Pacmint texte.png").convert_alpha()
+
+        # Redimensionnement à 50% de la taille originale
+        original_width, original_height = title_image.get_size()
+        new_width = original_width // 2
+        new_height = original_height // 2
+        title_image = pygame.transform.smoothscale(title_image, (new_width, new_height))
+
+        # Recalcul du rectangle pour bien centrer l'image redimensionnée
+        title_rect = title_image.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
+
+        # Affichage
+        screen.blit(title_image, title_rect)
         
         draw_button("Mode Hors Ligne", 250, 600, 200, 50, BLUE, CYAN, screen, font)  
         draw_button("Mode En Ligne", 550, 600, 200, 50, BLUE, CYAN, screen, font)
