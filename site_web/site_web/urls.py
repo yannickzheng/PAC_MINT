@@ -24,3 +24,4 @@ urlpatterns = [
 
 # Gestionnaires d'erreurs personnalisés
 handler404 = 'pacmint_app.views.error_views.custom_404_view'
+handler500 = 'pacmint_app.views.error_views.custom_500_view'
