@@ -15,14 +15,12 @@ class Score(models.Model):
 
 
 class Player(models.Model):
-    player_id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=50, unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     email = models.EmailField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    password = models.CharField(max_length=256)  # Store hashed passwords
 
     def __str__(self):
-        return self.username
+        return self.user.username
 
 class Map(models.Model):
     map_id = models.AutoField(primary_key=True)

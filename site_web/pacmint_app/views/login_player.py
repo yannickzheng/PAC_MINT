@@ -11,8 +11,6 @@ def login_player(request):
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             user = authenticate(request, username=username, password=password)
-            # Test if the user is in the database
-
 
             if user is not None:
                 login(request, user)
