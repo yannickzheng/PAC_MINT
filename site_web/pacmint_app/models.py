@@ -1,9 +1,12 @@
 from django.db import models
-
-# Create your models here.
-
-from django.db import models
 from django.contrib.auth.models import User
+
+class Player(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=False)  # Non-nullable
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.username
 
 class Score(models.Model):
     player = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -12,15 +15,6 @@ class Score(models.Model):
 
     def __str__(self):
         return f"{self.player.username} - {self.value}"
-
-
-class Player(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    email = models.EmailField(max_length=100, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.user.username
 
 class Map(models.Model):
     map_id = models.AutoField(primary_key=True)
@@ -33,8 +27,8 @@ class Map(models.Model):
         return self.name
 
 class Friend(models.Model):
-    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name="friends")
-    friend = models.ForeignKey(Player, on_delete=models.CASCADE, related_name="friend_of")
+    player = models.ForeignKey(User, on_delete=models.CASCADE, related_name="friends")
+    friend = models.ForeignKey(User, on_delete=models.CASCADE, related_name="friend_of")
     status = models.CharField(max_length=20, choices=[("pending", "Pending"), ("accepted", "Accepted"), ("blocked", "Blocked")])
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -47,7 +41,7 @@ class Friend(models.Model):
 class Room(models.Model):
     room_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, unique=True)
-    host = models.ForeignKey(Player, on_delete=models.CASCADE, related_name="hosted_rooms")
+    host = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hosted_rooms")
     max_players = models.IntegerField(default=4)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -57,7 +51,7 @@ class Room(models.Model):
 
 class Room_Players(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="room_players")
-    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name="player_rooms")
+    player = models.ForeignKey(User, on_delete=models.CASCADE, related_name="player_rooms")
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -71,7 +65,7 @@ class Game(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="games")
     map = models.ForeignKey(Map, on_delete=models.CASCADE, related_name="games")
     status = models.CharField(max_length=20, choices=[("waiting", "Waiting"), ("in_progress", "In Progress"), ("finished", "Finished")])
-    winner = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True, related_name="won_games")
+    winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="won_games")
     started_at = models.DateTimeField(auto_now_add=True)
     ended_at = models.DateTimeField(null=True, blank=True)
 
@@ -80,7 +74,7 @@ class Game(models.Model):
 
 class Table_Score(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="scores")
-    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name="scores")
+    player = models.ForeignKey(User, on_delete=models.CASCADE, related_name="scores")
     score = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -89,6 +83,3 @@ class Table_Score(models.Model):
 
     def __str__(self):
         return f"{self.player.username} - {self.score} pts in Game {self.game.game_id}"
-from django.db import models
-
-# Create your models here.
