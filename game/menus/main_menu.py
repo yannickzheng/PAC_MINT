@@ -21,7 +21,7 @@ def main_menu(screen, image, font):
         title_image = pygame.transform.smoothscale(title_image, (new_width, new_height))
 
         # Recalcul du rectangle pour bien centrer l'image redimensionnée
-        title_rect = title_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+        title_rect = title_image.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 130))
 
         # Affichage
         screen.blit(title_image, title_rect)
