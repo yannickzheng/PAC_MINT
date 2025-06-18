@@ -4,11 +4,11 @@
 
 {% block subtitle %}
     <h2 class="mb-4 lead" style="font-family:'Press Start 2P', cursive;">
-        Bonjour {{ username }} !
+        Bonjour {{ user.username }} !
     </h2>
 {% endblock %}
 
 {% block main %}
-    <p>Retrouvez ici vos parties.</p>
+    <p>Bonjour {{ user.username }}, vous pouvez retrouver ici l'historique de vos parties.</p>
     <a href="{% url 'pacmint_app:home' %}" class="btn btn-secondary">Retour à l'accueil</a>
 {% endblock %}
