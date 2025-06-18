@@ -15,7 +15,9 @@ urlpatterns = [
 
 # URLs de test seulement en mode DEBUG
 if settings.DEBUG:
-    from .views.test_views import test_404_view
+    from .views.test_views import test_404_view, test_500_view
     urlpatterns += [
         path('test-404/', test_404_view, name='test_404'),
+        path('test-500/', test_500_view, name='test_500')
+
     ]
