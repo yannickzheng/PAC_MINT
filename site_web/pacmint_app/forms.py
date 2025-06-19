@@ -12,6 +12,12 @@ class PlayerRegistrationForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'email', 'password']
+        labels = {
+            'username': 'Pseudonyme',
+            'email': 'Adresse e-mail',
+            'password': 'Mot de passe',
+            'confirm_password': 'Confirmez le mot de passe'
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -46,6 +52,14 @@ class PlayerRegistrationForm(forms.ModelForm):
 class PlayerLoginForm(forms.Form):
     username = forms.CharField(max_length=50, label="Pseudonyme", required=True)
     password = forms.CharField(widget=forms.PasswordInput, max_length=50, label="Mot de passe", required=True)
+
+    class Meta :
+        model = User
+        fields = ['username', 'password']
+        labels = {
+            'username': 'Pseudonyme',
+            'password': 'Mot de passe'
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

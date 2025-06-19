@@ -13,7 +13,6 @@ def login_player(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                messages.success(request,f"Bonjour {user.username}, vous êtes connecté avec succès !")
                 return redirect('pacmint_app:welcome')
             else:
                 messages.error(request, "Nom d'utilisateur ou mot de passe incorrect.")
