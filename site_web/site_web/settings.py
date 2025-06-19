@@ -39,10 +39,12 @@ INSTALLED_APPS = [
     'pacmint_app',
     'crispy_bootstrap5',
     'crispy_forms',
+    "debug_toolbar",
 
 ]
 
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -53,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+
 
 ]
 MESSAGE_TAGS = {
@@ -126,6 +129,12 @@ import os
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'pacmint_app/static')
+]
+
+INTERNAL_IPS = [
+    # ...
+    "127.0.0.1",
+    # ...
 ]
 
 # Default primary key field type
