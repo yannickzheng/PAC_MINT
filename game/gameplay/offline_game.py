@@ -7,7 +7,7 @@ from game.ui.components import display_loading_screen, draw_button, game_over
 from game.utils.helpers import distance, is_wall_at_position
 import os
 
-def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
+def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, role):
     """Mode de jeu hors ligne sans besoin de serveur"""
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
@@ -20,9 +20,12 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
     display_loading_screen("Préparation du jeu hors ligne...", screen, font)
 
     # Création d'un joueur Pacman pour le mode hors ligne
-    spawn_pos = (CELL_SIZE * 9, CELL_SIZE * 10)
 
-    pacman = Player("127.0.0.1", 0, "PacMan", spawn_pos)
+    spawn_pos = (CELL_SIZE * 9, CELL_SIZE * 10)
+    if role == "pacman":
+        pacman = Player("127.0.0.1", 0, "PacMan", spawn_pos)
+    else:  # Fantôme choisi
+        pacman = Player("127.0.0.1", 0, "Fantôme", spawn_pos)
     pacman.id = "player1"
     pacman.lives = 3
     pacman.score = 0
