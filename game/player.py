@@ -3,7 +3,155 @@ from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
 from game.map import MAP_DATA
 import heapq
 
+import pygame
+from common.global_variable import CELL_SIZE
+
 class Player:
+    def __init__(self, ip, tcp_port, role, position):
+        self.ip = ip
+        self.tcp_port = int(tcp_port) if tcp_port else None
+        self.tcp_addr = (self.ip, self.tcp_port)
+
+        self.role = role
+        self.id = None
+        self.is_coin = role == "Pièce"
+
+        # Position
+        self.position = position
+        self.x, self.y = position
+        self.coord = (self.x, self.y)
+
+        self.size = CELL_SIZE
+        self.hitbox_size = CELL_SIZE // 2
+        self.speed = CELL_SIZE // 6
+
+        # Chargement des images
+        self.image_right = pygame.transform.scale(pygame.image.load("images/pacman - right.png"), (self.size, self.size))
+        self.image_left = pygame.transform.scale(pygame.image.load("images/pacman - left.png"), (self.size, self.size))
+        self.image_up = pygame.transform.scale(pygame.image.load("images/pacman - up.png"), (self.size, self.size))
+        self.image_down = pygame.transform.scale(pygame.image.load("images/pacman - down.png"), (self.size, self.size))
+        self.image_red_ghost = pygame.transform.scale(pygame.image.load("images/red_ghost2.png"), (self.size, self.size))
+
+        self.image_super_right = pygame.transform.scale(pygame.image.load("images/Black Pacman.png"), (self.size, self.size))
+        self.image_super_left = pygame.transform.scale(pygame.image.load("images/Black Pacman-left.png"), (self.size, self.size))
+        self.image_super_up = pygame.transform.scale(pygame.image.load("images/Black Pacman-up.png"), (self.size, self.size))
+        self.image_super_down = pygame.transform.scale(pygame.image.load("images/Black Pacman-down.png"), (self.size, self.size))
+
+        self.score = 0
+        self.super_power_active = False
+        self.super_power_timer = 0
+        self.invincible = False
+        self.invincibility_timer = 0
+        self.is_eaten = False
+        self.respawn_target = None
+        self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
+        self.current_path = []  # Chemin actuel pour le fantôme
+
+    def move(self, players):
+        """Déplace le joueur (Pacman ou Fantôme)"""
+        pass
+
+    def check_collision(self, players):
+        """Vérifie si le joueur entre en collision avec un autre joueur"""
+        for player in players.values():
+            if player != self:
+                distance_squared = (self.x - player.x) ** 2 + (self.y - player.y) ** 2
+                if distance_squared < (self.hitbox_size + player.hitbox_size) ** 2:
+                    return True
+        return False
+
+    def is_wall(self, x, y):
+        cell_size = self.size
+        margin = self.size * 0.15  # tolérance pour passer dans les petits espaces
+
+        try:
+            return (
+                    MAP_DATA[int((y + margin) // cell_size)][int((x + margin) // cell_size)] == 1 or
+                    MAP_DATA[int((y + margin) // cell_size)][int((x + self.size - margin) // cell_size)] == 1 or
+                    MAP_DATA[int((y + self.size - margin) // cell_size)][int((x + margin) // cell_size)] == 1 or
+                    MAP_DATA[int((y + self.size - margin) // cell_size)][
+                        int((x + self.size - margin) // cell_size)] == 1
+            )
+        except IndexError:
+            return True
+
+    def draw(self, screen):
+        """Affiche le joueur à l'écran"""
+        pass
+
+
+class PacMan(Player):
+    def __init__(self, ip, tcp_port, position):
+        super().__init__(ip, tcp_port, "PacMan", position)
+        self.lives = 3  # PacMan commence avec 3 vies
+        self.score = 0
+        self.super_power_active = False
+        self.super_power_timer = 0
+        self.invincible = False
+        self.invincibility_timer = 0
+
+    def move(self, players, controlled=False):
+        """Déplace PacMan contrôlé par le joueur avec les touches du clavier"""
+        keys = pygame.key.get_pressed()  # Récupère les touches enfoncées
+        new_x, new_y = self.x, self.y  # Position de départ
+        hitbox_offset = self.size // 4  # Ajuste la taille du hitbox pour la détection des collisions
+
+        # Gestion du super pouvoir (accélération)
+        if self.super_power_active:
+            self.super_power_timer -= 1
+            if self.super_power_timer <= 0:
+                self.super_power_active = False
+                self.speed = CELL_SIZE // 6  # Réinitialise la vitesse à la normale
+
+        # Si PacMan est contrôlé par le joueur
+        if self.is_pacman and controlled:
+            # Déplacement avec les touches directionnelles (gauche, droite, haut, bas)
+            if keys[pygame.K_LEFT] and self.x > 0 and not self.is_wall(self.x - self.speed, self.y):
+                new_x -= self.speed
+            if keys[pygame.K_RIGHT] and self.x + self.size < WIDTH and not self.is_wall(self.x + self.speed, self.y):
+                new_x += self.speed
+            if keys[pygame.K_UP] and self.y > 0 and not self.is_wall(self.x, self.y - self.speed):
+                new_y -= self.speed
+            if keys[pygame.K_DOWN] and self.y + self.size < HEIGHT and not self.is_wall(self.x, self.y + self.speed):
+                new_y += self.speed
+
+            # Applique les nouvelles coordonnées
+            self.x, self.y = new_x, new_y
+
+        # Met à jour les coordonnées du personnage
+        self.update()
+
+    def activate_super_power(self, duration=200):
+        """Active le super pouvoir de PacMan pour une durée donnée"""
+        self.super_power_active = True
+        self.super_power_timer = duration
+        self.speed = min(int(self.speed * 1.2), CELL_SIZE // 5)
+        print(f"Super pouvoir activé pour {duration//60} secondes!")
+
+    def lose_life(self):
+        """Perdre une vie"""
+        if self.invincible:
+            return
+        if self.lives > 1:
+            self.lives -= 1
+            self.invincible = True
+            self.invincibility_timer = 180  # PacMan est invincible pendant 3 secondes
+        else:
+            self.lives = 0
+
+    def update(self):
+        """Met à jour les informations de PacMan"""
+        if self.invincible:
+            self.invincibility_timer -= 1
+            if self.invincibility_timer <= 0:
+                self.invincible = False
+
+
+
+
+
+
+"""class Player:
     def __init__(self, ip, tcp_port, role, position, tcp_socket=None):
 
         self.ip = ip
@@ -28,19 +176,24 @@ class Player:
         self.size = CELL_SIZE  # Pac-Man doit être basé sur `CELL_SIZE`
         self.hitbox_size = CELL_SIZE // 2
         self.speed = CELL_SIZE // 6  # Pac-Man bouge par petits pas
-        self.lives = 3  # Pac-Man commence avec 3 vies
+
+        # Gestion des vies
+        if self.is_pacman:
+            self.lives = 3  # PacMan commence avec 3 vies
+        else:
+            self.lives = float('inf')  # Fantôme a des vies illimitées
         #Chargement des images
         self.image1 = pygame.image.load("images/pacman - right.png")
         self.image2 = pygame.image.load("images/pacman - left.png")
         self.image3 = pygame.image.load("images/pacman - up.png")
         self.image4 = pygame.image.load("images/pacman - down.png")
-        self.image5 = pygame.image.load("images/red_ghost.png")
+        self.image5 = pygame.image.load("images/red_ghost2.png")
 
         self.image_right = pygame.transform.scale(pygame.image.load("images/pacman - right.png"), (self.size, self.size))
         self.image_left = pygame.transform.scale(pygame.image.load("images/pacman - left.png"), (self.size, self.size))
         self.image_up = pygame.transform.scale(pygame.image.load("images/pacman - up.png"), (self.size, self.size))
         self.image_down = pygame.transform.scale(pygame.image.load("images/pacman - down.png"), (self.size, self.size))
-        self.image_red_ghost = pygame.transform.scale(pygame.image.load("images/red_ghost.png"), (self.size, self.size))
+        self.image_red_ghost = pygame.transform.scale(pygame.image.load("images/red_ghost2.png"), (self.size, self.size))
 
         self.image_super_right = pygame.transform.scale(pygame.image.load("images/Black Pacman.png"), (self.size, self.size))
         self.image_super_left = pygame.transform.scale(pygame.image.load("images/Black Pacman-left.png"), (self.size, self.size))
