@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Erreur 404 - Page non trouvée | Pac‑Mint{% endblock %}
+
+{% block subtitle %}
+    <h2 class="h3 text-danger mb-4" style="font-family:'Press Start 2P', cursive;">
+        ERREUR 404
+    </h2>
+{% endblock subtitle %}
+
+{% block main %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Icône d'erreur avec style Pac-Man -->
+            <div class="mb-4">
+                <div class="d-inline-block position-relative">
+                    
+                </div>
+            </div>
+
+            <!-- Message d'erreur -->
+            <div class="alert alert-warning border-2 border-warning bg-dark text-white mb-4">
+                <h3 class="alert-heading h4 mb-3" style="font-family:'Press Start 2P', cursive;">
+                    OOPS ! PAGE NON TROUVÉE
+                </h3>
+                <p class="mb-2">
+                    Il semble que Pac‑Man ait mangé cette page ! 🍒
+                </p>
+                <p class="mb-0">
+                    La page que vous recherchez n'existe pas ou a été déplacée.
+                </p>
+            </div>
+
+            <!-- Boutons d'action -->
+            <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                <a href="{% url 'pacmint_app:home' %}" 
+                   class="btn btn-warning btn-lg px-4 fw-bold"
+                   style="font-family:'Press Start 2P', cursive; font-size: 0.8rem;">
+                    🏠 ACCUEIL
+                </a>
+                <button onclick="history.back()" 
+                        class="btn btn-outline-warning btn-lg px-4 fw-bold"
+                        style="font-family:'Press Start 2P', cursive; font-size: 0.8rem;">
+                    ⬅️ RETOUR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    
+{% endblock main %}

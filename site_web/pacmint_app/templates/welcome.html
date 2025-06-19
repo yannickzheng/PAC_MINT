@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Bienvenue - PacMint{% endblock %}
+
+{% block subtitle %}
+    <h2 class="mb-4 lead" style="font-family:'Press Start 2P', cursive;">
+        Bonjour {{ user.username }} !
+    </h2>
+{% endblock %}
+
+{% block main %}
+    <p>Bonjour {{ user.username }}, vous pouvez retrouver ici l'historique de vos parties.</p>
+    <a href="{% url 'pacmint_app:home' %}" class="btn btn-secondary">Retour à l'accueil</a>
+{% endblock %}

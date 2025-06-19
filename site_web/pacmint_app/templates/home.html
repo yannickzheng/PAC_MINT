@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block subtitle %}
+    <h2 class="mb-4" style="font-family:'Press Start 2P', cursive; font-size:2rem; color:#00FF00;">
+        Bienvenue, prêt à dévorer des fantômes ?
+    </h2>
+    <div class="d-flex justify-content-center align-items-center mb-5 animation-line">
+        <div class="pacman me-3"></div>
+        <div class="ghost red"></div>
+        <div class="ghost pink"></div>
+        <div class="ghost cyan"></div>
+        <div class="ghost orange"></div>
+    </div>
+{% endblock %}
+
+{% block main %}
+    <div class="d-flex justify-content-center gap-4">
+        <a class="btn btn-warning btn-lg fw-bold px-5" href="{% url 'pacmint_app:register' %}">S'inscrire</a>
+        <a href="{% url 'pacmint_app:login' %}" class="btn btn-outline-light btn-lg fw-bold px-5">Se connecter</a>
+    </div>
+{% endblock %}
