@@ -37,11 +37,7 @@ class Player:
         self.image_super_up = pygame.transform.scale(pygame.image.load("images/Black Pacman-up.png"), (self.size, self.size))
         self.image_super_down = pygame.transform.scale(pygame.image.load("images/Black Pacman-down.png"), (self.size, self.size))
 
-        self.score = 0
-        self.super_power_active = False
-        self.super_power_timer = 0
-        self.invincible = False
-        self.invincibility_timer = 0
+        ########################"A mettre dans la classe GHOST"####################################
         self.is_eaten = False
         self.respawn_target = None
         self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
