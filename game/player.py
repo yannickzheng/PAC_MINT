@@ -173,7 +173,14 @@ class PacMan(Player):
 
 
 
-
+class Ghost(Player):
+    def __init__(self, ip, tcp_port, position):
+        super().__init__(ip, tcp_port, "Fantôme", position)
+        self.lives = float('inf')  # Fantômes ont des vies illimitées
+        self.is_eaten = False
+        self.respawn_target = None
+        self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
+        self.current_path = []  # Chemin actuel pour le fantôme
 
 
 """class Player:
