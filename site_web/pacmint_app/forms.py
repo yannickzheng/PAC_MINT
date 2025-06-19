@@ -36,9 +36,10 @@ class PlayerRegistrationForm(forms.ModelForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password'])
+        user.email = self.cleaned_data['email']
         if commit:
             user.save()
-            Player.objects.create(user=user, email=self.cleaned_data['email'])
+            Player.objects.create(user=user)
         return user
 
 
