@@ -42,7 +42,7 @@ class Player:
         self.respawn_target = None
         self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
         self.current_path = []  # Chemin actuel pour le fantôme
-
+###################################################################################################
     def move(self, players):
         """Déplace le joueur (Pacman ou Fantôme)"""
         pass
@@ -116,6 +116,35 @@ class PacMan(Player):
 
         # Met à jour les coordonnées du personnage
         self.update()
+
+    def draw(self, screen):
+        """Affiche PacMan à l'écran"""
+        image = self.get_img_pacman(controlled_player=None)
+        screen.blit(image, (int(self.x), int(self.y)))  # Affiche l'image à la position actuelle de PacMan
+
+    def get_img_pacman(self, controlled_player):
+        """Retourne l'image de PacMan en fonction de son état et de l'input du joueur"""
+        keys = pygame.key.get_pressed()
+
+        if self.invincible and (self.invincibility_timer // 10) % 2 == 0:
+            if keys[pygame.K_LEFT]: return self.image_super_left
+            if keys[pygame.K_RIGHT]: return self.image_super_right
+            if keys[pygame.K_UP]: return self.image_super_up
+            if keys[pygame.K_DOWN]: return self.image_super_down
+            return self.image_super_right
+
+        if self.super_power_active:
+            if keys[pygame.K_LEFT]: return self.image_super_left
+            if keys[pygame.K_RIGHT]: return self.image_super_right
+            if keys[pygame.K_UP]: return self.image_super_up
+            if keys[pygame.K_DOWN]: return self.image_super_down
+            return self.image_super_right
+
+        if keys[pygame.K_LEFT]: return self.image_left
+        if keys[pygame.K_RIGHT]: return self.image_right
+        if keys[pygame.K_UP]: return self.image_up
+        if keys[pygame.K_DOWN]: return self.image_down
+        return self.image_right
 
     def activate_super_power(self, duration=200):
         """Active le super pouvoir de PacMan pour une durée donnée"""
@@ -510,7 +539,7 @@ class PacMan(Player):
         return self.image_right
 
     def get_img_phantom(self):
-        return self.image_red_ghost
+        return self.image_red_ghost2
 
     def draw(self, screen, controlled_player):
         if self.is_pacman:
