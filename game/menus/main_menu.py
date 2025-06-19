@@ -11,13 +11,29 @@ def select_role(screen, font):
         screen.fill((0, 0, 0))
 
         # Affichage du texte "Choisissez votre rôle"
-        title_text = font.render("Choisissez votre rôle", True, (255, 255, 255))
+        title_text = pygame.image.load(("images/Choisissez-votre-role.png"))
         title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 130))
         screen.blit(title_text, title_rect)
+
+        # Charger les images
+        pacman_image = pygame.image.load("images/pacman - right.png").convert_alpha()
+        ghost_image = pygame.image.load("images/red_ghost2.png").convert_alpha()
+
+        # Redimensionner les images pour qu'elles s'adaptent bien à l'interface
+        pacman_image = pygame.transform.scale(pacman_image, (50, 50))  # Ajuste la taille de l'image
+        ghost_image = pygame.transform.scale(ghost_image, (50, 50))  # Ajuste la taille de l'image
+
+        # Afficher les images à côté des boutons
+        pacman_image_rect = pacman_image.get_rect(midright=(WIDTH // 2 - 100, HEIGHT // 2 - 40 ))
+        ghost_image_rect = ghost_image.get_rect(midright=(WIDTH // 2 - 100, HEIGHT // 2 + 65))
 
         # Afficher les boutons Pacman et Fantôme
         draw_button("Pacman", 250, 300, 200, 50, BLUE, CYAN, screen, font)
         draw_button("Fantôme", 250, 400, 200, 50, BLUE, CYAN, screen, font)
+
+        # Blitter les images
+        screen.blit(pacman_image, pacman_image_rect)
+        screen.blit(ghost_image, ghost_image_rect)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
