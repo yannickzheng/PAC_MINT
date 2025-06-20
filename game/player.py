@@ -558,12 +558,12 @@ class Ghost(Player):
 
         print("⚠ Aucun point de retour libre trouvé autour du centre.")
 
-##############Algorithme deplacement des fantomes par IA###########################
+############## Algorithme deplacement des fantomes par IA###########################
 
-    def heuristic(self, a, b):
+    def heuristic(self, a, b):    ######### GERE ########
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-    def find_path(self, start, goal, map_data):
+    def find_path(self, start, goal, map_data):    ######### GERE ########
         "Algorithme A* basique pour trouver un chemin sur ta MAP_DATA"
         open_set = []
         heapq.heappush(open_set, (0, start))
@@ -606,7 +606,7 @@ class Ghost(Player):
 
         return []  # Aucun chemin trouvé
 
-    def ghost_ai_move(self, pacman):
+    def ghost_ai_move(self, pacman):   ######### GERE ########
         if self.is_eaten:
             return  # Ne pas faire d'IA si le fantôme est en train de respawn
 

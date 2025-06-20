@@ -24,12 +24,12 @@ def select_role(screen, font):
         ghost_image = pygame.transform.scale(ghost_image, (50, 50))  # Ajuste la taille de l'image
 
         # Afficher les images à côté des boutons
-        pacman_image_rect = pacman_image.get_rect(midright=(WIDTH // 2 - 100, HEIGHT // 2 - 40 ))
-        ghost_image_rect = ghost_image.get_rect(midright=(WIDTH // 2 - 100, HEIGHT // 2 + 65))
+        pacman_image_rect = pacman_image.get_rect(midright=(WIDTH // 2 - 250, HEIGHT // 2 + 130 )) #Pour qu'il soit juste en dessous du bouton
+        ghost_image_rect = ghost_image.get_rect(midright=(WIDTH // 2 + 180, HEIGHT // 2 + 130))
 
         # Afficher les boutons Pacman et Fantôme
-        draw_button("Pacman", 250, 300, 200, 50, BLUE, CYAN, screen, font)
-        draw_button("Fantôme", 250, 400, 200, 50, BLUE, CYAN, screen, font)
+        draw_button("Pacman", 250, 400, 200, 50, BLUE, CYAN, screen, font)
+        draw_button("Fantôme", 700, 400, 200, 50, BLUE, CYAN, screen, font)
 
         # Blitter les images
         screen.blit(pacman_image, pacman_image_rect)
@@ -41,9 +41,9 @@ def select_role(screen, font):
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                if 300 <= y <= 350:
+                if 250 <= x <= 250 + 200 and 400 <= y <= 400 + 50:
                     return "pacman"  # Choisir Pacman
-                elif 400 <= y <= 450:
+                elif 700 <= x <= 700 + 200 and 400 <= y <= 400 + 50:
                     return "fantome"  # Choisir Fantôme
 
         pygame.display.flip()
