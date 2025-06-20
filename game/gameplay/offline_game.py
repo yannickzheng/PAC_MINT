@@ -110,18 +110,19 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
             #pacman_ai.move(players)
 
         # Vérification des collisions avec les pièces
-        for coin in coins[:]:
-            if distance(playerControlled.x, playerControlled.y, coin[0], coin[1]) < CELL_SIZE // 2:
-                playerControlled.score += 10
-                coins.remove(coin)
+        if role == "pacman":
+            for coin in coins[:]:
+                if distance(playerControlled.x, playerControlled.y, coin[0], coin[1]) < CELL_SIZE // 2:
+                    playerControlled.score += 10
+                    coins.remove(coin)
 
         # Vérification des collisions avec les fruits
-        for fruit in fruits[:]:
-            if distance(playerControlled.x, playerControlled.y, fruit[0], fruit[1]) < CELL_SIZE // 2:
-                playerControlled.score += 50
-                fruits.remove(fruit)
-                # Activation du super pouvoir lors de la collecte d'un fruit
-                playerControlled.activate_super_power()
+            for fruit in fruits[:]:
+                if distance(playerControlled.x, playerControlled.y, fruit[0], fruit[1]) < CELL_SIZE // 2:
+                    playerControlled.score += 50
+                    fruits.remove(fruit)
+                    # Activation du super pouvoir lors de la collecte d'un fruit
+                    playerControlled.activate_super_power()
 
         # Vérification des collisions avec les fantômes
         # Si on est en mode PacMan → collisions PacMan vs fantômes
