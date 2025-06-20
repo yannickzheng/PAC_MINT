@@ -7,7 +7,7 @@ def load_game_assets():
     # Images des pièces et fruits
     coin_size = int(CELL_SIZE * 0.65)
     fruit_size = int(CELL_SIZE)
-    
+
     coin_offset = (CELL_SIZE - coin_size) // 2
     fruit_offset = (CELL_SIZE - fruit_size) // 2
     
