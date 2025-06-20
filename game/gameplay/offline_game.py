@@ -1,7 +1,8 @@
 import pygame
 import random
 from common.global_variable import WIDTH, HEIGHT, CELL_SIZE, BLUE, CYAN
-from game.player import Player
+from game.player import Player, PacMan, Ghost
+from game.core.assets import load_game_assets
 from game.map import MAP_SURFACE, MAP_DATA
 from game.ui.components import display_loading_screen, draw_button, game_over
 from game.utils.helpers import distance, is_wall_at_position
@@ -10,18 +11,21 @@ import os
 
 def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, role):
     """Mode de jeu hors ligne sans besoin de serveur"""
+    assets = load_game_assets()
+    coin_offset = assets['coin_offset']
+    fruit_offset = assets['fruit_offset']
+
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
     clock = pygame.time.Clock()
 
-    # Création du joueur contrôlé par l'utilisateur
-    spawn_pos = (CELL_SIZE * 9, CELL_SIZE * 10)  # Position de départ
-    playerControlled = Player("127.0.0.1", 0, role.capitalize(),
-                              spawn_pos)  # Dynamique pour le rôle (PacMan ou Fantôme)
-    playerControlled.id = "playerControlled"  # Le joueur contrôlé a l'ID 'playerControlled'
-
-    playerControlled.lives = 3
-    playerControlled.score = 0
+    # Création du joueur contrôlé (instanciation de la bonne classe)
+    spawn_pos = (CELL_SIZE * 9, CELL_SIZE * 10)
+    if role == "pacman":
+        playerControlled = PacMan("127.0.0.1", 0, spawn_pos)
+    else:
+        playerControlled = Ghost("127.0.0.1", 0, spawn_pos)
+    playerControlled.id = "playerControlled"
 
     # Création des 4 fantômes IA (autres fantômes non contrôlés par le joueur)
     ghost_positions = [
@@ -33,11 +37,12 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
     ghosts = []
     players = {playerControlled.id: playerControlled}  # Le joueur contrôlé est 'playerControlled'
     for i, pos in enumerate(ghost_positions):
-        if role != "fantome" or i != 0:  # Ne pas recréer un autre fantôme si c'est celui que le joueur contrôle
-            ghost = Player("127.0.0.1", 0, "Fantôme", pos)
-            ghost.id = f"ghost{i + 1}"
-            ghosts.append(ghost)
-            players[ghost.id] = ghost
+        # si le joueur contrôle un fantôme, on ne recrée pas le même
+        if not (role == "fantome" and i == 0):
+            g = Ghost("127.0.0.1", 0, pos)
+            g.id = f"ghost{i + 1}"
+            ghosts.append(g)
+            players[g.id] = g
 
     # Génération des pièces et fruits pour le mode hors ligne identique au serveur
     coins = []
@@ -123,7 +128,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
 
         # Affichage des joueurs
         for player in players.values():
-            player.update_eaten_state()
+            ghost.update_eaten_state()
             player.draw(screen, playerControlled)
 
         # Affichage du score et des vies

@@ -115,9 +115,9 @@ class PacMan(Player):
         # Met à jour les coordonnées du personnage
         self.update()
 
-    def draw(self, screen):
+    def draw(self, screen, controlled_player = None):
         """Affiche PacMan à l'écran"""
-        image = self.get_img_pacman(controlled_player=None)
+        image = self.get_img_pacman(controlled_player)
         screen.blit(image, (int(self.x), int(self.y)))  # Affiche l'image à la position actuelle de PacMan
 
     def get_img_pacman(self, controlled_player):
@@ -216,7 +216,7 @@ class Ghost(Player):
         self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
         self.current_path = []  # Chemin actuel pour le fantôme
 
-    def draw(self, screen):
+    def draw(self, screen, controlled_player = None):
         """Affiche le fantôme à l'écran"""
         if self.is_eaten:
             # Si le fantôme est mangé, on le dessine en tant que boule translucide
@@ -277,7 +277,7 @@ class Ghost(Player):
 
     def update_eaten_state(self):
         "Déplace le fantôme mangé vers le centre en ligne droite sans collision"
-        if not self.is_phantom or not self.is_eaten or not self.respawn_target:
+        if not self.is_eaten or not self.respawn_target:
             return
 
         target_x, target_y = self.respawn_target

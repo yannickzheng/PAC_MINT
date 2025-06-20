@@ -85,16 +85,16 @@ def main_menu(screen, image, font):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 # Vérifier les boutons principaux en bas de l'écran
-                if 600 <= y <= 650:
-                    if 250 <= x <= 450:  # Mode Hors Ligne
-                        role = select_role(screen, font)  # Sélectionner le rôle
-                        return "offline", role
-                    elif 550 <= x <= 750:  # Mode En Ligne
-                        return "online"
-                    elif 850 <= x <= 1050:  # Quitter
-                        run = False
-                        pygame.quit()
-                        sys.exit()
+                if 250 <= x <= 450 and 600 <= y <= 650:
+                    role = select_role(screen, font)  # "pacman" ou "fantome"
+                    return "offline", role
+                    # Mode En Ligne
+                if 550 <= x <= 750 and 600 <= y <= 650:
+                    return "online", None
+                    # Quitter
+                if 850 <= x <= 1050 and 600 <= y <= 650:
+                    pygame.quit()
+                    sys.exit()
                         
         pygame.display.flip()
     
