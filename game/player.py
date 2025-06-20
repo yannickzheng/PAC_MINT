@@ -37,14 +37,8 @@ class Player:
         self.image_super_up = pygame.transform.scale(pygame.image.load("images/Black Pacman-up.png"), (self.size, self.size))
         self.image_super_down = pygame.transform.scale(pygame.image.load("images/Black Pacman-down.png"), (self.size, self.size))
 
-        ########################"A mettre dans la classe GHOST"####################################
-        self.is_eaten = False
-        self.respawn_target = None
-        self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
-        self.current_path = []  # Chemin actuel pour le fantôme
-###################################################################################################
     def move(self, players):
-        """Déplace le joueur (Pacman ou Fantôme)"""
+        """Déplace le joueur (Pacman ou Fantôme)""" ###### A COMPLETER DANS CHAQUE CLASSE#########################
         pass
 
     def check_collision(self, players):
@@ -100,7 +94,7 @@ class PacMan(Player):
                 self.speed = CELL_SIZE // 6  # Réinitialise la vitesse à la normale
 
         # Si PacMan est contrôlé par le joueur
-        if self.is_pacman and controlled:
+        if controlled:
             # Déplacement avec les touches directionnelles (gauche, droite, haut, bas)
             if keys[pygame.K_LEFT] and self.x > 0 and not self.is_wall(self.x - self.speed, self.y):
                 new_x -= self.speed
@@ -146,12 +140,50 @@ class PacMan(Player):
         if keys[pygame.K_DOWN]: return self.image_down
         return self.image_right
 
+    class PacMan(Player):
+        def __init__(self, ip, tcp_port, position):
+            super().__init__(ip, tcp_port, "PacMan", position)
+            self.lives = 3  # PacMan commence avec 3 vies
+            self.score = 0
+            self.super_power_active = False
+            self.super_power_timer = 0
+            self.invincible = False
+            self.invincibility_timer = 0
+
+        def handle_collisions_with_players(self, players):
+            """Gère les collisions de PacMan avec les fantômes."""
+            if self.invincible:  # Si PacMan est invincible, il ne perd pas de vie
+                return
+
+            pacman_center = (self.x + self.size // 2, self.y + self.size // 2)
+
+            for player in players.values():
+                if player != self:  # Si c'est un fantôme
+                    ghost_center = (player.x + player.size // 2, player.y + player.size // 2)
+                    dx = pacman_center[0] - ghost_center[0]
+                    dy = pacman_center[1] - ghost_center[1]
+                    distance_squared = dx * dx + dy * dy
+                    combined_radius = self.hitbox_size + player.hitbox_size
+                    combined_squared = combined_radius ** 2
+
+                    if distance_squared <= combined_squared:  # Collision avec le fantôme
+                        if self.super_power_active:
+                            self.eat_ghost(player, players)  # Si PacMan a le super pouvoir, manger le fantôme
+                        else:
+                            self.lose_life()  # Sinon, perdre une vie
+
+                        self.x, self.y = self.coord  # Réinitialise la position de PacMan après la collision
+                        return  # Fin de la gestion de la collision
+
     def activate_super_power(self, duration=200):
         """Active le super pouvoir de PacMan pour une durée donnée"""
         self.super_power_active = True
         self.super_power_timer = duration
         self.speed = min(int(self.speed * 1.2), CELL_SIZE // 5)
         print(f"Super pouvoir activé pour {duration//60} secondes!")
+
+    def eat_ghost(self, ghost, players):
+        self.score += 1000  # Ajout de points à PacMan
 
     def lose_life(self):
         """Perdre une vie"""
@@ -181,6 +213,27 @@ class Ghost(Player):
         self.respawn_target = None
         self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
         self.current_path = []  # Chemin actuel pour le fantôme
+
+    def draw(self, screen):
+        """Affiche le fantôme à l'écran"""
+        if self.is_eaten:
+            # Si le fantôme est mangé, on le dessine en tant que boule translucide
+            ghost_surface = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
+            pygame.draw.circle(
+                ghost_surface,
+                (150, 200, 255, 150),  # Couleur et transparence pour effet "mangé"
+                (self.size // 2, self.size // 2),
+                self.size // 2
+            )
+            screen.blit(ghost_surface, (int(self.x), int(self.y)))
+        else:
+            # Affichage normal du fantôme
+            image = self.get_img_phantom()  # On récupère l'image du fantôme via la méthode
+            screen.blit(image, (int(self.x), int(self.y)))
+
+    def get_img_phantom(self):
+        """Retourne l'image du fantôme"""
+        return self.image_red_ghost
 
 
 """class Player:
@@ -346,6 +399,8 @@ class Ghost(Player):
 
         print("⚠ Aucun point de retour libre trouvé autour du centre.")
 
+##############Algorithme deplacement des fantomes par IA###########################
+
     def heuristic(self, a, b):
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
@@ -446,6 +501,7 @@ class Ghost(Player):
             # Si on est proche de la prochaine case, on passe à la suivante
             if abs(dx) < 5 and abs(dy) < 5:
                 self.current_path.pop(0)
+###################################################################################
 
     def move(self, players, controlled=False):
         """Déplace le joueur (Pacman ou Fantôme) contrôlé par le client."""
