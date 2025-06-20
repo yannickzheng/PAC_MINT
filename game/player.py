@@ -116,23 +116,23 @@ class PacMan(Player):
         # Met à jour les coordonnées du personnage
         self.update()
 
-    def draw(self, screen, controlled_player = None):
+    def draw(self, screen, controlled):
         """Affiche PacMan à l'écran"""
-        image = self.get_img_pacman(controlled_player)
+        image = self.get_img_pacman(controlled)
         screen.blit(image, (int(self.x), int(self.y)))  # Affiche l'image à la position actuelle de PacMan
 
-    def get_img_pacman(self, controlled_player):
+    def get_img_pacman(self, controlled=False):
         """Retourne l'image de PacMan en fonction de son état et de l'input du joueur"""
         keys = pygame.key.get_pressed()
 
-        if self.invincible and (self.invincibility_timer // 10) % 2 == 0:
+        if controlled and self.invincible and (self.invincibility_timer // 10) % 2 == 0:
             if keys[pygame.K_LEFT]: return self.image_super_left
             if keys[pygame.K_RIGHT]: return self.image_super_right
             if keys[pygame.K_UP]: return self.image_super_up
             if keys[pygame.K_DOWN]: return self.image_super_down
             return self.image_super_right
 
-        if self.super_power_active:
+        if controlled and self.super_power_active:
             if keys[pygame.K_LEFT]: return self.image_super_left
             if keys[pygame.K_RIGHT]: return self.image_super_right
             if keys[pygame.K_UP]: return self.image_super_up
@@ -218,41 +218,30 @@ class Ghost(Player):
         self.current_path = []  # Chemin actuel pour le fantôme
 
     def move(self, players, controlled=False):
-        """Déplace le fantôme (IA ou contrôlé par le joueur)."""
-
-        # 1) Si le fantôme est en mode “mangé”, on laisse update_eaten_state() gérer le retour au ghost house
-        if self.is_eaten:
-            return
-
-        # 2) Contrôle clavier si on passe controlled=True
+        """Si controlled=True : le joueur déplace ce fantôme au clavier.Sinon : IA A* via ghost_ai_move."""
         if controlled:
             keys = pygame.key.get_pressed()
-            dx = dy = 0
+            new_x, new_y = self.x, self.y
+
             if keys[pygame.K_LEFT] and not self.is_wall(self.x - self.speed, self.y):
-                dx = -self.speed
+                new_x -= self.speed
 
             if keys[pygame.K_RIGHT] and not self.is_wall(self.x + self.speed, self.y):
-                dx = self.speed
+                new_x += self.speed
 
             if keys[pygame.K_UP] and not self.is_wall(self.x, self.y - self.speed):
-                dy = -self.speed
-
+                new_y -= self.speed
             if keys[pygame.K_DOWN] and not self.is_wall(self.x, self.y + self.speed):
-                dy = self.speed
-                self.x += dx
-                self.y += dy
+                new_y += self.speed
 
-        #3) IA sinon
+            self.x, self.y = new_x, new_y
         else:
             pacman = next((p for p in players.values() if isinstance(p, PacMan)), None)
-
             if pacman:
                 self.ghost_ai_move(pacman)
-
-        # 4) Met à jour coord + timers éventuels
         self.update()
 
-    def draw(self, screen, controlled_player = None):
+    def draw(self, screen, controlled):
         """Affiche le fantôme à l'écran"""
         if self.is_eaten:
             # Si le fantôme est mangé, on le dessine en tant que boule translucide

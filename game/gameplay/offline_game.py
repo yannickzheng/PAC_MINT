@@ -99,14 +99,15 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         # Déplacement du joueur (si c'est PacMan ou un fantôme, selon le rôle)
         if role == "pacman":
             playerControlled.move(players, controlled=True)  # PacMan contrôlé par l'utilisateur
-        else:  # Fantôme contrôlé par l'utilisateur
-            # Le joueur peut choisir un seul fantôme à contrôler
-            for ghost in ghosts:
-                if ghost.id == playerControlled.id:  # Si le fantôme contrôlé par l'utilisateur
-                    ghost.move(players, controlled=True)
-                else:
-                    ghost.move(players)  # IA pour les autres fantômes
-            #pacman.ai.move(players)
+            for g in ghosts:
+                g.move(players, controlled=False)
+        else:
+            # 1) PacMan IA reste immobile (ou à coder plus tard)
+            # 2) On déplace les fantômes
+            for g in ghosts:
+                g.move(players, controlled=False)
+            playerControlled.move(players, controlled=True)
+            #pacman_ai.move(players)
 
         # Vérification des collisions avec les pièces
         for coin in coins[:]:
@@ -161,22 +162,22 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         for ghost in ghosts:
             ghost.update_eaten_state()
 
-        # 🎨 Affichage de PacMan puis de tous les fantômes
+        # Affichage de PacMan puis de tous les fantômes
         if role == "pacman":
             # 1) PacMan contrôlé
-            playerControlled.draw(screen)
-            # 2) Les 4 fantômes (IA)
+            playerControlled.draw(screen, controlled=True)
 
-            for ghost in ghosts:
-                ghost.draw(screen)
+            # 2) Les 4 fantômes (IA)
+            for g in ghosts:
+                g.draw(screen, controlled=False)
         else:
           # 1) PacMan en IA
-            pacman_ai.draw(screen)
+            pacman_ai.draw(screen, controlled=False)
           # 2) Les fantômes IA
-            for ghost in ghosts:
-                ghost.draw(screen)
+            for g in ghosts:
+                g.draw(screen, controlled=False)
           # 3) Le fantôme contrôlé
-            playerControlled.draw(screen)
+            playerControlled.draw(screen, controlled=True)
 
         # Affichage du score et des vies
         score_text = font.render(f"Score: {playerControlled.score}", True, (255, 255, 255))
