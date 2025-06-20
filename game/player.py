@@ -69,6 +69,10 @@ class Player:
         """Affiche le joueur à l'écran"""
         pass
 
+    def update(self):
+        """Met à jour les coordonnées du joueur"""
+        self.coord = (self.x, self.y)  # Met à jour les coordonnées
+
 
 class PacMan(Player):
     def __init__(self, ip, tcp_port, position):
@@ -140,40 +144,30 @@ class PacMan(Player):
         if keys[pygame.K_DOWN]: return self.image_down
         return self.image_right
 
-    class PacMan(Player):
-        def __init__(self, ip, tcp_port, position):
-            super().__init__(ip, tcp_port, "PacMan", position)
-            self.lives = 3  # PacMan commence avec 3 vies
-            self.score = 0
-            self.super_power_active = False
-            self.super_power_timer = 0
-            self.invincible = False
-            self.invincibility_timer = 0
+    def handle_collisions_with_ghosts(self, players):
+        """Gère les collisions de PacMan avec les fantômes."""
+        if self.invincible:  # Si PacMan est invincible, il ne perd pas de vie
+            return
 
-        def handle_collisions_with_players(self, players):
-            """Gère les collisions de PacMan avec les fantômes."""
-            if self.invincible:  # Si PacMan est invincible, il ne perd pas de vie
-                return
+        pacman_center = (self.x + self.size // 2, self.y + self.size // 2)
 
-            pacman_center = (self.x + self.size // 2, self.y + self.size // 2)
+        for player in players.values():
+            if player != self and player.is_phantom:  # Si c'est un fantôme
+                ghost_center = (player.x + player.size // 2, player.y + player.size // 2)
+                dx = pacman_center[0] - ghost_center[0]
+                dy = pacman_center[1] - ghost_center[1]
+                distance_squared = dx * dx + dy * dy
+                combined_radius = self.hitbox_size + player.hitbox_size
+                combined_squared = combined_radius ** 2
 
-            for player in players.values():
-                if player != self:  # Si c'est un fantôme
-                    ghost_center = (player.x + player.size // 2, player.y + player.size // 2)
-                    dx = pacman_center[0] - ghost_center[0]
-                    dy = pacman_center[1] - ghost_center[1]
-                    distance_squared = dx * dx + dy * dy
-                    combined_radius = self.hitbox_size + player.hitbox_size
-                    combined_squared = combined_radius ** 2
+                if distance_squared <= combined_squared:  # Collision avec le fantôme
+                    if self.super_power_active:
+                        self.eat_ghost(player, players)  # Si PacMan a le super pouvoir, manger le fantôme
+                    else:
+                        self.lose_life()  # Sinon, perdre une vie
 
-                    if distance_squared <= combined_squared:  # Collision avec le fantôme
-                        if self.super_power_active:
-                            self.eat_ghost(player, players)  # Si PacMan a le super pouvoir, manger le fantôme
-                        else:
-                            self.lose_life()  # Sinon, perdre une vie
-
-                        self.x, self.y = self.coord  # Réinitialise la position de PacMan après la collision
-                        return  # Fin de la gestion de la collision
+                    self.x, self.y = self.coord  # Réinitialise la position de PacMan après la collision
+                    return  # Fin de la gestion de la collision
 
     def activate_super_power(self, duration=200):
         """Active le super pouvoir de PacMan pour une durée donnée"""
@@ -243,50 +237,163 @@ class Ghost(Player):
         """Retourne l'image du fantôme"""
         return self.image_red_ghost2
 
-    class Ghost(Player):
-        def __init__(self, ip, tcp_port, position):
-            super().__init__(ip, tcp_port, "Fantôme", position)
-            self.lives = float('inf')  # Fantômes ont des vies illimitées
-            self.respawn_target = None  # Le point où le fantôme doit respawn
+    def is_position_free(x, y, ghost, players):
+        for player in players.values():
+            if player == ghost:
+                continue
+            dx = (player.x + player.size // 2) - (x + ghost.size // 2)
+            dy = (player.y + player.size // 2) - (y + ghost.size // 2)
+            distance_squared = dx * dx + dy * dy
+            if distance_squared < (ghost.size) ** 2:
+                return False
+        return True
 
-        def is_position_free(x, y, ghost, players):
-            for player in players.values():
-                if player == ghost:
-                    continue
-                dx = (player.x + player.size // 2) - (x + ghost.size // 2)
-                dy = (player.y + player.size // 2) - (y + ghost.size // 2)
-                distance_squared = dx * dx + dy * dy
-                if distance_squared < (ghost.size) ** 2:
-                    return False
-            return True
+    def get_respawn_position(self, players):
+        """Retourne un point de respawn libre pour le fantôme"""
+        center_x = WIDTH // 2
+        center_y = HEIGHT // 2
+        cell = CELL_SIZE
 
-        def get_respawn_position(self, players):
-            """Retourne un point de respawn libre pour le fantôme"""
-            center_x = WIDTH // 2
-            center_y = HEIGHT // 2
-            cell = CELL_SIZE
+        offsets = [
+            (0, 0),
+            (cell, 0), (-cell, 0),
+            (0, cell), (0, -cell),
+            (cell, cell), (-cell, -cell),
+            (cell, -cell), (-cell, cell),
+            (2 * cell, 0), (-2 * cell, 0),
+            (0, 2 * cell), (0, -2 * cell),
+            (cell * 2, cell * 2), (-cell * 2, -cell * 2)
+        ]
 
-            offsets = [
-                (0, 0),
-                (cell, 0), (-cell, 0),
-                (0, cell), (0, -cell),
-                (cell, cell), (-cell, -cell),
-                (cell, -cell), (-cell, cell),
-                (2 * cell, 0), (-2 * cell, 0),
-                (0, 2 * cell), (0, -2 * cell),
-                (cell * 2, cell * 2), (-cell * 2, -cell * 2)
+        # Cherche un point libre autour du centre pour respawn
+        for dx, dy in offsets:
+            target_x = center_x + dx
+            target_y = center_y + dy
+
+            if self.is_position_free(target_x, target_y, self, players):
+                return (target_x, target_y)
+
+        return None  # Si aucun point libre trouvé
+
+    def update_eaten_state(self):
+        "Déplace le fantôme mangé vers le centre en ligne droite sans collision"
+        if not self.is_phantom or not self.is_eaten or not self.respawn_target:
+            return
+
+        target_x, target_y = self.respawn_target
+        speed = self.speed
+
+        dx = target_x - self.x
+        dy = target_y - self.y
+        distance = (dx ** 2 + dy ** 2) ** 0.5
+
+        if distance < speed:
+            # 🎯 Fantôme arrivé au centre => il redevient normal
+            self.x, self.y = target_x, target_y  # aligne parfaitement sur le centre
+            self.is_eaten = False
+            self.respawn_target = None
+            return
+
+    def heuristic(self, a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    def find_path(self, start, goal, map_data):
+        "Algorithme A* basique pour trouver un chemin sur ta MAP_DATA"
+        open_set = []
+        heapq.heappush(open_set, (0, start))
+        came_from = {}
+        g_score = {start: 0}
+
+        while open_set:
+            _, current = heapq.heappop(open_set)
+
+            if current == goal:
+                # Reconstituer le chemin
+                path = []
+                while current in came_from:
+                    path.append(current)
+                    current = came_from[current]
+                path.reverse()
+                return path
+
+            x, y = current
+            neighbors = [
+                (x + 1, y),
+                (x - 1, y),
+                (x, y + 1),
+                (x, y - 1)
             ]
 
-            # Cherche un point libre autour du centre pour respawn
-            for dx, dy in offsets:
-                target_x = center_x + dx
-                target_y = center_y + dy
+            for neighbor in neighbors:
+                nx, ny = neighbor
+                # Vérifie que le voisin est dans la carte et n'est pas un mur
+                if 0 <= nx < len(map_data[0]) and 0 <= ny < len(map_data):
+                    if map_data[ny][nx] == 1:
+                        continue
 
-                if self.is_position_free(target_x, target_y, self, players):
-                    return (target_x, target_y)
+                    tentative_g_score = g_score[current] + 1
+                    if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
+                        came_from[neighbor] = current
+                        g_score[neighbor] = tentative_g_score
+                        f_score = tentative_g_score + self.heuristic(neighbor, goal)
+                        heapq.heappush(open_set, (f_score, neighbor))
 
-            return None  # Si aucun point libre trouvé
+        return []  # Aucun chemin trouvé
 
+    def ghost_ai_move(self, pacman):
+        if self.is_eaten:
+            return  # Ne pas faire d'IA si le fantôme est en train de respawn
+
+        # 🔁 Forcer le recalcul si changement de stratégie (fuite vs poursuite)
+        if pacman.super_power_active and self.pathfinding_timer > 0:
+            self.pathfinding_timer = 0
+
+        self.pathfinding_timer -= 1
+
+        if self.pathfinding_timer <= 0 or not self.current_path:
+            start = (int(self.x // CELL_SIZE), int(self.y // CELL_SIZE))
+
+            if pacman.super_power_active:
+                # 🔁 Fuite : aller dans la direction opposée à Pacman
+                dx = self.x - pacman.x
+                dy = self.y - pacman.y
+                flee_x = self.x + dx * 3
+                flee_y = self.y + dy * 3
+
+                # Clamp les coordonnées dans les limites de la carte
+                goal = (
+                    max(0, min(int(flee_x // CELL_SIZE), len(MAP_DATA[0]) - 1)),
+                    max(0, min(int(flee_y // CELL_SIZE), len(MAP_DATA) - 1))
+                )
+            else:
+                # 🎯 Poursuite normale de Pacman
+                goal = (int(pacman.x // CELL_SIZE), int(pacman.y // CELL_SIZE))
+
+            self.current_path = self.find_path(start, goal, MAP_DATA)
+            self.pathfinding_timer = 5  # Recalcul toutes les 10 frames
+
+        if self.current_path:
+            next_cell = self.current_path[0]
+            target_x = next_cell[0] * CELL_SIZE
+            target_y = next_cell[1] * CELL_SIZE
+
+            dx = target_x - self.x
+            dy = target_y - self.y
+
+            if abs(dx) > abs(dy):
+                if dx > 0:
+                    self.x += self.speed
+                else:
+                    self.x -= self.speed
+            else:
+                if dy > 0:
+                    self.y += self.speed
+                else:
+                    self.y -= self.speed
+
+            # Si on est proche de la prochaine case, on passe à la suivante
+            if abs(dx) < 5 and abs(dy) < 5:
+                self.current_path.pop(0)
 
 """class Player:
     def __init__(self, ip, tcp_port, role, position, tcp_socket=None):   ######### GERE ########
@@ -348,7 +455,7 @@ class Ghost(Player):
         self.current_path = []  # Chemin actuel pour le fantôme
 
     def check_collision(self, players): ######### GERE ########
-        """Vérifie si le joueur entre en collision avec un autre joueur"""
+        "Vérifie si le joueur entre en collision avec un autre joueur"
         for player in players.values():
             if player != self:
                 distance_squared = (self.x - player.x) ** 2 + (self.y - player.y) ** 2
@@ -380,7 +487,7 @@ class Ghost(Player):
         else:
             self.lives = 0
 
-    def handle_collisions_with_players(self, players):  ######### GERE ########
+    def handle_collisions_with_players(self, players):  ######### GERE pour Pacman########
         if not self.is_pacman or self.invincible:
             return
 
@@ -405,13 +512,13 @@ class Ghost(Player):
                     return    
     
     def activate_super_power(self, duration=200): ######### GERE ########
-        """Active le super pouvoir de Pacman pour une durée donnée"""
+        "Active le super pouvoir de Pacman pour une durée donnée"
         self.super_power_active = True
         self.super_power_timer = duration
         self.speed = min(int(self.speed * 1.2), CELL_SIZE // 5)
         print(f"Super pouvoir activé pour {duration//60} secondes!")
 
-    def is_position_free(x, y, ghost, players):
+    def is_position_free(x, y, ghost, players): ######### GERE ########
         for player in players.values():
             if player == ghost:
                 continue
@@ -422,7 +529,7 @@ class Ghost(Player):
                 return False
         return True
 
-    def eat_ghost(self, ghost, players):
+    def eat_ghost(self, ghost, players):  ######### GERE ########
         self.score += 1000
 
         center_x = WIDTH // 2
@@ -457,7 +564,7 @@ class Ghost(Player):
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
     def find_path(self, start, goal, map_data):
-        """Algorithme A* basique pour trouver un chemin sur ta MAP_DATA"""
+        "Algorithme A* basique pour trouver un chemin sur ta MAP_DATA"
         open_set = []
         heapq.heappush(open_set, (0, start))
         came_from = {}
@@ -555,8 +662,8 @@ class Ghost(Player):
                 self.current_path.pop(0)
 ###################################################################################
 
-    def move(self, players, controlled=False):
-        """Déplace le joueur (Pacman ou Fantôme) contrôlé par le client."""
+    def move(self, players, controlled=False):######### GERE POUR PACMAN ########
+        ""Déplace le joueur (Pacman ou Fantôme) contrôlé par le client.""
         keys = pygame.key.get_pressed()
         new_x, new_y = self.x, self.y
         hitbox_offset = self.size // 4
@@ -593,17 +700,17 @@ class Ghost(Player):
 
         self.update()
 
-    def update_position(self, new_pos):
+    def update_position(self, new_pos): ######### GERE ########
         self.x, self.y = tuple(new_pos)
         self.coord = new_pos
         self.position = new_pos
 
-    def update(self):
-        """Met à jour les coordonnées du joueur"""
+    def update(self): ######### GERE ########
+        "Met à jour les coordonnées du joueur"
         self.coord = (self.x, self.y)
 
-    def update_eaten_state(self):
-        """Déplace le fantôme mangé vers le centre en ligne droite sans collision"""
+    def update_eaten_state(self): ######### GERE ########
+        "Déplace le fantôme mangé vers le centre en ligne droite sans collision"
         if not self.is_phantom or not self.is_eaten or not self.respawn_target:
             return
 
@@ -655,7 +762,7 @@ class Ghost(Player):
 
 
 
-    def get_img_phantom(self): 
+    def get_img_phantom(self): ######### GERE ########
         return self.image_red_ghost2
 
     def draw(self, screen, controlled_player):   ######### GERE ########
@@ -675,4 +782,4 @@ class Ghost(Player):
                 screen.blit(self.get_img_phantom(), (int(self.x), int(self.y)))
 
     def spawn(self, screen, img):
-        screen.blit(img, (self.x, self.y))
+        screen.blit(img, (self.x, self.y))"""
