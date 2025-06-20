@@ -13,6 +13,7 @@ class Player:
         self.tcp_addr = (self.ip, self.tcp_port)
 
         self.role = role
+        self.score = 0
         self.id = None
         self.is_coin = role == "Pièce"
 
@@ -235,7 +236,7 @@ class Ghost(Player):
 
     def get_img_phantom(self):
         """Retourne l'image du fantôme"""
-        return self.image_red_ghost2
+        return self.image_red_ghost
 
     def is_position_free(x, y, ghost, players):
         for player in players.values():

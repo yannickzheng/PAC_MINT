@@ -93,27 +93,28 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
                 playerControlled.activate_super_power()
 
         # Vérification des collisions avec les fantômes
-        for ghost in ghosts:
-            if distance(playerControlled.x, playerControlled.y, ghost.x,
-                        ghost.y) < CELL_SIZE and not playerControlled.invincible:
-                if playerControlled.super_power_active:
-                    playerControlled.eat_ghost(ghost, players)
-                    playerControlled.score += 200
-                else:
-                    playerControlled.lose_life()
-                    playerControlled.invincible = True
-                    playerControlled.invincibility_timer = 180
+        # Si on est en mode PacMan → collisions PacMan vs fantômes
+        if role == "pacman":
+            for ghost in ghosts:
+                if distance(playerControlled.x, playerControlled.y, ghost.x, ghost.y) < CELL_SIZE and not playerControlled.invincible:
+                    if playerControlled.super_power_active:
+                        playerControlled.eat_ghost(ghost, players)
+                        playerControlled.score += 200
+                    else:
+                        playerControlled.lose_life()
+                        playerControlled.invincible = True
+                        playerControlled.invincibility_timer = 180
 
-        # Mise à jour des timers
-        if playerControlled.invincible:
-            playerControlled.invincibility_timer -= 1
-            if playerControlled.invincibility_timer <= 0:
-                playerControlled.invincible = False
-
-        if playerControlled.super_power_active:
-            playerControlled.super_power_timer -= 1
-            if playerControlled.super_power_timer <= 0:
-                playerControlled.super_power_active = False
+        # Mise à jour des timers (uniquement pour PacMan)
+        if role == "pacman":
+            if playerControlled.invincible:
+                playerControlled.invincibility_timer -= 1
+                if playerControlled.invincibility_timer <= 0:
+                    playerControlled.invincible = False
+            if playerControlled.super_power_active:
+                playerControlled.super_power_timer -= 1
+                if playerControlled.super_power_timer <= 0:
+                    playerControlled.super_power_active = False
 
         # Affichage du jeu
         screen.fill((0, 0, 0))
@@ -127,9 +128,13 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
             screen.blit(fruit_image, (fruit[0] + fruit_offset, fruit[1] + fruit_offset))
 
         # Affichage des joueurs
-        for player in players.values():
+        for ghost in ghosts:
             ghost.update_eaten_state()
-            player.draw(screen, playerControlled)
+
+        # 🎨 Affichage de PacMan puis de tous les fantômes
+        playerControlled.draw(screen)
+        for ghost in ghosts:
+            ghost.draw(screen)
 
         # Affichage du score et des vies
         score_text = font.render(f"Score: {playerControlled.score}", True, (255, 255, 255))
