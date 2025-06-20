@@ -185,6 +185,14 @@ class PacMan(Player):
     def eat_ghost(self, ghost, players):
         self.score += 1000  # Ajout de points à PacMan
 
+        respawn_position = ghost.get_respawn_position(players)
+
+        if respawn_position:
+            ghost.respawn_target = respawn_position  # Assigner le point de respawn au fantôme
+            ghost.x, ghost.y = respawn_position  # Déplacer le fantôme au point de respawn
+        else:
+            print("⚠ Aucun point libre pour le respawn du fantôme.")
+
     def lose_life(self):
         """Perdre une vie"""
         if self.invincible:
@@ -233,11 +241,55 @@ class Ghost(Player):
 
     def get_img_phantom(self):
         """Retourne l'image du fantôme"""
-        return self.image_red_ghost
+        return self.image_red_ghost2
+
+    class Ghost(Player):
+        def __init__(self, ip, tcp_port, position):
+            super().__init__(ip, tcp_port, "Fantôme", position)
+            self.lives = float('inf')  # Fantômes ont des vies illimitées
+            self.respawn_target = None  # Le point où le fantôme doit respawn
+
+        def is_position_free(x, y, ghost, players):
+            for player in players.values():
+                if player == ghost:
+                    continue
+                dx = (player.x + player.size // 2) - (x + ghost.size // 2)
+                dy = (player.y + player.size // 2) - (y + ghost.size // 2)
+                distance_squared = dx * dx + dy * dy
+                if distance_squared < (ghost.size) ** 2:
+                    return False
+            return True
+
+        def get_respawn_position(self, players):
+            """Retourne un point de respawn libre pour le fantôme"""
+            center_x = WIDTH // 2
+            center_y = HEIGHT // 2
+            cell = CELL_SIZE
+
+            offsets = [
+                (0, 0),
+                (cell, 0), (-cell, 0),
+                (0, cell), (0, -cell),
+                (cell, cell), (-cell, -cell),
+                (cell, -cell), (-cell, cell),
+                (2 * cell, 0), (-2 * cell, 0),
+                (0, 2 * cell), (0, -2 * cell),
+                (cell * 2, cell * 2), (-cell * 2, -cell * 2)
+            ]
+
+            # Cherche un point libre autour du centre pour respawn
+            for dx, dy in offsets:
+                target_x = center_x + dx
+                target_y = center_y + dy
+
+                if self.is_position_free(target_x, target_y, self, players):
+                    return (target_x, target_y)
+
+            return None  # Si aucun point libre trouvé
 
 
 """class Player:
-    def __init__(self, ip, tcp_port, role, position, tcp_socket=None):
+    def __init__(self, ip, tcp_port, role, position, tcp_socket=None):   ######### GERE ########
 
         self.ip = ip
         self.tcp_port = int(tcp_port) if tcp_port else None
@@ -295,7 +347,7 @@ class Ghost(Player):
         self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
         self.current_path = []  # Chemin actuel pour le fantôme
 
-    def check_collision(self, players):
+    def check_collision(self, players): ######### GERE ########
         """Vérifie si le joueur entre en collision avec un autre joueur"""
         for player in players.values():
             if player != self:
@@ -303,7 +355,7 @@ class Ghost(Player):
                 if distance_squared < (self.hitbox_size + player.hitbox_size) ** 2:
                     return True
         return False
-    def is_wall(self, x, y):
+    def is_wall(self, x, y): ######### GERE ########
         cell_size = self.size
         margin = self.size * 0.15  # tolérance pour passer dans les petits espaces
 
@@ -318,7 +370,7 @@ class Ghost(Player):
         except IndexError:
             return True
 
-    def lose_life(self):
+    def lose_life(self):    ######### GERE ########
         if self.invincible:
             return
         if self.lives > 1:
@@ -328,7 +380,7 @@ class Ghost(Player):
         else:
             self.lives = 0
 
-    def handle_collisions_with_players(self, players):
+    def handle_collisions_with_players(self, players):  ######### GERE ########
         if not self.is_pacman or self.invincible:
             return
 
@@ -352,7 +404,7 @@ class Ghost(Player):
                     self.x, self.y = self.coord
                     return    
     
-    def activate_super_power(self, duration=200):
+    def activate_super_power(self, duration=200): ######### GERE ########
         """Active le super pouvoir de Pacman pour une durée donnée"""
         self.super_power_active = True
         self.super_power_timer = duration
@@ -575,7 +627,7 @@ class Ghost(Player):
         self.x += move_x
         self.y += move_y
 
-    def get_img_pacman(self, controlled_player):
+    def get_img_pacman(self, controlled_player):  ######### GERE ########
         if self != controlled_player:
             return self.image_right
 
@@ -601,10 +653,12 @@ class Ghost(Player):
         if keys[pygame.K_DOWN]: return self.image_down
         return self.image_right
 
-    def get_img_phantom(self):
+
+
+    def get_img_phantom(self): 
         return self.image_red_ghost2
 
-    def draw(self, screen, controlled_player):
+    def draw(self, screen, controlled_player):   ######### GERE ########
         if self.is_pacman:
             screen.blit(self.get_img_pacman(controlled_player), (int(self.x), int(self.y)))
         elif self.is_phantom:
