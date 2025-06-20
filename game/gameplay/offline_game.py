@@ -19,13 +19,43 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
     font = pygame.font.SysFont("Arial", 24)
     clock = pygame.time.Clock()
 
-    # Création du joueur contrôlé (instanciation de la bonne classe)
+    # ——— On crée d'abord PacMan IA (pour qu'il y ait toujours un PacMan) ———
     spawn_pos = (CELL_SIZE * 9, CELL_SIZE * 10)
+    pacman_ai = PacMan("127.0.0.1", 0, spawn_pos)
+    pacman_ai.id = "pacman_ai"
+
+    # ——— Puis on remplace ou non par le contrôlé ———
+
     if role == "pacman":
-        playerControlled = PacMan("127.0.0.1", 0, spawn_pos)
+        playerControlled = pacman_ai
     else:
         playerControlled = Ghost("127.0.0.1", 0, spawn_pos)
-    playerControlled.id = "playerControlled"
+        playerControlled.id = "playerControlled"
+
+    # ——— Et on ajoute les deux dans la collection `players` ———
+    players = {playerControlled.id: playerControlled}
+
+    if pacman_ai.id not in players:
+        players[pacman_ai.id] = pacman_ai
+
+    # on définit d'abord les 4 positions autour du centre
+    center_x, center_y = WIDTH // 2, HEIGHT // 2
+    d = 20
+    ghost_positions = [
+        (center_x - d, center_y - d),
+        (center_x + d, center_y - d),
+        (center_x - d, center_y + d),
+        (center_x + d, center_y + d),
+    ]
+
+    # Si on contrôle PacMan, on le place sur sa spawn « classique »
+    # Si on contrôle un Fantôme, on le place en ghost_positions[0]
+
+    if role == "pacman":
+        playerControlled = PacMan("127.0.0.1", 0, (CELL_SIZE * 9, CELL_SIZE * 10))
+    else:
+        playerControlled = Ghost("127.0.0.1", 0, ghost_positions[0])
+        playerControlled.id = "playerControlled"
 
     # Création des 4 fantômes IA (autres fantômes non contrôlés par le joueur)
     ghost_positions = [
@@ -35,7 +65,6 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         (WIDTH // 2 + 20, HEIGHT // 2 + 20)
     ]
     ghosts = []
-    players = {playerControlled.id: playerControlled}  # Le joueur contrôlé est 'playerControlled'
     for i, pos in enumerate(ghost_positions):
         # si le joueur contrôle un fantôme, on ne recrée pas le même
         if not (role == "fantome" and i == 0):
@@ -77,6 +106,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
                     ghost.move(players, controlled=True)
                 else:
                     ghost.move(players)  # IA pour les autres fantômes
+            #pacman.ai.move(players)
 
         # Vérification des collisions avec les pièces
         for coin in coins[:]:
@@ -132,9 +162,21 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
             ghost.update_eaten_state()
 
         # 🎨 Affichage de PacMan puis de tous les fantômes
-        playerControlled.draw(screen)
-        for ghost in ghosts:
-            ghost.draw(screen)
+        if role == "pacman":
+            # 1) PacMan contrôlé
+            playerControlled.draw(screen)
+            # 2) Les 4 fantômes (IA)
+
+            for ghost in ghosts:
+                ghost.draw(screen)
+        else:
+          # 1) PacMan en IA
+            pacman_ai.draw(screen)
+          # 2) Les fantômes IA
+            for ghost in ghosts:
+                ghost.draw(screen)
+          # 3) Le fantôme contrôlé
+            playerControlled.draw(screen)
 
         # Affichage du score et des vies
         score_text = font.render(f"Score: {playerControlled.score}", True, (255, 255, 255))
