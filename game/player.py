@@ -123,16 +123,19 @@ class PacMan(Player):
 
     def get_img_pacman(self, controlled=False):
         """Retourne l'image de PacMan en fonction de son état et de l'input du joueur"""
+        if not controlled:
+            return self.image_right #############SERA REMPLACE PAR PACMAN_AI.MOVE()################################
+
         keys = pygame.key.get_pressed()
 
-        if controlled and self.invincible and (self.invincibility_timer // 10) % 2 == 0:
+        if self.invincible and (self.invincibility_timer // 10) % 2 == 0:
             if keys[pygame.K_LEFT]: return self.image_super_left
             if keys[pygame.K_RIGHT]: return self.image_super_right
             if keys[pygame.K_UP]: return self.image_super_up
             if keys[pygame.K_DOWN]: return self.image_super_down
             return self.image_super_right
 
-        if controlled and self.super_power_active:
+        if self.super_power_active:
             if keys[pygame.K_LEFT]: return self.image_super_left
             if keys[pygame.K_RIGHT]: return self.image_super_right
             if keys[pygame.K_UP]: return self.image_super_up
