@@ -217,6 +217,41 @@ class Ghost(Player):
         self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
         self.current_path = []  # Chemin actuel pour le fantôme
 
+    def move(self, players, controlled=False):
+        """Déplace le fantôme (IA ou contrôlé par le joueur)."""
+
+        # 1) Si le fantôme est en mode “mangé”, on laisse update_eaten_state() gérer le retour au ghost house
+        if self.is_eaten:
+            return
+
+        # 2) Contrôle clavier si on passe controlled=True
+        if controlled:
+            keys = pygame.key.get_pressed()
+            dx = dy = 0
+            if keys[pygame.K_LEFT] and not self.is_wall(self.x - self.speed, self.y):
+                dx = -self.speed
+
+            if keys[pygame.K_RIGHT] and not self.is_wall(self.x + self.speed, self.y):
+                dx = self.speed
+
+            if keys[pygame.K_UP] and not self.is_wall(self.x, self.y - self.speed):
+                dy = -self.speed
+
+            if keys[pygame.K_DOWN] and not self.is_wall(self.x, self.y + self.speed):
+                dy = self.speed
+                self.x += dx
+                self.y += dy
+
+        #3) IA sinon
+        else:
+            pacman = next((p for p in players.values() if isinstance(p, PacMan)), None)
+
+            if pacman:
+                self.ghost_ai_move(pacman)
+
+        # 4) Met à jour coord + timers éventuels
+        self.update()
+
     def draw(self, screen, controlled_player = None):
         """Affiche le fantôme à l'écran"""
         if self.is_eaten:

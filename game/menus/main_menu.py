@@ -10,9 +10,17 @@ def select_role(screen, font):
     while run:
         screen.fill((0, 0, 0))
 
+        # ——— Affichage du bandeau “Mode Hors-Ligne” ———
+        header_img = pygame.transform.scale(
+            pygame.image.load("images/mode hors-ligne.png").convert_alpha(),
+            (400, 80)  # largeur, hauteur voulues
+        )
+        header_rect = header_img.get_rect(center=(WIDTH // 2, 70))
+        screen.blit(header_img, header_rect)
+
         # Affichage du texte "Choisissez votre rôle"
         title_text = pygame.image.load(("images/Choisissez-votre-role.png"))
-        title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 130))
+        title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 80))
         screen.blit(title_text, title_rect)
 
         # Charger les images
@@ -24,12 +32,12 @@ def select_role(screen, font):
         ghost_image = pygame.transform.scale(ghost_image, (50, 50))  # Ajuste la taille de l'image
 
         # Afficher les images à côté des boutons
-        pacman_image_rect = pacman_image.get_rect(midright=(WIDTH // 2 - 250, HEIGHT // 2 + 130 )) #Pour qu'il soit juste en dessous du bouton
+        pacman_image_rect = pacman_image.get_rect(midright=(WIDTH // 2 - 265, HEIGHT // 2 + 130 )) #Pour qu'il soit juste en dessous du bouton
         ghost_image_rect = ghost_image.get_rect(midright=(WIDTH // 2 + 180, HEIGHT // 2 + 130))
 
         # Afficher les boutons Pacman et Fantôme
-        draw_button("Pacman", 250, 400, 200, 50, BLUE, CYAN, screen, font)
-        draw_button("Fantôme", 700, 400, 200, 50, BLUE, CYAN, screen, font)
+        draw_button("Pacman", 250, 500, 200, 50, BLUE, CYAN, screen, font)
+        draw_button("Fantôme", 700, 500, 200, 50, BLUE, CYAN, screen, font)
 
         # Blitter les images
         screen.blit(pacman_image, pacman_image_rect)
@@ -41,9 +49,9 @@ def select_role(screen, font):
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                if 250 <= x <= 250 + 200 and 400 <= y <= 400 + 50:
+                if 250 <= x <= 250 + 200 and 500 <= y <= 500 + 50:
                     return "pacman"  # Choisir Pacman
-                elif 700 <= x <= 700 + 200 and 400 <= y <= 400 + 50:
+                elif 700 <= x <= 700 + 200 and 500 <= y <= 500 + 50:
                     return "fantome"  # Choisir Fantôme
 
         pygame.display.flip()
@@ -85,16 +93,16 @@ def main_menu(screen, image, font):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 # Vérifier les boutons principaux en bas de l'écran
-                if 250 <= x <= 450 and 600 <= y <= 650:
-                    role = select_role(screen, font)  # "pacman" ou "fantome"
-                    return "offline", role
-                    # Mode En Ligne
-                if 550 <= x <= 750 and 600 <= y <= 650:
-                    return "online", None
-                    # Quitter
-                if 850 <= x <= 1050 and 600 <= y <= 650:
-                    pygame.quit()
-                    sys.exit()
+                if 600 <= y <= 650:
+                    if 250 <= x <= 450:  # Mode Hors Ligne
+                        role = select_role(screen, font)  # Sélectionner le rôle
+                        return "offline", role
+                    elif 550 <= x <= 750:  # Mode En Ligne
+                        return "online"
+                    elif 850 <= x <= 1050:  # Quitter
+                        run = False
+                        pygame.quit()
+                        sys.exit()
                         
         pygame.display.flip()
     

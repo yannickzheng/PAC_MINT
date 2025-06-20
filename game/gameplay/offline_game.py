@@ -29,10 +29,10 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
 
     # Création des 4 fantômes IA (autres fantômes non contrôlés par le joueur)
     ghost_positions = [
-        (WIDTH // 2 - 100, HEIGHT // 2 - 100),
-        (WIDTH // 2 + 100, HEIGHT // 2 - 100),
-        (WIDTH // 2 - 100, HEIGHT // 2 + 100),
-        (WIDTH // 2 + 100, HEIGHT // 2 + 100)
+        (WIDTH // 2 - 20, HEIGHT // 2 - 20),
+        (WIDTH // 2 + 20, HEIGHT // 2 - 20),
+        (WIDTH // 2 - 20, HEIGHT // 2 + 20),
+        (WIDTH // 2 + 20, HEIGHT // 2 + 20)
     ]
     ghosts = []
     players = {playerControlled.id: playerControlled}  # Le joueur contrôlé est 'playerControlled'
