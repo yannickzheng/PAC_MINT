@@ -1,6 +1,11 @@
+import sys
+import os
+
+# Configuration robuste des imports - DOIT ÊTRE EN PREMIER
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import socket
 import time
-import sys
 from _thread import start_new_thread
 from rooms import RoomManager
 from common.protocols import Protocols
@@ -137,13 +142,6 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                 #On écoute le client
                 raw_data = recv_json(connexion)
 
-                """
-                if raw_data.get("command", False) == Protocols.Request.GET_POS :
-                    json_data = json.dumps(datas)
-                    connexion.send(json_data.encode())
-                    #print("Coucouu",json_data)
-                """
-
                 if not raw_data.get("command", False):
                     logger.info(f"Déconnexion du joueur {joueur_actuel}")
                     break
@@ -186,12 +184,13 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                     else:
                         event = None
                     
-                    # Synchronisation complète pour tous les joueurs
+                    # Construire l'état de jeu final
                     state = sync_game_state(room, joueur_actuel, event=event)
                     if activate_super_power:
                         state["activate_super_power"] = True
-                        send_json(connexion, state)
-                        #broadcast_state(room, joueur_actuel, state)      
+                    
+                    # Envoyer la réponse uniquement au client qui a fait la requête
+                    send_json(connexion, state)
                     
 
             except Exception as erreur:
@@ -287,8 +286,8 @@ def check_pacman_ghost_collision(room):
 
 def sync_game_state(room, current_id, event=None):
     """
-    Synchronise l'état du jeu pour tous les joueurs.
-    Envoie une mise à jour complète à tous les joueurs.
+    Construit l'état du jeu pour synchronisation
+    La diffusion est maintenant gérée par l'appelant
     """
     # Mettre à jour les états des joueurs (timers d'invincibilité, etc.)
     update_player_states(room)
@@ -301,10 +300,7 @@ def sync_game_state(room, current_id, event=None):
         "coins": room.item_manager.coins,
         "fruits": room.item_manager.fruits
     }
-    
-    # Diffuser l'état à tous les joueurs
-    broadcast_state(room, current_id, state)
-    
+
     return state
 
 
