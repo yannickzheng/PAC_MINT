@@ -1,5 +1,6 @@
 from game.player import Player
 from game.items import ServerItemManager
+import random
 
 """Faire en sort qu'un joueur n'est présent que dans une seule salle"""
 
@@ -74,10 +75,10 @@ class RoomManager:
                 #mettre ici la fonction send utilisant udp
 
     def generate_unique_code(self):
-        """Crée une nouvelle partie"""
-        #ode = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-        code = 111
-        return code
+        while True:
+            code = random.randint(100000, 999999)
+            if code not in self.rooms:
+                return code
 
 class Room:
 
