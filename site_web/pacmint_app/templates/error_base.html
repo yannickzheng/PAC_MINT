@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block subtitle %}
+    <h2 class="h3 text-danger mb-4" style="font-family:'Press Start 2P', cursive;">
+        {% block error_code %}ERREUR{% endblock error_code %}
+    </h2>
+{% endblock subtitle %}
+
+{% block main %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Icône d'erreur avec style Pac-Man -->
+            <div class="mb-4">
+                <div class="d-inline-block position-relative">
+                    {% block error_icon %}
+                        <!-- Icône par défaut ou spécifique selon l'erreur -->
+                    {% endblock error_icon %}
+                </div>
+            </div>
+
+            <!-- Message d'erreur -->
+            <div class="alert {% block alert_class %}alert-warning border-2 border-warning{% endblock alert_class %} bg-dark text-white mb-4">
+                <h3 class="alert-heading h4 mb-3" style="font-family:'Press Start 2P', cursive;">
+                    {% block error_title %}ERREUR{% endblock error_title %}
+                </h3>
+                <div class="mb-2">
+                    {% block error_message %}
+                        Une erreur s'est produite.
+                    {% endblock error_message %}
+                </div>
+                <div class="mb-0">
+                    {% block error_description %}
+                        Veuillez réessayer plus tard.
+                    {% endblock error_description %}
+                </div>
+            </div>
+
+
+            <!-- Bouton d'action -->
+            {% block action_button %}{% endblock action_button %}
+        </div>
+    </div>
+{% endblock main %}
