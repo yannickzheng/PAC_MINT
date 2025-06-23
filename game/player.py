@@ -186,8 +186,8 @@ class PacMan(Player):
         respawn_position = ghost.get_respawn_position(players)
 
         if respawn_position:
+            ghost.is_eaten = True
             ghost.respawn_target = respawn_position  # Assigner le point de respawn au fantôme
-            ghost.x, ghost.y = respawn_position  # Déplacer le fantôme au point de respawn
         else:
             print("⚠ Aucun point libre pour le respawn du fantôme.")
 
@@ -265,15 +265,15 @@ class Ghost(Player):
         """Retourne l'image du fantôme"""
         return self.image_red_ghost
 
-    def is_position_free(x, y, ghost, players):
-        for player in players.values():
-            if player == ghost:
+    def is_position_free(self, x, y, players):
+        """Retourne True si la position (x,y) est libre de collision avec les autres joueurs."""
+        for other in players.values():
+            if other is self:
                 continue
-            dx = (player.x + player.size // 2) - (x + ghost.size // 2)
-            dy = (player.y + player.size // 2) - (y + ghost.size // 2)
-            distance_squared = dx * dx + dy * dy
-            if distance_squared < (ghost.size) ** 2:
-                return False
+            dx = (other.x + other.size // 2) - (x + self.size // 2)
+            dy = (other.y + other.size // 2) - (y + self.size // 2)
+        if dx * dx + dy * dy < (self.size) ** 2:
+            return False
         return True
 
     def get_respawn_position(self, players):
@@ -298,7 +298,7 @@ class Ghost(Player):
             target_x = center_x + dx
             target_y = center_y + dy
 
-            if self.is_position_free(target_x, target_y, self, players):
+            if self.is_position_free(target_x, target_y, players):
                 return (target_x, target_y)
 
         return None  # Si aucun point libre trouvé
@@ -309,18 +309,20 @@ class Ghost(Player):
             return
 
         target_x, target_y = self.respawn_target
-        speed = self.speed
-
         dx = target_x - self.x
         dy = target_y - self.y
-        distance = (dx ** 2 + dy ** 2) ** 0.5
-
-        if distance < speed:
-            # 🎯 Fantôme arrivé au centre => il redevient normal
-            self.x, self.y = target_x, target_y  # aligne parfaitement sur le centre
+        dist = (dx * dx + dy * dy) ** 0.5
+        if dist <= 0:
+            return
+        # Si on est arrivé
+        if dist < self.speed:
+            self.x, self.y = target_x, target_y
             self.is_eaten = False
             self.respawn_target = None
-            return
+        else:
+        # avance en ligne droite à vitesse constante
+            self.x += self.speed * dx / dist
+            self.y += self.speed * dy / dist
 
     def heuristic(self, a, b):
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
