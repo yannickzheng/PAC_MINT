@@ -119,6 +119,20 @@ class Room:
             role = role_keys[len(self.players)]  # ex : "pacman", "fantome_1", etc.
             position = self.initial_positions[role]
             player = Player(ip=None, tcp_port=None, role=role, position=position)
+            
+            if "pacman" in role.lower():
+                player.lives = 3
+                player.score = 0
+                player.super_power_active = False
+                player.super_power_timer = 0
+                player.invincible = False
+                player.invincibility_timer = 0
+            else:
+                player.lives = float('inf')
+                player.score = 0
+                player.is_eaten = False
+                player.respawn_target = None
+            
             self.players[player_id] = player
             return True
         return False

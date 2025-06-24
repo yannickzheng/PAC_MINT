@@ -42,6 +42,12 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             players[pid].invincible = data.get("invincible", False)
             players[pid].super_power_active = data.get("super_power_active", False)
             players[pid].super_power_timer = data.get("super_power_timer", 0)
+            # Mettre à jour l'état mangé pour les fantômes
+            if "fantome" in players[pid].role.lower():
+                players[pid].is_eaten = data.get("is_eaten", False)
+            # Gestion de l'état mangé pour les fantômes
+            if hasattr(players[pid], 'is_eaten'):
+                players[pid].is_eaten = data.get("is_eaten", False)
         else:
             # Nouveau joueur
             new_player = Player(
@@ -56,6 +62,9 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             new_player.invincible = data.get("invincible", False)
             new_player.super_power_active = data.get("super_power_active", False)
             new_player.super_power_timer = data.get("super_power_timer", 0)
+            # Ajouter l'état mangé pour les fantômes
+            if "fantome" in new_player.role.lower():
+                new_player.is_eaten = data.get("is_eaten", False)
             players[pid] = new_player
             print(f"[CLIENT] Nouveau joueur ajouté : {pid}")
 
@@ -147,7 +156,9 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
 
         # On affiche sur l'interface l'ensemble des joueurs
         for player in players.values():
-            player.draw(screen, player)
+            # Déterminer si ce joueur est contrôlé par le client actuel
+            is_controlled = player.id == current_player_id
+            player.draw(screen, is_controlled)
 
         # Affiche le code de la partie sous le score
         game_code_text = font.render(f"Code de la partie: {game_code}", True, (255, 255, 0))

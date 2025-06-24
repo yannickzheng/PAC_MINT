@@ -76,6 +76,7 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
                 "invincible": getattr(p, "invincible", False),
                 "super_power_active": getattr(p, "super_power_active", False),
                 "super_power_timer": getattr(p, "super_power_timer", 0),
+                "is_eaten": getattr(p, "is_eaten", False),
                 "activate_super_power": activate_super_power if pid == current_id else False
             }
             for pid, p in room.players.items()
@@ -180,15 +181,24 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                     update_player_states(room)
                     
                     # GESTION COLLISION FANTÔME/PACMAN 
-                    pacman_touche = check_pacman_ghost_collision(room)
-                    if pacman_touche and not getattr(pacman_touche, "invincible", False):
+                    collision_result = check_pacman_ghost_collision(room)
+                    event = None
+                    
+                    if collision_result["ghost_eaten"]:
+                        # Pacman mange un fantôme
+                        pacman = collision_result["ghost_eaten"]["pacman"]
+                        ghost = collision_result["ghost_eaten"]["ghost"]
+                        eat_ghost(pacman, ghost, room)
+                        event = "ghost_eaten"
+                        logger.info(f"Fantôme mangé ! Score Pacman : {pacman.score}")
+                    elif collision_result["pacman_hit"]:
+                        # Pacman est touché par un fantôme
+                        pacman_touche = collision_result["pacman_hit"]
                         pacman_touche.lives = getattr(pacman_touche, "lives", 3) - 1
                         pacman_touche.invincible = True
                         pacman_touche.invincibility_timer = 180  # 3 secondes à 60 FPS
                         logger.info(f"Pacman touché ! Vies restantes : {pacman_touche.lives}")
                         event = "pacman_hit"
-                    else:
-                        event = None
                     
                     # Construire l'état de jeu final
                     state = sync_game_state(room, joueur_actuel, event=event)
@@ -196,8 +206,8 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                         state["activate_super_power"] = True
                         # Diffuser à tous les clients de la room quand un super pouvoir est activé
                         broadcast_to_room(room, state)
-                    elif event == "pacman_hit":
-                        # Diffuser à tous les clients quand Pacman est touché
+                    elif event == "pacman_hit" or event == "ghost_eaten":
+                        # Diffuser à tous les clients quand Pacman est touché ou mange un fantôme
                         broadcast_to_room(room, state)
                     else:
                         # Envoyer la réponse uniquement au client qui a fait la requête
@@ -282,18 +292,51 @@ def update_player_states(room):
                 logger.info(f"Super-pouvoir désactivé pour le joueur {pid}")
 
 def check_pacman_ghost_collision(room):
-    """Renvoie le Pacman touché par un fantôme, ou None."""
+    """Vérifie les collisions entre Pacman et les fantômes."""
     pacmans = [p for p in room.players.values() if "pacman" in p.role.lower()]
     ghosts = [p for p in room.players.values() if "fantome" in p.role.lower()]
+    
+    collision_result = {"pacman_hit": None, "ghost_eaten": None}
+    
     for pacman in pacmans:
         for ghost in ghosts:
+            # Ignorer les fantômes déjà mangés
+            if getattr(ghost, "is_eaten", False):
+                continue
+                
             dx = pacman.position[0] - ghost.position[0]
             dy = pacman.position[1] - ghost.position[1]
             distance_squared = dx * dx + dy * dy
             # Rayon de collision (ajuste selon la taille de tes sprites)
             if distance_squared < 30*30:
-                return pacman
-    return None
+                # Si Pacman a le super-pouvoir et n'est pas invincible
+                if getattr(pacman, "super_power_active", False):
+                    collision_result["ghost_eaten"] = {"pacman": pacman, "ghost": ghost}
+                    logger.info(f"Pacman mange le fantôme {ghost.id if hasattr(ghost, 'id') else 'unknown'}")
+                    return collision_result
+                # Sinon, si Pacman n'est pas invincible, il est touché
+                elif not getattr(pacman, "invincible", False):
+                    collision_result["pacman_hit"] = pacman
+                    return collision_result
+                    
+    return collision_result
+
+def eat_ghost(pacman, ghost, room):
+    """Logique pour faire manger un fantôme par Pacman."""
+    # Augmenter le score de Pacman
+    pacman.score += 200
+    
+    # Marquer le fantôme comme mangé
+    ghost.is_eaten = False # pour l'instant, je ne le marque pas comme mangé
+        
+    # Calculer une position de respawn au centre (adapté pour le serveur)
+    center_x = 300  # Position centrale approximative
+    center_y = 300  # Position centrale approximative
+    ghost.respawn_target = (center_x, center_y)
+    
+    logger.info(f"Fantôme {getattr(ghost, 'id', 'unknown')} mangé par Pacman. Score: +200")
+    
+    return True
 
 def sync_game_state(room, current_id, event=None):
     """
