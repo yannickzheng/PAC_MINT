@@ -10,18 +10,42 @@
     <link rel="stylesheet" href="{% static 'pacmint_app/home.css' %}">
 </head>
 <body class="bg-black text-white text-center">
+
+<!-- Barre de navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+    <div class="container-fluid">
+        <a class="navbar-brand text-warning fw-bold" href="{% url 'pacmint_app:home' %}">PAC‑MINT</a>
+
+        <div class="collapse navbar-collapse justify-content-end">
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="{% url 'pacmint_app:profile' %}">Mon profil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="{% url 'pacmint_app:logout' %}">Se déconnecter</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="{% url 'pacmint_app:login' %}">Se connecter</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Contenu principal -->
 <div class="container py-5">
 
+    <!-- Logo uniquement, en plus grand -->
+    <img src="{% static 'images/new_logo.png' %}" alt="Logo Pac‑Mint"
+         class="img-fluid mb-5 logo-animation" style="width:500px;">
 
-   <!-- Logo uniquement, en plus grand -->
-<img src="{% static 'images/new_logo.png' %}" alt="Logo Pac‑Mint"
-     class="img-fluid mb-5 logo-animation" style="width:500px;">
-
-    {# sous-titre #}
+    {# Sous-titre spécifique à chaque page #}
     {% block subtitle %}{% endblock subtitle %}
 
-
-
+    <!-- Messages Django -->
     {% if messages %}
         <div class="messages">
             {% for message in messages %}
@@ -32,7 +56,8 @@
             {% endfor %}
         </div>
     {% endif %}
-    {# contenu principal #}
+
+    {# Contenu spécifique à chaque page #}
     {% block main %}{% endblock main %}
 </div>
 

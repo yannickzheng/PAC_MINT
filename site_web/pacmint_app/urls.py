@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/submit-score/', views.submit_score, name='submit_score'),
     path('scores/', views.score_list, name='score_list'),
     path('login/', views.login_player, name='login'),
+    path('profile/', views.profile_view, name='profile'),
 ]
 
 # URLs de test seulement en mode DEBUG
