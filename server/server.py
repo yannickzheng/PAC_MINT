@@ -74,6 +74,8 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
                 "score": p.score,
                 "lives": getattr(p, "lives", 3),
                 "invincible": getattr(p, "invincible", False),
+                "super_power_active": getattr(p, "super_power_active", False),
+                "super_power_timer": getattr(p, "super_power_timer", 0),
                 "activate_super_power": activate_super_power if pid == current_id else False
             }
             for pid, p in room.players.items()
@@ -95,13 +97,17 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
     
     return state
 
-def broadcast_state(room, current_id, state):
+def broadcast_to_room(room, state, exclude_player=None):
+    """Diffuse l'état du jeu à tous les clients connectés d'une room"""
     for pid, player in room.players.items():
-        if player.tcp_socket:
+        if exclude_player and pid == exclude_player:
+            continue
+        if hasattr(player, 'tcp_socket') and player.tcp_socket:
             try:
                 send_json(player.tcp_socket, state)
+                logger.debug(f"État diffusé au joueur {pid}")
             except Exception as e:
-                logger.warning(f"[Serveur] Erreur d'envoi à {pid}: {e}")
+                logger.error(f"Erreur lors de la diffusion au joueur {pid}: {e}")
 
 
 def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
@@ -188,9 +194,14 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                     state = sync_game_state(room, joueur_actuel, event=event)
                     if activate_super_power:
                         state["activate_super_power"] = True
-                    
-                    # Envoyer la réponse uniquement au client qui a fait la requête
-                    send_json(connexion, state)
+                        # Diffuser à tous les clients de la room quand un super pouvoir est activé
+                        broadcast_to_room(room, state)
+                    elif event == "pacman_hit":
+                        # Diffuser à tous les clients quand Pacman est touché
+                        broadcast_to_room(room, state)
+                    else:
+                        # Envoyer la réponse uniquement au client qui a fait la requête
+                        send_json(connexion, state)
                     
 
             except Exception as erreur:
