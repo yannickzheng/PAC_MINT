@@ -1,0 +1,18 @@
+{% extends 'error_base.html' %}
+
+{% block title %}Erreur 500 - Erreur serveur | Pac‑Mint{% endblock %}
+
+{% block error_code %}ERREUR 500{% endblock error_code %}
+
+{% block alert_class %}alert-danger border-2 border-danger{% endblock alert_class %}
+
+{% block error_title %}GAME OVER ! ERREUR SERVEUR{% endblock error_title %}
+
+{% block error_message %}
+    Un fantôme a perturbé le serveur !
+{% endblock error_message %}
+
+{% block error_description %}
+    Nous avons rencontré un problème technique. Veuillez réessayer plus tard.
+{% endblock error_description %}
+

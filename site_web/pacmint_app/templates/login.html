@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Connexion - PacMint{% endblock %}
+
+{% block subtitle %}
+    <h2 class="mb-4 lead" style="font-family:'Press Start 2P', cursive;">
+        Connecte-toi à l'aventure !
+    </h2>
+{% endblock %}
+
+{% block main %}
+    {% if messages %}
+        <div class="alert alert-danger" role="alert">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+    <form action="{% url 'pacmint_app:login' %}" method="post" class="w-100">
+        {% csrf_token %}
+        {% crispy formulaire %}
+    </form>
+    
+    <a href="{% url 'pacmint_app:register' %}" class="btn btn-primary mt-3">Créer un compte</a>
+    <a href="{% url 'pacmint_app:home' %}" class="btn btn-secondary mt-3">Retour à l'accueil</a>
+    
+    
+{% endblock %}

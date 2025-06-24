@@ -265,14 +265,14 @@ class Ghost(Player):
         """Retourne l'image du fantôme"""
         return self.image_red_ghost
 
-    def is_position_free(x, y, ghost, players):
-        for player in players.values():
-            if player == ghost:
+    def is_position_free(self, x, y, players):
+        """Retourne True si la position (x,y) est libre de collision avec les autres joueurs."""
+        for other in players.values():
+            if other is self:
                 continue
-            dx = (player.x + player.size // 2) - (x + ghost.size // 2)
-            dy = (player.y + player.size // 2) - (y + ghost.size // 2)
-            distance_squared = dx * dx + dy * dy
-            if distance_squared < (ghost.size) ** 2:
+            dx = (other.x + other.size // 2) - (x + self.size // 2)
+            dy = (other.y + other.size // 2) - (y + self.size // 2)
+            if dx * dx + dy * dy < (self.size) ** 2:
                 return False
         return True
 
@@ -298,7 +298,7 @@ class Ghost(Player):
             target_x = center_x + dx
             target_y = center_y + dy
 
-            if self.is_position_free(target_x, target_y, self, players):
+            if self.is_position_free(target_x, target_y, players):
                 return (target_x, target_y)
 
         return None  # Si aucun point libre trouvé

@@ -1,5 +1,5 @@
 """
-URL configuration for nom_de_lapp project.
+URL configuration for site_web project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.1/topics/http/urls/
@@ -16,8 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from debug_toolbar.toolbar import debug_toolbar_urls
 
 urlpatterns = [
     path('', include('pacmint_app.urls')),
     path('admin/', admin.site.urls),
-]
+] + debug_toolbar_urls()
+
+# Gestionnaires d'erreurs personnalisés
+handler404 = 'pacmint_app.views.error_views.custom_404_view'
+handler500 = 'pacmint_app.views.error_views.custom_500_view'

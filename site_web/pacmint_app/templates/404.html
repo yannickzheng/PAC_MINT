@@ -1,0 +1,20 @@
+{% extends 'error_base.html' %}
+
+{% block title %}Erreur 404 - Page non trouvée | Pac‑Mint{% endblock %}
+
+{% block error_code %}ERREUR 404{% endblock error_code %}
+
+{% block error_title %}OOPS ! PAGE NON TROUVÉE{% endblock error_title %}
+
+{% block error_message %}
+    Il semble que Pac‑Man ait mangé cette page ! 🍒
+{% endblock error_message %}
+
+{% block error_description %}
+    La page que vous recherchez n'existe pas ou a été déplacée.
+{% endblock error_description %}
+{% block action_button %}
+    <a href="{% url 'pacmint_app:home' %}" class="btn btn-primary">
+        Retour à l'accueil
+    </a>
+{% endblock action_button %}
