@@ -2,7 +2,7 @@ import pygame
 from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
 from game.map import MAP_DATA
 import heapq
-
+import math
 import pygame
 from common.global_variable import CELL_SIZE
 
@@ -25,6 +25,7 @@ class Player:
         self.size = CELL_SIZE
         self.hitbox_size = CELL_SIZE // 2
         self.speed = CELL_SIZE // 6
+
 
         # Chargement des images
         self.image_right = pygame.transform.scale(pygame.image.load("images/pacman - right.png"), (self.size, self.size))
@@ -177,7 +178,7 @@ class PacMan(Player):
         """Active le super pouvoir de PacMan pour une durée donnée"""
         self.super_power_active = True
         self.super_power_timer = duration
-        self.speed = min(int(self.speed * 1.2), CELL_SIZE // 5)
+        self.speed = CELL_SIZE // 5
         print(f"Super pouvoir activé pour {duration//60} secondes!")
 
     def eat_ghost(self, ghost, players):
@@ -186,8 +187,8 @@ class PacMan(Player):
         respawn_position = ghost.get_respawn_position(players)
 
         if respawn_position:
+            ghost.is_eaten = True
             ghost.respawn_target = respawn_position  # Assigner le point de respawn au fantôme
-            ghost.x, ghost.y = respawn_position  # Déplacer le fantôme au point de respawn
         else:
             print("⚠ Aucun point libre pour le respawn du fantôme.")
 
@@ -304,23 +305,31 @@ class Ghost(Player):
         return None  # Si aucun point libre trouvé
 
     def update_eaten_state(self):
-        "Déplace le fantôme mangé vers le centre en ligne droite sans collision"
-        if not self.is_eaten or not self.respawn_target:
+        """Déplace le fantôme mangé vers le centre en ligne droite sans collision."""
+        if not self.is_eaten or self.respawn_target is None:
             return
 
-        target_x, target_y = self.respawn_target
-        speed = self.speed
+        tx, ty = self.respawn_target
+        dx = tx - self.x
+        dy = ty - self.y
+        dist = math.hypot(dx, dy)
 
-        dx = target_x - self.x
-        dy = target_y - self.y
-        distance = (dx ** 2 + dy ** 2) ** 0.5
-
-        if distance < speed:
-            # 🎯 Fantôme arrivé au centre => il redevient normal
-            self.x, self.y = target_x, target_y  # aligne parfaitement sur le centre
+        # Si on est déjà au point de respawn, on termine
+        if dist == 0:
             self.is_eaten = False
             self.respawn_target = None
             return
+
+        # On avance de `speed` pixels vers la cible (ou moins si on est tout proche)
+        step = min(self.speed, dist)
+        self.x += step * dx / dist
+        self.y += step * dy / dist
+
+        # Si on a atteint la cible, on réactive le fantôme normalement
+        if step == dist:
+            self.x, self.y = tx, ty
+            self.is_eaten = False
+            self.respawn_target = None
 
     def heuristic(self, a, b):
         return abs(a[0] - b[0]) + abs(a[1] - b[1])

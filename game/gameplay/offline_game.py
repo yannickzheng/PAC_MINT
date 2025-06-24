@@ -19,24 +19,24 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
     font = pygame.font.SysFont("Arial", 24)
     clock = pygame.time.Clock()
 
-    # ——— On crée d'abord PacMan IA (pour qu'il y ait toujours un PacMan) ———
+    # ——— On instancie un seul PacMan, qu'on utilisera pour IA ou contrôle ———
     spawn_pos = (CELL_SIZE * 9, CELL_SIZE * 10)
-    pacman_ai = PacMan("127.0.0.1", 0, spawn_pos)
-    pacman_ai.id = "pacman_ai"
-
-    # ——— Puis on remplace ou non par le contrôlé ———
+    pacman = PacMan("127.0.0.1", 0, spawn_pos)
+    pacman.id = "pacman"
+    # ——— On décide quel objet est contrôlé par l'utilisateur ———
 
     if role == "pacman":
-        playerControlled = pacman_ai
+        playerControlled = pacman
     else:
         playerControlled = Ghost("127.0.0.1", 0, spawn_pos)
         playerControlled.id = "playerControlled"
 
-    # ——— Et on ajoute les deux dans la collection `players` ———
-    players = {playerControlled.id: playerControlled}
-
-    if pacman_ai.id not in players:
-        players[pacman_ai.id] = pacman_ai
+    # ——— On monte le dictionnaire de tous les joueurs ———
+    players = {
+        pacman.id: pacman,
+        playerControlled.id: playerControlled
+    }
+    # Si on contrôle PacMan, players contient deux fois la même référence : c'est ok
 
     # on définit d'abord les 4 positions autour du centre
     center_x, center_y = WIDTH // 2, HEIGHT // 2
@@ -47,15 +47,6 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         (center_x - d, center_y + d),
         (center_x + d, center_y + d),
     ]
-
-    # Si on contrôle PacMan, on le place sur sa spawn « classique »
-    # Si on contrôle un Fantôme, on le place en ghost_positions[0]
-
-    if role == "pacman":
-        playerControlled = PacMan("127.0.0.1", 0, (CELL_SIZE * 9, CELL_SIZE * 10))
-    else:
-        playerControlled = Ghost("127.0.0.1", 0, ghost_positions[0])
-        playerControlled.id = "playerControlled"
 
     # Création des 4 fantômes IA (autres fantômes non contrôlés par le joueur)
     ghost_positions = [
