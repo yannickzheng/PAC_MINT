@@ -174,7 +174,7 @@ class PacMan(Player):
                     self.x, self.y = self.coord  # Réinitialise la position de PacMan après la collision
                     return  # Fin de la gestion de la collision
 
-    def activate_super_power(self, duration=200):
+    def activate_super_power(self, duration=360):
         """Active le super pouvoir de PacMan pour une durée donnée"""
         self.super_power_active = True
         self.super_power_timer = duration
@@ -293,6 +293,25 @@ class Ghost(Player):
             (0, 2 * cell), (0, -2 * cell),
             (cell * 2, cell * 2), (-cell * 2, -cell * 2)
         ]
+
+        # Parmi les fantômes qui sont déjà en cours de respawn,
+        # on recense leurs cibles actuelles pour ne pas les réutiliser.
+        used = {
+        other.respawn_target
+        for other in players.values()
+            if isinstance(other, Ghost) and other.is_eaten and other.respawn_target is not None
+        }
+
+        # On parcourt les offsets : on choisit le premier libre ET non déjà attribué
+
+        for dx, dy in offsets:
+            tx = center_x + dx
+            ty = center_y + dy
+
+            if (tx, ty) in used:
+                continue
+            if self.is_position_free(tx, ty, players):
+                return (tx, ty)
 
         # Cherche un point libre autour du centre pour respawn
         for dx, dy in offsets:
