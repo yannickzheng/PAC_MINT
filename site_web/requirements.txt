@@ -2,3 +2,4 @@ Django
 django-crispy-forms
 django-debug-toolbar
 crispy-bootstrap5
+gunicorn==20.1.0
