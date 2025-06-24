@@ -29,7 +29,10 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             current_player.score = data["score"]
             current_player.lives = data.get("lives", current_player.lives)
             current_player.invincible = data.get("invincible", False)
+            current_player.super_power_active = data.get("super_power_active", False)
+            current_player.super_power_timer = data.get("super_power_timer", 0)
             if data.get("activate_super_power"):
+                print(f"[CLIENT] Activation du super pouvoir reçue pour le joueur {pid}")
                 current_player.activate_super_power()
         elif pid in players:
             # Joueur existant
@@ -37,6 +40,8 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             players[pid].score = data.get("score", 0)
             players[pid].lives = data.get("lives", 3)
             players[pid].invincible = data.get("invincible", False)
+            players[pid].super_power_active = data.get("super_power_active", False)
+            players[pid].super_power_timer = data.get("super_power_timer", 0)
         else:
             # Nouveau joueur
             new_player = Player(
@@ -49,6 +54,8 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             new_player.score = data.get("score", 0)
             new_player.lives = data.get("lives", 3)
             new_player.invincible = data.get("invincible", False)
+            new_player.super_power_active = data.get("super_power_active", False)
+            new_player.super_power_timer = data.get("super_power_timer", 0)
             players[pid] = new_player
             print(f"[CLIENT] Nouveau joueur ajouté : {pid}")
 
