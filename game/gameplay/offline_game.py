@@ -27,26 +27,19 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
 
     if role == "pacman":
         playerControlled = pacman
+        controlled_key = "pacman"
     else:
         playerControlled = Ghost("127.0.0.1", 0, spawn_pos)
         playerControlled.id = "playerControlled"
+        controlled_key = "ghost_player"
+
 
     # ——— On monte le dictionnaire de tous les joueurs ———
     players = {
-        pacman.id: pacman,
-        playerControlled.id: playerControlled
+        "pacman": pacman,
+        controlled_key: playerControlled
     }
     # Si on contrôle PacMan, players contient deux fois la même référence : c'est ok
-
-    # on définit d'abord les 4 positions autour du centre
-    center_x, center_y = WIDTH // 2, HEIGHT // 2
-    d = 20
-    ghost_positions = [
-        (center_x - d, center_y - d),
-        (center_x + d, center_y - d),
-        (center_x - d, center_y + d),
-        (center_x + d, center_y + d),
-    ]
 
     # Création des 4 fantômes IA (autres fantômes non contrôlés par le joueur)
     ghost_positions = [
@@ -119,11 +112,13 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         # Si on est en mode PacMan → collisions PacMan vs fantômes
         if role == "pacman":
             for ghost in ghosts:
-                if distance(playerControlled.x, playerControlled.y, ghost.x, ghost.y) < CELL_SIZE and not playerControlled.invincible:
+                if distance(playerControlled.x, playerControlled.y, ghost.x, ghost.y) < CELL_SIZE:
                     if playerControlled.super_power_active:
+                        # mange toujours le fantôme, même si clignotant
                         playerControlled.eat_ghost(ghost, players)
                         playerControlled.score += 200
-                    else:
+                    elif not playerControlled.invincible:
+                        # ne perd vie que si pas déjà invincible
                         playerControlled.lose_life()
                         playerControlled.invincible = True
                         playerControlled.invincibility_timer = 180
@@ -164,7 +159,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
                 g.draw(screen, controlled=False)
         else:
           # 1) PacMan en IA
-            pacman_ai.draw(screen, controlled=False)
+            pacman.draw(screen, controlled=False)
           # 2) Les fantômes IA
             for g in ghosts:
                 g.draw(screen, controlled=False)
