@@ -23,13 +23,22 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
     spawn_pos = (CELL_SIZE * 9, CELL_SIZE * 10)
     pacman = PacMan("127.0.0.1", 0, spawn_pos)
     pacman.id = "pacman"
-    # ——— On décide quel objet est contrôlé par l'utilisateur ———
 
+    # Création des 4 fantômes IA (autres fantômes non contrôlés par le joueur)
+    ghost_positions = [
+        (WIDTH // 2 - 20, HEIGHT // 2 - 20),
+        (WIDTH // 2 + 20, HEIGHT // 2 - 20),
+        (WIDTH // 2 - 20, HEIGHT // 2 + 20),
+        (WIDTH // 2 + 20, HEIGHT // 2 + 20)
+    ]
+
+    # ——— On décide quel objet est contrôlé par l'utilisateur ———
     if role == "pacman":
         playerControlled = pacman
         controlled_key = "pacman"
     else:
-        playerControlled = Ghost("127.0.0.1", 0, spawn_pos)
+        ghost_spawn_pos = ghost_positions[0]
+        playerControlled = Ghost("127.0.0.1", 0, ghost_spawn_pos)
         playerControlled.id = "playerControlled"
         controlled_key = "ghost_player"
 
@@ -41,13 +50,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
     }
     # Si on contrôle PacMan, players contient deux fois la même référence : c'est ok
 
-    # Création des 4 fantômes IA (autres fantômes non contrôlés par le joueur)
-    ghost_positions = [
-        (WIDTH // 2 - 20, HEIGHT // 2 - 20),
-        (WIDTH // 2 + 20, HEIGHT // 2 - 20),
-        (WIDTH // 2 - 20, HEIGHT // 2 + 20),
-        (WIDTH // 2 + 20, HEIGHT // 2 + 20)
-    ]
+
     ghosts = []
     for i, pos in enumerate(ghost_positions):
         # si le joueur contrôle un fantôme, on ne recrée pas le même
@@ -86,7 +89,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
             for g in ghosts:
                 g.move(players, controlled=False)
         else:
-            # 1) PacMan IA reste immobile (ou à coder plus tard)
+            # 1) PacMan IA
             pacman.pacman_ai_move(players, coins, fruits, ghosts)
             # 2) On déplace les fantômes
             for g in ghosts:
@@ -105,11 +108,11 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
                 if distance(playerControlled.x, playerControlled.y, fruit[0], fruit[1]) < CELL_SIZE // 2:
                     playerControlled.score += 50
                     fruits.remove(fruit)
-                    # Activation du super pouvoir lors de la collecte d'un fruit
+                    # Activation du super pouvoir
                     playerControlled.activate_super_power()
 
         # Vérification des collisions avec les fantômes
-        # Si on est en mode PacMan → collisions PacMan vs fantômes
+        # Si on est  PacMan => collisions PacMan/fantômes
         if role == "pacman":
             for ghost in ghosts:
                 if distance(playerControlled.x, playerControlled.y, ghost.x, ghost.y) < CELL_SIZE:
@@ -122,6 +125,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
                         playerControlled.lose_life()
                         playerControlled.invincible = True
                         playerControlled.invincibility_timer = 180
+
 
         # Mise à jour des timers (uniquement pour PacMan)
         if role == "pacman":
