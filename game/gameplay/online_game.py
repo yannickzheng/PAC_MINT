@@ -42,6 +42,7 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             players[pid].invincible = data.get("invincible", False)
             players[pid].super_power_active = data.get("super_power_active", False)
             players[pid].super_power_timer = data.get("super_power_timer", 0)
+            players[pid].direction = data.get("direction", "right")
             # Mettre à jour l'état mangé pour les fantômes
             if "fantome" in players[pid].role.lower():
                 players[pid].is_eaten = data.get("is_eaten", False)
@@ -62,6 +63,7 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             new_player.invincible = data.get("invincible", False)
             new_player.super_power_active = data.get("super_power_active", False)
             new_player.super_power_timer = data.get("super_power_timer", 0)
+            new_player.direction = data.get("direction", "right")
             # Ajouter l'état mangé pour les fantômes
             if "fantome" in new_player.role.lower():
                 new_player.is_eaten = data.get("is_eaten", False)
@@ -135,7 +137,8 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
             "players": [
                 {
                     "id": current_player.id,
-                    "pos": current_player.coord
+                    "pos": current_player.coord,
+                    "direction": getattr(current_player, 'direction', 'right')
                 }
             ]
         }

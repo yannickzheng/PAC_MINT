@@ -77,6 +77,7 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
                 "super_power_active": getattr(p, "super_power_active", False),
                 "super_power_timer": getattr(p, "super_power_timer", 0),
                 "is_eaten": getattr(p, "is_eaten", False),
+                "direction": getattr(p, "direction", "right"),
                 "activate_super_power": activate_super_power if pid == current_id else False
             }
             for pid, p in room.players.items()
@@ -161,10 +162,12 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                     for pdata in payload.get("players", []):
                         pid = pdata["id"]
                         pos = pdata["pos"]
+                        direction = pdata.get("direction", "right")
                         if pid in room.players:
                             player = room.players[pid]
                             player.update_position(pos)
-                            logger.debug(f"Position mise à jour pour le joueur {pid}: {pos}")
+                            player.direction = direction
+                            logger.debug(f"Position et direction mises à jour pour le joueur {pid}: {pos}, direction: {direction}")
 
                             # Vérifie la collecte d'items pour ce joueur (uniquement si c'est Pacman)
                             if player.role == "pacman":

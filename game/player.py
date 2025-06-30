@@ -52,6 +52,7 @@ class Player:
         self.super_power_timer = 0
         self.invincible = False
         self.invincibility_timer = 0
+        self.direction = 'right'
         self.is_eaten = False
         self.respawn_target = None
         self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
@@ -231,13 +232,17 @@ class Player:
             if abs(dx) > abs(dy):
                 if dx > 0:
                     self.x += self.speed
+                    self.direction = 'right'
                 else:
                     self.x -= self.speed
+                    self.direction = 'left'
             else:
                 if dy > 0:
                     self.y += self.speed
+                    self.direction = 'down'
                 else:
                     self.y -= self.speed
+                    self.direction = 'up'
 
             # Quand il est assez proche de la prochaine case, avancer dans la liste
             if abs(dx) < 5 and abs(dy) < 5:
@@ -264,12 +269,16 @@ class Player:
             # Controle clavier pour Pacman et pour le fantôme contrôlé par le joueur
             if keys[pygame.K_LEFT] and self.x > 0 and not self.is_wall(self.x - self.speed, self.y):
                 new_x -= self.speed
+                self.direction = 'left'
             if keys[pygame.K_RIGHT] and self.x + self.size < WIDTH and not self.is_wall(self.x + self.speed, self.y):
                 new_x += self.speed
+                self.direction = 'right'
             if keys[pygame.K_UP] and self.y > 0 and not self.is_wall(self.x, self.y - self.speed):
                 new_y -= self.speed
+                self.direction = 'up'
             if keys[pygame.K_DOWN] and self.y + self.size < HEIGHT and not self.is_wall(self.x, self.y + self.speed):
                 new_y += self.speed
+                self.direction = 'down'
 
             self.x, self.y = new_x, new_y
 
@@ -316,9 +325,31 @@ class Player:
         self.y += move_y
 
     def get_img_pacman(self, controlled_player):
+        # Pour les autres joueurs, utiliser leur direction stockée et leur état de super-pouvoir
         if self != controlled_player:
+            direction = getattr(self, 'direction', 'right')
+            
+            if self.invincible and (getattr(self, 'invincibility_timer', 0) // 10) % 2 == 0:
+                if direction == 'left': return self.image_super_left
+                elif direction == 'right': return self.image_super_right
+                elif direction == 'up': return self.image_super_up
+                elif direction == 'down': return self.image_super_down
+                return self.image_super_right
+
+            if self.super_power_active:
+                if direction == 'left': return self.image_super_left
+                elif direction == 'right': return self.image_super_right
+                elif direction == 'up': return self.image_super_up
+                elif direction == 'down': return self.image_super_down
+                return self.image_super_right
+
+            if direction == 'left': return self.image_left
+            elif direction == 'right': return self.image_right
+            elif direction == 'up': return self.image_up
+            elif direction == 'down': return self.image_down
             return self.image_right
 
+        # Pour le joueur contrôlé localement, utiliser les touches du clavier
         keys = pygame.key.get_pressed()
 
         if self.invincible and (self.invincibility_timer // 10) % 2 == 0:

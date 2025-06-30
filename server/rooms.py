@@ -127,11 +127,13 @@ class Room:
                 player.super_power_timer = 0
                 player.invincible = False
                 player.invincibility_timer = 0
+                player.direction = 'right'
             else:
                 player.lives = float('inf')
                 player.score = 0
                 player.is_eaten = False
                 player.respawn_target = None
+                player.direction = 'right'
             
             self.players[player_id] = player
             return True
