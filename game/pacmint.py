@@ -8,7 +8,6 @@ import pygame
 from common.global_variable import WIDTH, HEIGHT
 from game.core.assets import load_game_assets
 from game.menus.main_menu import main_menu
-from game.menus.main_menu import select_role
 from game.menus.online_menu import online_menu, create_game, join_game
 from game.gameplay.offline_game import offline_game
 from game.gameplay.online_game import main_game
@@ -24,37 +23,35 @@ font = pygame.font.SysFont("Arial", 24)
 assets = load_game_assets()
 
 def main():
-    """Fonction principale du jeu"""
+    """Fonction principale du jeu - identique à l'original"""
+    # Précharger les assets
     preload_assets(screen, font)
-
+    
     while True:
-        # Menu principal + sélection de rôle
-        choice, role = main_menu(screen, assets['background_image'], font)
-        if choice is None:
-            break
-
+        # Menu principal
+        choice = main_menu(screen, assets['background_image'], font)
+        
         if choice == "offline":
-            # Mode hors-ligne → on passe directement le rôle
+            # Mode hors ligne
             offline_game(
-                screen, font,
+                screen, font, 
                 assets['coin_image'], assets['fruit_image'],
-                assets['coin_size'], assets['fruit_size'],
-                role
+                assets['coin_size'], assets['fruit_size']
             )
-            continue
-
+        
         elif choice == "online":
-            # Mode en ligne…
+            # Mode en ligne - navigation dans les sous-menus
             while True:
                 online_choice = online_menu(screen, assets['background_image'], font)
-
+                
                 if online_choice == "create":
+                    # Créer une partie
                     create_choice = create_game(screen, assets['background_image'], font)
                     if create_choice == "start":
                         main_game(
-                            is_created_game=True,
+                            is_created_game=True, 
                             game_code=None,
-                            screen=screen,
+                            screen=screen, 
                             font=font,
                             coin_image=assets['coin_image'],
                             fruit_image=assets['fruit_image'],
@@ -63,33 +60,30 @@ def main():
                         )
                     elif create_choice == "back":
                         continue
-
+                
                 elif online_choice == "join":
+                    # Rejoindre une partie
                     join_result = join_game(screen, assets['background_image'], font)
                     if join_result == "back":
                         continue
-                    elif join_result:
+                    elif join_result:  # Code de partie saisi
                         main_game(
-                            is_created_game=False,
+                            is_created_game=False, 
                             game_code=join_result,
-                            screen=screen,
+                            screen=screen, 
                             font=font,
                             coin_image=assets['coin_image'],
                             fruit_image=assets['fruit_image'],
                             coin_offset=assets['coin_offset'],
                             fruit_offset=assets['fruit_offset']
                         )
-
+                
                 elif online_choice == "back":
                     break
-
+        
         else:
             # Quitter le jeu
             break
-
-    pygame.quit()
-    sys.exit()
-
     
     pygame.quit()
     sys.exit()

@@ -5,9 +5,9 @@ from common.global_variable import CELL_SIZE
 def load_game_assets():
     """Charge toutes les ressources du jeu"""
     # Images des pièces et fruits
-    coin_size = int(CELL_SIZE * 0.65)
-    fruit_size = int(CELL_SIZE)
-
+    coin_size = CELL_SIZE * 0.65
+    fruit_size = CELL_SIZE // 2
+    
     coin_offset = (CELL_SIZE - coin_size) // 2
     fruit_offset = (CELL_SIZE - fruit_size) // 2
     
@@ -15,6 +15,7 @@ def load_game_assets():
     coin_image = pygame.transform.scale(coin_image, (coin_size, coin_size))
     
     fruit_image = pygame.image.load(os.path.join("images", "fraise.png"))
+    fruit_size = int(CELL_SIZE * 1.2)
     fruit_image = pygame.transform.scale(fruit_image, (fruit_size, fruit_size))
     
     # Image de fond

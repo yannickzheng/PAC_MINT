@@ -9,13 +9,8 @@ class Player(models.Model):
         return self.user.username
 
 class Score(models.Model):
-    RESULT_CHOICES = [
-        ('win', 'Victoire'),
-        ('lose', 'Défaite'),
-    ]
     player = models.ForeignKey(User, on_delete=models.CASCADE)
     value = models.IntegerField()
-    result = models.CharField(max_length=10, choices=RESULT_CHOICES, default='win')
     date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

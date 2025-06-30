@@ -3,7 +3,7 @@ import sys
 from common.global_variable import WIDTH, BLUE, CYAN
 from common.network import Network
 from common.protocols import Protocols
-from game.player import Player, PacMan, Ghost
+from game.player import Player
 from game.map import MAP_SURFACE
 from game.ui.components import display_loading_screen, draw_button, game_over
 
@@ -107,15 +107,7 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
 
     # On crée des classes pour chaque joueur en local
     for data in all_players_data["players"]:
-        role = data["roles"]
-        position = tuple(data["pos"])
-        
-        # Créer la bonne instance selon le rôle
-        if "pacman" in role.lower():
-            player = PacMan(ip=data["ip"], tcp_port=data["tcp_port"], position=position)
-        elif "fantome" in role.lower():
-            player = Ghost(ip=data["ip"], tcp_port=data["tcp_port"], position=position)
-            
+        player = Player(ip=data["ip"], tcp_port=data["tcp_port"], role=data["roles"], position=tuple(data["pos"]))
         player.id = data["id"]
         player.score = data.get("score", 0)
         player.lives = data.get("lives", 3)
@@ -134,7 +126,7 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
         current_player = players.get(current_player_id)
 
         # Si le joueur est Pacman et n'a plus de vies, afficher l'écran de Game Over
-        if isinstance(current_player, PacMan) and current_player.lives <= 0:
+        if current_player.is_pacman and current_player.lives <= 0:
             game_over(current_player.score, screen, font)
             return  # Quitter la partie
         
