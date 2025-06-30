@@ -3,7 +3,7 @@ import sys
 from common.global_variable import WIDTH, BLUE, CYAN
 from common.network import Network
 from common.protocols import Protocols
-from game.player import Player
+from game.player_online import Player
 from game.map import MAP_SURFACE
 from game.ui.components import display_loading_screen, draw_button, game_over
 

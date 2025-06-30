@@ -1,4 +1,4 @@
-from game.player import Player
+from game.player_online import Player
 from game.items import ServerItemManager
 import random
 
