@@ -3,4 +3,4 @@ from django.shortcuts import render
 
 @login_required
 def profile_view(request):
-    return render(request, 'pacmint_app/profile.html', {'user': request.user})
+    return render(request, 'profile.html', {'user': request.user})
