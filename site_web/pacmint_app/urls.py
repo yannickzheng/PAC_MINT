@@ -1,6 +1,7 @@
 from django.urls import path
 from django.conf import settings
 from . import views
+from .views.api import submit_game_result
 
 app_name = 'pacmint_app'
 
@@ -13,7 +14,7 @@ urlpatterns = [
     path('login/', views.login_player, name='login'),
     path('profile/', views.profile_view, name='profile'),
     path('logout/', views.logout_view, name='logout'),
-
+    path('api/submit-result/', submit_game_result, name='submit_result'),
 ]
 
 # URLs de test seulement en mode DEBUG
