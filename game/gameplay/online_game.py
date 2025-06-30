@@ -156,9 +156,7 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
 
         # On affiche sur l'interface l'ensemble des joueurs
         for player in players.values():
-            # Déterminer si ce joueur est contrôlé par le client actuel
-            is_controlled = player.id == current_player_id
-            player.draw(screen, is_controlled)
+            player.draw(screen, current_player)
 
         # Affiche le code de la partie sous le score
         game_code_text = font.render(f"Code de la partie: {game_code}", True, (255, 255, 0))
