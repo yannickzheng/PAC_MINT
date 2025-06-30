@@ -122,10 +122,45 @@ class PacMan(Player):
         image = self.get_img_pacman(controlled)
         screen.blit(image, (int(self.x), int(self.y)))  # Affiche l'image à la position actuelle de PacMan
 
+    def pacman_ai_move(self, players, coins, fruits, ghosts):
+        active_ghosts = [g for g in ghosts if not g.is_eaten]
+
+        if self.super_power_active:
+            # Mange tous les fantômes “sur la route” (= assez proches)
+            for ghost in active_ghosts:
+                distance = ((ghost.x - self.x) ** 2 + (ghost.y - self.y) ** 2) ** 0.5
+                if distance < CELL_SIZE * 0.8:
+                    self.eat_ghost(ghost, players)
+            # Puis cible le plus proche pour continuer la chasse
+            if active_ghosts:
+                target = min(active_ghosts, key=lambda g: (g.x - self.x) ** 2 + (g.y - self.y) ** 2)
+                self.move_towards(target.x, target.y)
+            return
+
+        # Si pas de super pouvoir : cherche fruits > pièces, mais fuit les fantômes proches
+        target = None
+        if fruits:
+            target = min(fruits, key=lambda f: (f[0] - self.x) ** 2 + (f[1] - self.y) ** 2)
+        elif coins:
+            target = min(coins, key=lambda c: (c[0] - self.x) ** 2 + (c[1] - self.y) ** 2)
+        else:
+            return  # Plus rien à faire
+
+        for ghost in active_ghosts:
+            distance = ((ghost.x - self.x) ** 2 + (ghost.y - self.y) ** 2) ** 0.5
+            if distance < CELL_SIZE * 2:  # Distance de fuite
+                # Fuit (va à l’opposé)
+                flee_x = self.x - (ghost.x - self.x)
+                flee_y = self.y - (ghost.y - self.y)
+                self.move_towards(flee_x, flee_y)
+                return
+
+        # Sinon, va vers la cible (fruit ou pièce)
+        self.move_towards(target[0], target[1])
     def get_img_pacman(self, controlled=False):
         """Retourne l'image de PacMan en fonction de son état et de l'input du joueur"""
         if not controlled:
-            return self.image_right #############SERA REMPLACE PAR PACMAN_AI.MOVE()################################
+            return self.image_right
 
         keys = pygame.key.get_pressed()
 
@@ -406,7 +441,8 @@ class Ghost(Player):
 
         self.pathfinding_timer -= 1
 
-        if self.pathfinding_timer <= 0 or not self.current_path:
+        target_cell = (int(pacman.x // CELL_SIZE), int(pacman.y // CELL_SIZE))
+        if self.pathfinding_timer <= 0 or not self.current_path or self.current_path[-1] != target_cell:
             start = (int(self.x // CELL_SIZE), int(self.y // CELL_SIZE))
 
             if pacman.super_power_active:
@@ -426,7 +462,9 @@ class Ghost(Player):
                 goal = (int(pacman.x // CELL_SIZE), int(pacman.y // CELL_SIZE))
 
             self.current_path = self.find_path(start, goal, MAP_DATA)
-            self.pathfinding_timer = 20  # Recalcul toutes les 10 frames
+
+            # 👇 affiche le chemin
+            print(f"[DEBUG] Ghost {self.id} new path: {self.current_path}")
 
         if self.current_path:
             next_cell = self.current_path[0]
@@ -437,19 +475,35 @@ class Ghost(Player):
             dy = target_y - self.y
 
             if abs(dx) > abs(dy):
+                # tentative de déplacement horizontal
                 if dx > 0:
-                    self.x += self.speed
+                    # vers la droite
+                    new_x = self.x + self.speed
                 else:
-                    self.x -= self.speed
+                    # vers la gauche
+                    new_x = self.x - self.speed
+
+                # on teste le mur avec self.y et notre nouveau new_x
+                if not self.is_wall(new_x, self.y):
+                    self.x = new_x
             else:
+                # tentative de déplacement vertical
                 if dy > 0:
-                    self.y += self.speed
+                    # vers le bas (dy positif)
+                    new_y = self.y + self.speed
                 else:
-                    self.y -= self.speed
+                    # vers le haut (dy négatif)
+                    new_y = self.y - self.speed
+
+                # on teste le mur avec self.x et notre nouveau new_y
+                if not self.is_wall(self.x, new_y):
+                    self.y = new_y
 
             # Si on est proche de la prochaine case, on passe à la suivante
-            if abs(dx) < 5 and abs(dy) < 5:
+            if abs(dx) <= self.speed and abs(dy) < self.speed:
                 self.current_path.pop(0)
+                self.pathfinding_timer = 10 # Recalcul toutes les 10 frames
+
 
 """class Player:
     def __init__(self, ip, tcp_port, role, position, tcp_socket=None):   ######### GERE ########

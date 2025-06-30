@@ -87,11 +87,11 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
                 g.move(players, controlled=False)
         else:
             # 1) PacMan IA reste immobile (ou à coder plus tard)
+            pacman.pacman_ai_move(players, coins, fruits, ghosts)
             # 2) On déplace les fantômes
             for g in ghosts:
                 g.move(players, controlled=False)
             playerControlled.move(players, controlled=True)
-            #pacman_ai.move(players)
 
         # Vérification des collisions avec les pièces
         if role == "pacman":
