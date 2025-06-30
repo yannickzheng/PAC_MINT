@@ -25,15 +25,9 @@ def preload_assets(screen, font):
     display_loading_screen("Chargement des ressources...", screen, font)
     # Préchargement des images
     images = [
-        "images/pacman - right.png",
-        "images/pacman - left.png",
-        "images/pacman - up.png",
-        "images/pacman - down.png",
-        "images/red_ghost.png",
-        "images/Black Pacman.png",
-        "images/Black Pacman-left.png",
-        "images/Black Pacman-up.png",
-        "images/Black Pacman-down.png"
+        "images/pacman_right.png",
+        "images/pacman_super_right.png",
+        "images/red_ghost.png"
     ]
     
     for img_path in images:

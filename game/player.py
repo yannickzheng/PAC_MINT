@@ -29,23 +29,21 @@ class Player:
         self.hitbox_size = CELL_SIZE // 2
         self.speed = CELL_SIZE // 6  # Pac-Man bouge par petits pas
         self.lives = 3  # Pac-Man commence avec 3 vies
-        #Chargement des images
-        self.image1 = pygame.image.load("images/pacman - right.png")
-        self.image2 = pygame.image.load("images/pacman - left.png")
-        self.image3 = pygame.image.load("images/pacman - up.png")
-        self.image4 = pygame.image.load("images/pacman - down.png")
-        self.image5 = pygame.image.load("images/red_ghost.png")
-
-        self.image_right = pygame.transform.scale(pygame.image.load("images/pacman - right.png"), (self.size, self.size))
-        self.image_left = pygame.transform.scale(pygame.image.load("images/pacman - left.png"), (self.size, self.size))
-        self.image_up = pygame.transform.scale(pygame.image.load("images/pacman - up.png"), (self.size, self.size))
-        self.image_down = pygame.transform.scale(pygame.image.load("images/pacman - down.png"), (self.size, self.size))
+        
+        # Chargement des images de base
+        self.pacman_base_image = pygame.transform.scale(pygame.image.load("images/pacman_right.png"), (self.size, self.size))
+        self.super_pacman_base_image = pygame.transform.scale(pygame.image.load("images/pacman_super_right.png"), (self.size, self.size))
         self.image_red_ghost = pygame.transform.scale(pygame.image.load("images/red_ghost.png"), (self.size, self.size))
-
-        self.image_super_right = pygame.transform.scale(pygame.image.load("images/Black Pacman.png"), (self.size, self.size))
-        self.image_super_left = pygame.transform.scale(pygame.image.load("images/Black Pacman-left.png"), (self.size, self.size))
-        self.image_super_up = pygame.transform.scale(pygame.image.load("images/Black Pacman-up.png"), (self.size, self.size))
-        self.image_super_down = pygame.transform.scale(pygame.image.load("images/Black Pacman-down.png"), (self.size, self.size))
+        
+        self.image_right = self.pacman_base_image
+        self.image_left = pygame.transform.flip(self.pacman_base_image, True, False)
+        self.image_up = pygame.transform.rotate(self.pacman_base_image, 90)
+        self.image_down = pygame.transform.rotate(self.pacman_base_image, -90)
+        
+        self.image_super_right = self.super_pacman_base_image
+        self.image_super_left = pygame.transform.flip(self.super_pacman_base_image, True, False)
+        self.image_super_up = pygame.transform.rotate(self.super_pacman_base_image, 90)
+        self.image_super_down = pygame.transform.rotate(self.super_pacman_base_image, -90)
 
         self.score = 0
         self.super_power_active = False
