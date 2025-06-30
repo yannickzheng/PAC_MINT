@@ -1,5 +1,0 @@
-Django
-django-crispy-forms
-django-debug-toolbar
-crispy-bootstrap5
-gunicorn>=23.0.0
