@@ -89,7 +89,7 @@ class Table_Score(models.Model):
     def __str__(self):
         return f"{self.player.username} - {self.score} pts in Game {self.game.game_id}"
 
-    class GameResult(models.Model):
+class GameResult(models.Model):
         ROLE_CHOICES = [
             ('pacman', 'Pac-Man'),
             ('ghost', 'Fantôme'),
@@ -107,3 +107,5 @@ class Table_Score(models.Model):
 
         def __str__(self):
             return f"{self.player.username} - {self.role} - {self.outcome} - {self.score}"
+
+
