@@ -43,15 +43,6 @@ class Player:
         """Déplace le joueur (Pacman ou Fantôme)""" ###### A COMPLETER DANS CHAQUE CLASSE#########################
         pass
 
-    def check_collision(self, players):
-        """Vérifie si le joueur entre en collision avec un autre joueur"""
-        for player in players.values():
-            if player != self:
-                distance_squared = (self.x - player.x) ** 2 + (self.y - player.y) ** 2
-                if distance_squared < (self.hitbox_size + player.hitbox_size) ** 2:
-                    return True
-        return False
-
     def is_wall(self, x, y):
         cell_size = self.size
         margin = self.size * 0.15  # tolérance pour passer dans les petits espaces
@@ -327,6 +318,30 @@ class PacMan(Player):
             if self.invincibility_timer <= 0:
                 self.invincible = False
 
+    def check_collision_with_items(self, coins, fruits):
+        """Gère les collisions de Pacman avec les pièces et les fruits."""
+        for coin in coins[:]:
+            if distance(self.x, self.y, coin[0], coin[1]) < CELL_SIZE // 2:
+                self.score += 10
+                coins.remove(coin)
+        for fruit in fruits[:]:
+            if distance(self.x, self.y, fruit[0], fruit[1]) < CELL_SIZE // 2:
+                self.score += 50
+                fruits.remove(fruit)
+                self.activate_super_power()
+
+    def check_collision_with_ghosts(self, ghosts, players):
+        """Gère la collision Pacman vs tous les fantômes."""
+        for ghost in ghosts:
+            if distance(self.x, self.y, ghost.x, ghost.y) < CELL_SIZE:
+                if self.super_power_active:
+                    self.eat_ghost(ghost, players)
+                    self.score += 200
+                elif not self.invincible:
+                    self.lose_life()
+                    self.invincible = True
+                    self.invincibility_timer = 180
+
 
 
 class Ghost(Player):
@@ -440,6 +455,16 @@ class Ghost(Player):
 
         return None  # Si aucun point libre trouvé
 
+    def check_collision_with_pacman(self, pacman, players):
+        """Gère la collision Fantôme contrôlé <-> Pacman."""
+        if distance(self.x, self.y, pacman.x, pacman.y) < CELL_SIZE:
+            if pacman.super_power_active:
+                pacman.eat_ghost(self, players)
+                pacman.score += 200
+            elif not pacman.invincible:
+                pacman.lose_life()
+                pacman.invincible = True
+                pacman.invincibility_timer = 180
     def update_eaten_state(self):
         """Déplace le fantôme mangé vers le centre en ligne droite sans collision."""
         if not self.is_eaten or self.respawn_target is None:

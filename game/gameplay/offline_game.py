@@ -96,36 +96,16 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
                 g.move(players, controlled=False)
             playerControlled.move(players, controlled=True)
 
-        # Vérification des collisions avec les pièces
+        # Vérification des collisions
         if role == "pacman":
-            for coin in coins[:]:
-                if distance(playerControlled.x, playerControlled.y, coin[0], coin[1]) < CELL_SIZE // 2:
-                    playerControlled.score += 10
-                    coins.remove(coin)
+            # 1) COLLISIONS PACMAN vs COINS & FRUITS
+            playerControlled.check_collision_with_items(coins, fruits)
+            # 2) COLLISIONS PACMAN <=> FANTOMES
+            playerControlled.check_collision_with_ghosts(ghosts, players)
 
-        # Vérification des collisions avec les fruits
-            for fruit in fruits[:]:
-                if distance(playerControlled.x, playerControlled.y, fruit[0], fruit[1]) < CELL_SIZE // 2:
-                    playerControlled.score += 50
-                    fruits.remove(fruit)
-                    # Activation du super pouvoir
-                    playerControlled.activate_super_power()
-
-        # Vérification des collisions avec les fantômes
-        # Si on est  PacMan => collisions PacMan/fantômes
-        if role == "pacman":
-            for ghost in ghosts:
-                if distance(playerControlled.x, playerControlled.y, ghost.x, ghost.y) < CELL_SIZE:
-                    if playerControlled.super_power_active:
-                        # mange toujours le fantôme, même si clignotant
-                        playerControlled.eat_ghost(ghost, players)
-                        playerControlled.score += 200
-                    elif not playerControlled.invincible:
-                        # ne perd vie que si pas déjà invincible
-                        playerControlled.lose_life()
-                        playerControlled.invincible = True
-                        playerControlled.invincibility_timer = 180
-
+        elif role == "fantome":
+            pacman.check_collision_with_ghosts(ghosts, players)
+            playerControlled.check_collision_with_pacman(pacman, players)
 
         # Mise à jour des timers (uniquement pour PacMan)
         if role == "pacman":
