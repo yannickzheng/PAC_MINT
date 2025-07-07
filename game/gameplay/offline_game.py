@@ -1,7 +1,7 @@
 import pygame
 import random
 from common.global_variable import WIDTH, HEIGHT, CELL_SIZE, BLUE, CYAN
-from game.player import Player
+from game.player_online import Player
 from game.map import MAP_SURFACE, MAP_DATA
 from game.ui.components import display_loading_screen, draw_button, game_over
 from game.utils.helpers import distance, is_wall_at_position
