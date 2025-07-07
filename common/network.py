@@ -1,5 +1,6 @@
 import json
 import socket
+import select
 
 class Network:
     SERVER_ADDRESS = "localhost"  # Constante pour l'adresse IP du serveur
@@ -48,3 +49,15 @@ class Network:
         payload = {"command": request, "message": message}
         self.client.sendall(json.dumps(payload).encode() + b'\n')
         return self.receive_json()
+    
+    def has_data_waiting(self):
+        """Vérifie s'il y a des données en attente sans bloquer"""
+        
+        ready, _, _ = select.select([self.client], [], [], 0)
+        return len(ready) > 0
+    
+    def receive_json_non_blocking(self):
+        """Reçoit des données JSON de manière non-bloquante"""
+        if self.has_data_waiting():
+            return self.receive_json()
+        return None

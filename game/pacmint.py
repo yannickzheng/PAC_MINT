@@ -19,7 +19,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PacMint")
 font = pygame.font.SysFont("Arial", 24)
 
-# Chargement des ressources
+# Chargement des ressource
 assets = load_game_assets()
 
 def main():

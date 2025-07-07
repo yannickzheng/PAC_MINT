@@ -80,3 +80,40 @@ def game_over(score, screen, font):
                 return
             if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 waiting = False
+
+
+def you_win(score, screen, font):
+    """Affiche l'écran de victoire avec le score final."""
+    overlay = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 180))
+    screen.blit(overlay, (0, 0))
+
+    # Titre Game Over
+    game_win_font = pygame.font.SysFont("Arial", 72, bold=True)
+    game_win_text = game_win_font.render("YOU WIN !", True, (255, 215, 0))
+    game_win_rect = game_win_text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2 - 100))
+    screen.blit(game_win_text, game_win_rect)
+
+    # Score final
+    score_font = pygame.font.SysFont("Arial", 48)
+    score_text = score_font.render(f"Score Final: {score}", True, (255, 255, 255))
+    score_rect = score_text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
+    screen.blit(score_text, score_rect)
+
+    # Instructions
+    instruction_font = pygame.font.SysFont("Arial", 24)
+    instruction_text = instruction_font.render("Appuyez sur une touche pour continuer...", True, (200, 200, 200))
+    instruction_rect = instruction_text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2 + 100))
+    screen.blit(instruction_text, instruction_rect)
+
+    pygame.display.flip()
+
+    # Attendre qu'une touche soit pressée
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                waiting = False

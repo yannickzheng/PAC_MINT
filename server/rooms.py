@@ -1,6 +1,7 @@
 from game.player_online import Player
 from game.items import ServerItemManager
 import random
+import time
 
 """Faire en sort qu'un joueur n'est présent que dans une seule salle"""
 
@@ -98,6 +99,7 @@ class Room:
             "fantome_4": (920, 420)
         }
         self.item_manager = ServerItemManager()
+        self.chat_history = []
 
 
     def update_position(self, role_key, new_pos):
@@ -148,3 +150,27 @@ class Room:
     def is_player_in_room(self, player_id):
         """Le joueur est il dans la salle?"""
         return player_id in self.players
+    
+    def add_chat_message(self, player_id, message):
+        """Ajoute un message au chat de la room"""
+        
+        player_name = self.players[player_id].role if player_id in self.players else "Joueur"
+        
+        chat_message = {
+            "player_id": player_id,
+            "player_name": player_name,
+            "message": message,
+            "timestamp": time.time()
+        }
+        
+        self.chat_history.append(chat_message)
+        
+        # On garde les 50 derniers messages
+        if len(self.chat_history) > 50:
+            self.chat_history = self.chat_history[-50:]
+            
+        return chat_message
+    
+    def get_chat_history(self, limit=20):
+        """Retourne l'historique du chat (limité aux derniers messages)"""
+        return self.chat_history[-limit:] if len(self.chat_history) > limit else self.chat_history
