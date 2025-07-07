@@ -29,14 +29,15 @@ def main():
     
     while True:
         # Menu principal
-        choice = main_menu(screen, assets['background_image'], font)
+        choice, role = main_menu(screen, assets['background_image'], font)
         
         if choice == "offline":
             # Mode hors ligne
             offline_game(
                 screen, font, 
                 assets['coin_image'], assets['fruit_image'],
-                assets['coin_size'], assets['fruit_size']
+                assets['coin_size'], assets['fruit_size'],
+                role
             )
         
         elif choice == "online":

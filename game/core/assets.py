@@ -5,8 +5,8 @@ from common.global_variable import CELL_SIZE
 def load_game_assets():
     """Charge toutes les ressources du jeu"""
     # Images des pièces et fruits
-    coin_size = CELL_SIZE * 0.65
-    fruit_size = CELL_SIZE // 2
+    coin_size = int(CELL_SIZE * 0.65)
+    fruit_size = int(CELL_SIZE * 1.2)
     
     coin_offset = (CELL_SIZE - coin_size) // 2
     fruit_offset = (CELL_SIZE - fruit_size) // 2
