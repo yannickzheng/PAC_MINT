@@ -1,42 +1,53 @@
 import pygame
 import random
 from common.global_variable import WIDTH, HEIGHT, CELL_SIZE, BLUE, CYAN
-
-# from game.player import Player
-
-from game.player_online import Player
+from game.player import Player, PacMan, Ghost
+from game.core.assets import load_game_assets
 from game.map import MAP_SURFACE, MAP_DATA
-from game.ui.components import display_loading_screen, draw_button, game_over
+from game.ui.components import display_loading_screen, draw_button, game_over, you_win
 from game.utils.helpers import distance, is_wall_at_position
-import os
 
-def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
+
+
+def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, role):
     """Mode de jeu hors ligne sans besoin de serveur"""
+    assets = load_game_assets()
+    coin_offset = assets['coin_offset']
+    fruit_offset = assets['fruit_offset']
+
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
     clock = pygame.time.Clock()
-    
-    # Calculer les offsets identiques à la version online
-    coin_offset = (CELL_SIZE - coin_size) // 2
-    fruit_offset = (CELL_SIZE - fruit_size) // 2
-    
-    display_loading_screen("Préparation du jeu hors ligne...", screen, font)
-    
-    # Création d'un joueur Pacman pour le mode hors ligne
-    pacman = Player(ip="127.0.0.1", tcp_port=0, role="pacman", position=(WIDTH//2, HEIGHT//2))
-    pacman.id = "player1"
-    pacman.lives = 3
-    pacman.score = 0
-    
-    # Création d'un fantôme contrôlé par l'IA
-    ghost = Player(ip="127.0.0.1", tcp_port=0, role="fantome", position=(WIDTH//2 - 100, HEIGHT//2 - 100))
-    ghost.id = "ghost1"
-    
-    players = {
-        pacman.id: pacman,
-        ghost.id: ghost
-    }
-    
+
+    # ——— On instancie un seul PacMan, qu'on utilisera pour IA ou contrôle ———
+    spawn_pos = (CELL_SIZE * 9, CELL_SIZE * 10)
+    pacman = PacMan("127.0.0.1", 0, spawn_pos)
+    pacman.id = "pacman"
+
+    # Création des 4 fantômes IA (autres fantômes non contrôlés par le joueur)
+    ghost_positions = [
+        (WIDTH // 2 - 20, HEIGHT // 2 - 20),
+        (WIDTH // 2 + 20, HEIGHT // 2 - 20),
+        (WIDTH // 2 - 20, HEIGHT // 2 + 20),
+        (WIDTH // 2 + 20, HEIGHT // 2 + 20)
+    ]
+    ghosts = []
+    players = {"pacman": pacman}
+
+    for i, pos in enumerate(ghost_positions):
+        # si le joueur contrôle un fantôme, on ne recrée pas le même
+        if not (role == "fantome" and i == 0):
+            g = Ghost("127.0.0.1", 0, pos)
+            g.id = f"ghost{i + 1}"
+            ghosts.append(g)
+            players[g.id] = g
+
+    if role == "pacman":
+        playerControlled = pacman
+    elif role == "fantome":
+        # Tu choisis le fantôme que tu veux contrôler (par ex, le 1er)
+        playerControlled = ghosts[0]
+
     # Génération des pièces et fruits pour le mode hors ligne identique au serveur
     coins = []
     fruits = []
@@ -46,97 +57,107 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size):
                 coins.append((x * CELL_SIZE, y * CELL_SIZE))
             elif MAP_DATA[y][x] == 4:
                 fruits.append((x * CELL_SIZE, y * CELL_SIZE))
-    
+
     pygame.time.delay(500)  # Petit délai pour l'affichage de l'écran de chargement
-    
+
     run = True
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-        # Vérifier si Pacman a perdu toutes ses vies
+
+        # Vérifier si PacMan a perdu toutes ses vies
         if pacman.lives <= 0:
-            game_over(pacman.score, screen, font)
-            return
-        
-        # Déplacement du joueur Pacman
-        pacman.move(players, controlled=True)
-        
-        # Déplacement du fantôme par l'IA simple
-        if hasattr(ghost, "ghost_ai_move"):
-            ghost.ghost_ai_move(pacman)
-        else:
-            # Mouvement aléatoire simple si la méthode ghost_ai_move n'existe pas
-            directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
-            if random.random() < 0.05:  # 5% de chance de changer de direction
-                dx, dy = random.choice(directions)
-                new_x = ghost.x + dx * ghost.speed
-                new_y = ghost.y + dy * ghost.speed
-                if not is_wall_at_position(new_x, new_y):
-                    ghost.x, ghost.y = new_x, new_y
-        
-        # Vérification des collisions avec les pièces
-        for coin in coins[:]:
-            if distance(pacman.x, pacman.y, coin[0], coin[1]) < CELL_SIZE // 2:
-                pacman.score += 10
-                coins.remove(coin)
-        
-        # Vérification des collisions avec les fruits
-        for fruit in fruits[:]:
-            if distance(pacman.x, pacman.y, fruit[0], fruit[1]) < CELL_SIZE // 2:
-                pacman.score += 50
-                fruits.remove(fruit)
-                # Activation du super pouvoir lors de la collecte d'un fruit
-                pacman.activate_super_power()
-        
-        # Vérification des collisions avec les fantômes
-        if distance(pacman.x, pacman.y, ghost.x, ghost.y) < CELL_SIZE and not pacman.invincible:
-            if pacman.super_power_active:
-                # Le fantôme retourne à sa position de départ
-                ghost.x, ghost.y = WIDTH//2 - 100, HEIGHT//2 - 100
-                pacman.score += 200
+            if role == "pacman":
+                game_over(playerControlled.score, screen, font)
             else:
-                # Pacman perd une vie
-                pacman.lose_life()
-                pacman.invincible = True
-                pacman.invincibility_timer = 180  # 3 secondes d'invincibilité
-        
+                you_win(playerControlled.score, screen, font)
+            return
+
+        # Déplacement du joueur (si c'est PacMan ou un fantôme, selon le rôle)
+        if role == "pacman":
+            playerControlled.move(players, controlled=True)
+            for g in ghosts:
+                g.move(players, controlled=False)
+        elif role == "fantome":
+            pacman.pacman_ai_move(players, coins, fruits, ghosts)
+            for g in ghosts:
+                # Le fantôme contrôlé réagit au clavier, les autres sont en IA
+                g.move(players, controlled=(g is playerControlled))
+
+        # Vérification des collisions
+        if role == "pacman":
+            # 1) COLLISIONS PACMAN vs COINS & FRUITS
+            playerControlled.check_collision_with_items(coins, fruits)
+            # 2) COLLISIONS PACMAN <=> FANTOMES
+            playerControlled.check_collision_with_ghosts(ghosts, players)
+
+        elif role == "fantome":
+            pacman.check_collision_with_ghosts(ghosts, players)
+            pacman.check_collision_with_items(coins, fruits)
+            playerControlled.check_collision_with_pacman(pacman, players)
+            if pacman.invincible:
+                pacman.invincibility_timer -= 1
+                if pacman.invincibility_timer <= 0:
+                    pacman.invincible = False
+            if pacman.super_power_active:
+                pacman.super_power_timer -= 1
+                if pacman.super_power_timer <= 0:
+                    pacman.super_power_active = False
+
         # Mise à jour des timers
-        if pacman.invincible:
-            pacman.invincibility_timer -= 1
-            if pacman.invincibility_timer <= 0:
-                pacman.invincible = False
-        
-        if pacman.super_power_active:
-            pacman.super_power_timer -= 1
-            if pacman.super_power_timer <= 0:
-                pacman.super_power_active = False
-        
+        if role == "pacman":
+            if playerControlled.invincible:
+                playerControlled.invincibility_timer -= 1
+                if playerControlled.invincibility_timer <= 0:
+                    playerControlled.invincible = False
+            if playerControlled.super_power_active:
+                playerControlled.super_power_timer -= 1
+                if playerControlled.super_power_timer <= 0:
+                    playerControlled.super_power_active = False
+
         # Affichage du jeu
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
-        
+
         # Affichage des pièces et fruits
         for coin in coins:
             screen.blit(coin_image, (coin[0] + coin_offset, coin[1] + coin_offset))
-        
+
         for fruit in fruits:
             screen.blit(fruit_image, (fruit[0] + fruit_offset, fruit[1] + fruit_offset))
-        
-        # Affichage des joueurs
-        for player in players.values():
-            player.draw(screen, pacman)
-        
-        # Affichage du score et des vies
-        score_text = font.render(f"Score: {pacman.score}", True, (255, 255, 255))
-        screen.blit(score_text, (10, 10))
-        
-        lives_text = font.render(f"Vies: {pacman.lives}", True, (255, 255, 255))
-        screen.blit(lives_text, (WIDTH - 180, 10))
-        
 
+        # Affichage des joueurs
+        for ghost in ghosts:
+            ghost.update_eaten_state()
+        if role == "fantome":
+            playerControlled.update_eaten_state()
+
+        # Affichage de PacMan puis de tous les fantômes
+        if role == "pacman":
+            # 1) PacMan contrôlé
+            playerControlled.draw(screen, controlled=True)
+
+            # 2) Les 4 fantômes (IA)
+            for g in ghosts:
+                g.draw(screen, controlled=False)
+        else:
+          # 1) PacMan en IA
+            pacman.draw(screen, controlled=True)
+          # 2) Les fantômes IA
+            for g in ghosts:
+                g.draw(screen, controlled=False)
+          # 3) Le fantôme contrôlé
+            playerControlled.draw(screen, controlled=True)
+
+        # Affichage du score et des vies
+        score_text = font.render(f"Score: {playerControlled.score}", True, (255, 255, 255))
+        screen.blit(score_text, (10, 10))
+
+        lives_text = font.render(f"Vies: {playerControlled.lives}", True, (255, 255, 255))
+        screen.blit(lives_text, (WIDTH - 180, 10))
 
         pygame.display.flip()
         clock.tick(60)
-    
+
     return
