@@ -133,7 +133,7 @@ STATIC_URL = '/static/'
 import os
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'pacmint_app/static')
+    os.path.join(BASE_DIR, 'pacmint_app', 'static'),
 ]
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
