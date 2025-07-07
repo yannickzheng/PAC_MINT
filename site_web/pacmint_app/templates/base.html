@@ -23,6 +23,9 @@
                         <a class="nav-link text-light" href="{% url 'pacmint_app:profile' %}">Mon profil</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link text-light" href="{% url 'pacmint_app:leaderboard' %}">Classement</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link text-danger" href="{% url 'pacmint_app:logout' %}">Se déconnecter</a>
                     </li>
                 {% else %}
