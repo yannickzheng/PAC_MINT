@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
   site_web:
     build:
-      context: .
-      dockerfile: site_web/Dockerfile
+      context: ./site_web
+      dockerfile: Dockerfile
     container_name: pacmint-site-web
     restart: unless-stopped
     volumes:
