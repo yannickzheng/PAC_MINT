@@ -14,8 +14,8 @@ urlpatterns = [
     path('login/', views.login_player, name='login'),
     path('profile/', views.profile_view, name='profile'),
     path('logout/', views.logout_view, name='logout'),
-    path('api/submit-result/', submit_game_result, name='submit_result'),
-]
+    path('api/submit-result/', submit_game_result, name='submit_result'), ]
+
 
 # URLs de test seulement en mode DEBUG
 if settings.DEBUG:
