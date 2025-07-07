@@ -72,7 +72,7 @@ class Player:
         # heuristique Manhattan #
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-    def find_path(self, start, goal, map_data):
+    def find_path(self, start, goal, map_data,  allow_goal_occupied=False):
         "Algorithme A* basique pour trouver un chemin sur ta MAP_DATA"
         open_set = []
         heapq.heappush(open_set, (0, start))
@@ -101,9 +101,9 @@ class Player:
 
             for neighbor in neighbors:
                 nx, ny = neighbor
-                # Vérifie que le voisin est dans la carte et n'est pas un mur
                 if 0 <= nx < len(map_data[0]) and 0 <= ny < len(map_data):
-                    if (nx, ny) != goal and map_data[ny][nx] == 1:
+                    # Permettre d’atteindre la case d’arrivée même si c’est un fantôme
+                    if map_data[ny][nx] == 1 and (neighbor != goal or not allow_goal_occupied):
                         continue
 
                     tentative_g_score = g_score[current] + 1
