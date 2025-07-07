@@ -11,6 +11,7 @@ class Protocols:
         WINNER = "protocol.winner"
         OPPONENT_LEFT = "protocol.opponent_left"
         ACTIVATE_SUPER_POWER = "activate_super_power"
+        CHAT_MESSAGE = "protocol.chat_message"
 
     class Request:
         ANSWER = "protocol.answer"
@@ -20,3 +21,4 @@ class Protocols:
         CREATE_GAME = "protocol.create_game"
         GET_POS = "protocol.get_pos"
         UPDATE_POSITION = "protocol.update_position"
+        SEND_CHAT_MESSAGE = "protocol.send_chat_message"
