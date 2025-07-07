@@ -90,6 +90,7 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
                 "coins": room.item_manager.coins,
                 "fruits": room.item_manager.fruits
             }
+            state["chat_history"] = room.get_chat_history()
         else:
             state["action"] = "update"
     
@@ -215,6 +216,28 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                     else:
                         # Envoyer la réponse uniquement au client qui a fait la requête
                         send_json(connexion, state)
+                
+                elif raw_data.get("command") == Protocols.Request.SEND_CHAT_MESSAGE:
+                    # Gestion des messages de chat
+                    try:
+                        message_text = raw_data.get("message", "").strip()
+                        if message_text and len(message_text) <= 200:  # Limiter la taille des messages
+                            # Ajouter le message au chat de la room
+                            chat_message = room.add_chat_message(joueur_actuel, message_text)
+                            
+                            # Créer la réponse pour diffuser le message
+                            chat_response = {
+                                "action": "chat_message",
+                                "chat_message": chat_message
+                            }
+                            
+                            # Diffuser le message à tous les joueurs de la room
+                            broadcast_to_room(room, chat_response)
+                        else:
+                            # Message trop long ou vide
+                            send_json(connexion, {"status": "error", "message": "Message invalide"})
+                    except Exception as e:
+                        send_json(connexion, {"status": "error", "message": "Erreur serveur"})
                     
 
             except Exception as erreur:
