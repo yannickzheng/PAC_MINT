@@ -103,7 +103,7 @@ class Player:
                 nx, ny = neighbor
                 # Vérifie que le voisin est dans la carte et n'est pas un mur
                 if 0 <= nx < len(map_data[0]) and 0 <= ny < len(map_data):
-                    if map_data[ny][nx] == 1:
+                    if (nx, ny) != goal and map_data[ny][nx] == 1:
                         continue
 
                     tentative_g_score = g_score[current] + 1
@@ -119,28 +119,25 @@ class Player:
         if not path:
             return
         next_cell = path[0]
-        target_x = next_cell[0] * CELL_SIZE
-        target_y = next_cell[1] * CELL_SIZE
+        # Vise le centre de la prochaine case
+        target_x = next_cell[0] * CELL_SIZE + CELL_SIZE // 2 - self.size // 2
+        target_y = next_cell[1] * CELL_SIZE + CELL_SIZE // 2 - self.size // 2
         dx = target_x - self.x
         dy = target_y - self.y
-        moved = False
-        if abs(dx) > abs(dy):
-            if dx > 0 and not self.is_wall(self.x + self.speed, self.y):
-                self.x += self.speed
-                moved = True
-            elif dx < 0 and not self.is_wall(self.x - self.speed, self.y):
-                self.x -= self.speed
-                moved = True
-        else:
-            if dy > 0 and not self.is_wall(self.x, self.y + self.speed):
-                self.y += self.speed
-                moved = True
-            elif dy < 0 and not self.is_wall(self.x, self.y - self.speed):
-                self.y -= self.speed
-                moved = True
-        # Passe à la prochaine case si proche
-        if abs(dx) < self.speed and abs(dy) < self.speed and moved:
+
+        dist = math.hypot(dx, dy)
+        if dist < self.speed:
+            # On est arrivé au centre de la case cible, on s'aligne parfaitement
+            self.x = target_x
+            self.y = target_y
             path.pop(0)
+        else:
+            # Avance vers la cible
+            step_x = self.speed * dx / dist
+            step_y = self.speed * dy / dist
+            if not self.is_wall(self.x + step_x, self.y + step_y):
+                self.x += step_x
+                self.y += step_y
         self.update()
 
 
@@ -193,13 +190,13 @@ class PacMan(Player):
     def pacman_ai_move(self, players, coins, fruits, ghosts):
         active_ghosts = [g for g in ghosts if not g.is_eaten]
 
+        # Mode super pouvoir : chasse les fantômes
         if self.super_power_active and active_ghosts:
-            # Mange tous les fantômes “sur la route” (= assez proches)
+            # Mange tous les fantômes assez proches
             for ghost in active_ghosts:
-                distance = ((ghost.x - self.x) ** 2 + (ghost.y - self.y) ** 2) ** 0.5
-                if distance < CELL_SIZE * 0.8:
+                if distance(self.x, self.y, ghost.x, ghost.y) < CELL_SIZE * 0.8:
                     self.eat_ghost(ghost, players)
-            # Puis cible le plus proche pour continuer la chasse
+            # Cible le fantôme le plus proche pour continuer la chasse
             target = min(active_ghosts, key=lambda g: (g.x - self.x) ** 2 + (g.y - self.y) ** 2)
             start = (int(self.x // CELL_SIZE), int(self.y // CELL_SIZE))
             goal = (int(target.x // CELL_SIZE), int(target.y // CELL_SIZE))
@@ -207,18 +204,17 @@ class PacMan(Player):
             self.move_along_path(path)
             return
 
-        # Si pas de super pouvoir : cherche fruits > pièces, mais fuit les fantômes proches
+        # Mode normal : cherche fruit en priorité, sinon pièce
         if fruits:
             target = min(fruits, key=lambda f: (f[0] - self.x) ** 2 + (f[1] - self.y) ** 2)
         elif coins:
             target = min(coins, key=lambda c: (c[0] - self.x) ** 2 + (c[1] - self.y) ** 2)
         else:
-            return  # Plus rien à faire
+            return  # Rien à faire
 
+        # Fuit les fantômes proches
         for ghost in active_ghosts:
-            distance = ((ghost.x - self.x) ** 2 + (ghost.y - self.y) ** 2) ** 0.5
-            if distance < CELL_SIZE * 2:  # Distance de fuite
-                # Fuit (va à l’opposé)
+            if distance(self.x, self.y, ghost.x, ghost.y) < CELL_SIZE * 2:
                 dx = self.x - ghost.x
                 dy = self.y - ghost.y
                 flee_cell = (int((self.x + dx * 3) // CELL_SIZE), int((self.y + dy * 3) // CELL_SIZE))
@@ -232,6 +228,7 @@ class PacMan(Player):
         goal = (int(target[0] // CELL_SIZE), int(target[1] // CELL_SIZE))
         path = self.find_path(start, goal, MAP_DATA)
         self.move_along_path(path)
+
     def get_img_pacman(self, controlled=False):
         """Retourne l'image de PacMan en fonction de son état et de l'input du joueur"""
         if not controlled:
@@ -328,6 +325,7 @@ class PacMan(Player):
                 coins.remove(coin)
         for fruit in fruits[:]:
             if distance(self.x, self.y, fruit[0], fruit[1]) < CELL_SIZE // 2:
+                print("🍒 Pacman mange un fruit !", self.x, self.y, fruit)
                 self.score += 50
                 fruits.remove(fruit)
                 self.activate_super_power()

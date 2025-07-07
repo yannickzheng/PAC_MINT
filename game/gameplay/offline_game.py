@@ -108,6 +108,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
 
         elif role == "fantome":
             pacman.check_collision_with_ghosts(ghosts, players)
+            pacman.check_collision_with_items(coins, fruits)
             playerControlled.check_collision_with_pacman(pacman, players)
             if pacman.invincible:
                 pacman.invincibility_timer -= 1
@@ -143,6 +144,8 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         # Affichage des joueurs
         for ghost in ghosts:
             ghost.update_eaten_state()
+        if role == "fantome":
+            playerControlled.update_eaten_state()
 
         # Affichage de PacMan puis de tous les fantômes
         if role == "pacman":
