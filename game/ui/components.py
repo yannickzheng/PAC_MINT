@@ -89,10 +89,10 @@ def you_win(score, screen, font):
     screen.blit(overlay, (0, 0))
 
     # Titre Game Over
-    game_over_font = pygame.font.SysFont("Arial", 72, bold=True)
-    game_over_text = game_over_font.render("YOU WIN !", True, (255, 0, 0))
-    game_over_rect = game_over_text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2 - 100))
-    screen.blit(game_over_text, game_over_rect)
+    game_win_font = pygame.font.SysFont("Arial", 72, bold=True)
+    game_win_text = game_win_font.render("YOU WIN !", True, (255, 215, 0))
+    game_win_rect = game_win_text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2 - 100))
+    screen.blit(game_win_text, game_win_rect)
 
     # Score final
     score_font = pygame.font.SysFont("Arial", 48)

@@ -4,7 +4,7 @@ from common.global_variable import WIDTH, HEIGHT, CELL_SIZE, BLUE, CYAN
 from game.player import Player, PacMan, Ghost
 from game.core.assets import load_game_assets
 from game.map import MAP_SURFACE, MAP_DATA
-from game.ui.components import display_loading_screen, draw_button, game_over
+from game.ui.components import display_loading_screen, draw_button, game_over, you_win
 from game.utils.helpers import distance, is_wall_at_position
 
 
@@ -79,8 +79,11 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
                 run = False
 
         # Vérifier si PacMan a perdu toutes ses vies
-        if playerControlled.lives <= 0:
-            game_over(playerControlled.score, screen, font)
+        if pacman.lives <= 0:
+            if role == "pacman":
+                game_over(playerControlled.score, screen, font)
+            else:
+                you_win(playerControlled.score, screen, font)
             return
 
         # Déplacement du joueur (si c'est PacMan ou un fantôme, selon le rôle)

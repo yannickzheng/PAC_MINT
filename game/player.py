@@ -467,6 +467,7 @@ class Ghost(Player):
                 pacman.lose_life()
                 pacman.invincible = True
                 pacman.invincibility_timer = 180
+                self.score += 1000
     def update_eaten_state(self):
         """Déplace le fantôme mangé vers le centre en ligne droite sans collision."""
         if not self.is_eaten or self.respawn_target is None:
