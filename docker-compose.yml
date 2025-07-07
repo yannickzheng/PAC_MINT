@@ -6,24 +6,22 @@ services:
       context: .
       dockerfile: site_web/Dockerfile
     container_name: pacmint-site-web
-    ports:
-      - "8080:8080"
+#    ports:
+#      - "8080:8080"
     restart: unless-stopped
     volumes:
       - ./site_web/staticfiles:/app/staticfiles
-      - ./site_web/media:/app/media
 
   caddy:
     image: caddy:2
     container_name: pacmint-caddy
     ports:
-      - "8081:80"
+      - "8080:80"
     depends_on:
       - site_web
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./site_web/staticfiles:/staticfiles
-      - ./site_web/media:/media
 
 
   client:
