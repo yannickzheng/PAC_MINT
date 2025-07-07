@@ -6,7 +6,7 @@ from game.core.assets import load_game_assets
 from game.map import MAP_SURFACE, MAP_DATA
 from game.ui.components import display_loading_screen, draw_button, game_over
 from game.utils.helpers import distance, is_wall_at_position
-import os
+
 
 
 def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, role):
@@ -106,8 +106,16 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         elif role == "fantome":
             pacman.check_collision_with_ghosts(ghosts, players)
             playerControlled.check_collision_with_pacman(pacman, players)
+            if pacman.invincible:
+                pacman.invincibility_timer -= 1
+                if pacman.invincibility_timer <= 0:
+                    pacman.invincible = False
+            if pacman.super_power_active:
+                pacman.super_power_timer -= 1
+                if pacman.super_power_timer <= 0:
+                    pacman.super_power_active = False
 
-        # Mise à jour des timers (uniquement pour PacMan)
+        # Mise à jour des timers
         if role == "pacman":
             if playerControlled.invincible:
                 playerControlled.invincibility_timer -= 1
@@ -143,7 +151,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
                 g.draw(screen, controlled=False)
         else:
           # 1) PacMan en IA
-            pacman.draw(screen, controlled=False)
+            pacman.draw(screen, controlled=True)
           # 2) Les fantômes IA
             for g in ghosts:
                 g.draw(screen, controlled=False)

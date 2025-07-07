@@ -5,6 +5,8 @@ import heapq
 import math
 import pygame
 from common.global_variable import CELL_SIZE
+from game.utils.helpers import distance
+
 
 class Player:
     def __init__(self, ip, tcp_port, role, position):
@@ -40,7 +42,7 @@ class Player:
         self.image_super_down = pygame.transform.scale(pygame.image.load("images/Black Pacman-down.png"), (self.size, self.size))
 
     def move(self, players):
-        """Déplace le joueur (Pacman ou Fantôme)""" ###### A COMPLETER DANS CHAQUE CLASSE#########################
+        """Déplace le joueur (Pacman ou Fantôme)"""
         pass
 
     def is_wall(self, x, y):
