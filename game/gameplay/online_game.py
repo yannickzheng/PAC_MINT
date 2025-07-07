@@ -3,7 +3,7 @@ import sys
 from common.global_variable import WIDTH, BLUE, CYAN
 from common.network import Network
 from common.protocols import Protocols
-from game.player import Player
+from game.player_online import Player
 from game.map import MAP_SURFACE
 from game.ui.components import display_loading_screen, draw_button, game_over
 
@@ -29,7 +29,10 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             current_player.score = data["score"]
             current_player.lives = data.get("lives", current_player.lives)
             current_player.invincible = data.get("invincible", False)
+            current_player.super_power_active = data.get("super_power_active", False)
+            current_player.super_power_timer = data.get("super_power_timer", 0)
             if data.get("activate_super_power"):
+                print(f"[CLIENT] Activation du super pouvoir reçue pour le joueur {pid}")
                 current_player.activate_super_power()
         elif pid in players:
             # Joueur existant
@@ -37,6 +40,15 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             players[pid].score = data.get("score", 0)
             players[pid].lives = data.get("lives", 3)
             players[pid].invincible = data.get("invincible", False)
+            players[pid].super_power_active = data.get("super_power_active", False)
+            players[pid].super_power_timer = data.get("super_power_timer", 0)
+            players[pid].direction = data.get("direction", "right")
+            # Mettre à jour l'état mangé pour les fantômes
+            if "fantome" in players[pid].role.lower():
+                players[pid].is_eaten = data.get("is_eaten", False)
+            # Gestion de l'état mangé pour les fantômes
+            if hasattr(players[pid], 'is_eaten'):
+                players[pid].is_eaten = data.get("is_eaten", False)
         else:
             # Nouveau joueur
             new_player = Player(
@@ -49,6 +61,12 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             new_player.score = data.get("score", 0)
             new_player.lives = data.get("lives", 3)
             new_player.invincible = data.get("invincible", False)
+            new_player.super_power_active = data.get("super_power_active", False)
+            new_player.super_power_timer = data.get("super_power_timer", 0)
+            new_player.direction = data.get("direction", "right")
+            # Ajouter l'état mangé pour les fantômes
+            if "fantome" in new_player.role.lower():
+                new_player.is_eaten = data.get("is_eaten", False)
             players[pid] = new_player
             print(f"[CLIENT] Nouveau joueur ajouté : {pid}")
 
@@ -119,7 +137,8 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
             "players": [
                 {
                     "id": current_player.id,
-                    "pos": current_player.coord
+                    "pos": current_player.coord,
+                    "direction": getattr(current_player, 'direction', 'right')
                 }
             ]
         }
@@ -140,7 +159,7 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
 
         # On affiche sur l'interface l'ensemble des joueurs
         for player in players.values():
-            player.draw(screen, player)
+            player.draw(screen, current_player)
 
         # Affiche le code de la partie sous le score
         game_code_text = font.render(f"Code de la partie: {game_code}", True, (255, 255, 0))
