@@ -231,13 +231,21 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                                 "chat_message": chat_message
                             }
                             
-                            # Diffuser le message à tous les joueurs de la room
-                            broadcast_to_room(room, chat_response)
+                            # On diffuse le message à tous les joueurs de la room sauf l'expéditeur
+                            broadcast_to_room(room, chat_response, exclude_player=joueur_actuel)
+                            
+                            # Envoyer une confirmation avec le message à l'expéditeur
+                            send_json(connexion, {
+                                "status": "ok", 
+                                "message": "Message sent",
+                                "action": "chat_message",
+                                "chat_message": chat_message
+                            })
                         else:
                             # Message trop long ou vide
-                            send_json(connexion, {"status": "error", "message": "Message invalide"})
+                            send_json(connexion, {"status": "error", "message": "Invalid message"})
                     except Exception as e:
-                        send_json(connexion, {"status": "error", "message": "Erreur serveur"})
+                        send_json(connexion, {"status": "error", "message": "Server error"})
                     
 
             except Exception as erreur:

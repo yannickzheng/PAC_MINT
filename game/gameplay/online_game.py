@@ -158,7 +158,11 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
             if chat_message:
                 
                 try:
-                    n.send_command(Protocols.Request.SEND_CHAT_MESSAGE, chat_message)
+                    response = n.send_command(Protocols.Request.SEND_CHAT_MESSAGE, chat_message)
+                    # Traiter la réponse qui contient le message de chat pour l'expéditeur
+                    if response:
+                        update_game_state_from_server(response, players, current_player_id, coins, fruits, chat_box)
+                        
                 except Exception as e:
                     print(f"Erreur lors de l'envoi du message de chat: {e}")
             
