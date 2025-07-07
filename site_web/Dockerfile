@@ -22,3 +22,5 @@ RUN python manage.py migrate
 
 # Entrée : démarrer avec gunicorn (PAS runserver)
 CMD ["gunicorn", "site_web.wsgi:application", "--bind", "0.0.0.0:8000"]
+
+EXPOSE 8000
