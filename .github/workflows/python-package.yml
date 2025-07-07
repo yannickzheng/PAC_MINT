@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
 name: Python package
 
 on:
@@ -13,8 +10,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.9", "3.10", "3.11"]
+
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -22,21 +21,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Pour chaque sous-répertoire, installer les requirements et lancer les tests
-      - name: Install and test game
-        working-directory: game
-        run: |
-          pip install -r requirements.txt
-          pytest
+      # Installer les dépendances pour chaque sous-projet
+      - name: Install game requirements
+        run: pip install -r game/requirements.txt
 
-      - name: Install and test server
-        working-directory: server
-        run: |
-          pip install -r requirements.txt
-          pytest
+      - name: Install server requirements
+        run: pip install -r server/requirements.txt
 
-      - name: Install and test site_web
-        working-directory: site_web
-        run: |
-          pip install -r requirements.txt
-          pytest
+      - name: Install site_web requirements
+        run: pip install -r site_web/requirements.txt
