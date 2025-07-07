@@ -9,4 +9,4 @@ def leaderboard_view(request):
         .annotate(total_score=Sum('score'))
         .order_by('-total_score')[:10]
     )
-    return render(request, 'pacmint_app/leaderboard.html', {'leaderboard': leaderboard})
+    return render(request, 'leaderboard.html', {'leaderboard': leaderboard})
