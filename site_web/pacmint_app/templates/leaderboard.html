@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Classement - Pac-Mint{% endblock %}
+
+{% block subtitle %}
+<h2 class="text-warning mb-4" style="font-family: 'Press Start 2P', cursive;">Classement Global</h2>
+{% endblock %}
+
+{% block main %}
+<div class="table-responsive">
+    <table class="table table-dark table-bordered border-warning">
+        <thead class="table-warning text-black">
+            <tr>
+                <th>Position</th>
+                <th>Joueur</th>
+                <th>Score total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for joueur in leaderboard %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ joueur.player__username }}</td>
+                <td>{{ joueur.total_score }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">Aucun joueur encore classé.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

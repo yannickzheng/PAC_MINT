@@ -22,3 +22,10 @@ env/
 
 # Database
 db.sqlite3
+
+# Fichiers générés Django
+staticfiles/
+media/
+
+# Autres
+*.log
