@@ -9,8 +9,13 @@ class Player(models.Model):
         return self.user.username
 
 class Score(models.Model):
+    RESULT_CHOICES = [
+        ('win', 'Victoire'),
+        ('lose', 'Défaite'),
+    ]
     player = models.ForeignKey(User, on_delete=models.CASCADE)
     value = models.IntegerField()
+    result = models.CharField(max_length=10, choices=RESULT_CHOICES, default='win')
     date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -83,3 +88,24 @@ class Table_Score(models.Model):
 
     def __str__(self):
         return f"{self.player.username} - {self.score} pts in Game {self.game.game_id}"
+
+class GameResult(models.Model):
+        ROLE_CHOICES = [
+            ('pacman', 'Pac-Man'),
+            ('ghost', 'Fantôme'),
+        ]
+        OUTCOME_CHOICES = [
+            ('win', 'Victoire'),
+            ('lose', 'Défaite'),
+        ]
+
+        player = models.ForeignKey(User, on_delete=models.CASCADE)
+        role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+        score = models.IntegerField()
+        outcome = models.CharField(max_length=10, choices=OUTCOME_CHOICES)
+        date_played = models.DateTimeField(auto_now_add=True)
+
+        def __str__(self):
+            return f"{self.player.username} - {self.role} - {self.outcome} - {self.score}"
+
+

@@ -74,6 +74,10 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
                 "score": p.score,
                 "lives": getattr(p, "lives", 3),
                 "invincible": getattr(p, "invincible", False),
+                "super_power_active": getattr(p, "super_power_active", False),
+                "super_power_timer": getattr(p, "super_power_timer", 0),
+                "is_eaten": getattr(p, "is_eaten", False),
+                "direction": getattr(p, "direction", "right"),
                 "activate_super_power": activate_super_power if pid == current_id else False
             }
             for pid, p in room.players.items()
@@ -86,6 +90,7 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
                 "coins": room.item_manager.coins,
                 "fruits": room.item_manager.fruits
             }
+            state["chat_history"] = room.get_chat_history()
         else:
             state["action"] = "update"
     
@@ -95,13 +100,17 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
     
     return state
 
-def broadcast_state(room, current_id, state):
+def broadcast_to_room(room, state, exclude_player=None):
+    """Diffuse l'état du jeu à tous les clients connectés d'une room"""
     for pid, player in room.players.items():
-        if player.tcp_socket:
+        if exclude_player and pid == exclude_player:
+            continue
+        if hasattr(player, 'tcp_socket') and player.tcp_socket:
             try:
                 send_json(player.tcp_socket, state)
+                logger.debug(f"État diffusé au joueur {pid}")
             except Exception as e:
-                logger.warning(f"[Serveur] Erreur d'envoi à {pid}: {e}")
+                logger.error(f"Erreur lors de la diffusion au joueur {pid}: {e}")
 
 
 def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
@@ -154,10 +163,12 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                     for pdata in payload.get("players", []):
                         pid = pdata["id"]
                         pos = pdata["pos"]
+                        direction = pdata.get("direction", "right")
                         if pid in room.players:
                             player = room.players[pid]
                             player.update_position(pos)
-                            logger.debug(f"Position mise à jour pour le joueur {pid}: {pos}")
+                            player.direction = direction
+                            logger.debug(f"Position et direction mises à jour pour le joueur {pid}: {pos}, direction: {direction}")
 
                             # Vérifie la collecte d'items pour ce joueur (uniquement si c'est Pacman)
                             if player.role == "pacman":
@@ -174,23 +185,67 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                     update_player_states(room)
                     
                     # GESTION COLLISION FANTÔME/PACMAN 
-                    pacman_touche = check_pacman_ghost_collision(room)
-                    if pacman_touche and not getattr(pacman_touche, "invincible", False):
+                    collision_result = check_pacman_ghost_collision(room)
+                    event = None
+                    
+                    if collision_result["ghost_eaten"]:
+                        # Pacman mange un fantôme
+                        pacman = collision_result["ghost_eaten"]["pacman"]
+                        ghost = collision_result["ghost_eaten"]["ghost"]
+                        eat_ghost(pacman, ghost, room)
+                        event = "ghost_eaten"
+                        logger.info(f"Fantôme mangé ! Score Pacman : {pacman.score}")
+                    elif collision_result["pacman_hit"]:
+                        # Pacman est touché par un fantôme
+                        pacman_touche = collision_result["pacman_hit"]
                         pacman_touche.lives = getattr(pacman_touche, "lives", 3) - 1
                         pacman_touche.invincible = True
                         pacman_touche.invincibility_timer = 180  # 3 secondes à 60 FPS
                         logger.info(f"Pacman touché ! Vies restantes : {pacman_touche.lives}")
                         event = "pacman_hit"
-                    else:
-                        event = None
                     
                     # Construire l'état de jeu final
                     state = sync_game_state(room, joueur_actuel, event=event)
                     if activate_super_power:
                         state["activate_super_power"] = True
-                    
-                    # Envoyer la réponse uniquement au client qui a fait la requête
-                    send_json(connexion, state)
+                        # Diffuser à tous les clients de la room quand un super pouvoir est activé
+                        broadcast_to_room(room, state)
+                    elif event == "pacman_hit" or event == "ghost_eaten":
+                        # Diffuser à tous les clients quand Pacman est touché ou mange un fantôme
+                        broadcast_to_room(room, state)
+                    else:
+                        # Envoyer la réponse uniquement au client qui a fait la requête
+                        send_json(connexion, state)
+                
+                elif raw_data.get("command") == Protocols.Request.SEND_CHAT_MESSAGE:
+                    # Gestion des messages de chat
+                    try:
+                        message_text = raw_data.get("message", "").strip()
+                        if message_text and len(message_text) <= 200:  # Limiter la taille des messages
+                            # Ajouter le message au chat de la room
+                            chat_message = room.add_chat_message(joueur_actuel, message_text)
+                            
+                            # Créer la réponse pour diffuser le message
+                            chat_response = {
+                                "action": "chat_message",
+                                "chat_message": chat_message
+                            }
+                            
+                            # On diffuse le message à tous les joueurs de la room sauf l'expéditeur
+                            broadcast_to_room(room, chat_response, exclude_player=joueur_actuel)
+                            
+                            # Envoyer une confirmation avec le message à l'expéditeur
+                            send_json(connexion, {
+                                "status": "ok", 
+                                "message": "Message sent",
+                                "action": "chat_message",
+                                "chat_message": chat_message
+                            })
+                        else:
+                            # Message trop long ou vide
+                            send_json(connexion, {"status": "error", "message": "Invalid message"})
+                    except Exception as e:
+                        send_json(connexion, {"status": "error", "message": "Server error"})
                     
 
             except Exception as erreur:
@@ -271,18 +326,51 @@ def update_player_states(room):
                 logger.info(f"Super-pouvoir désactivé pour le joueur {pid}")
 
 def check_pacman_ghost_collision(room):
-    """Renvoie le Pacman touché par un fantôme, ou None."""
+    """Vérifie les collisions entre Pacman et les fantômes."""
     pacmans = [p for p in room.players.values() if "pacman" in p.role.lower()]
     ghosts = [p for p in room.players.values() if "fantome" in p.role.lower()]
+    
+    collision_result = {"pacman_hit": None, "ghost_eaten": None}
+    
     for pacman in pacmans:
         for ghost in ghosts:
+            # Ignorer les fantômes déjà mangés
+            if getattr(ghost, "is_eaten", False):
+                continue
+                
             dx = pacman.position[0] - ghost.position[0]
             dy = pacman.position[1] - ghost.position[1]
             distance_squared = dx * dx + dy * dy
             # Rayon de collision (ajuste selon la taille de tes sprites)
             if distance_squared < 30*30:
-                return pacman
-    return None
+                # Si Pacman a le super-pouvoir et n'est pas invincible
+                if getattr(pacman, "super_power_active", False):
+                    collision_result["ghost_eaten"] = {"pacman": pacman, "ghost": ghost}
+                    logger.info(f"Pacman mange le fantôme {ghost.id if hasattr(ghost, 'id') else 'unknown'}")
+                    return collision_result
+                # Sinon, si Pacman n'est pas invincible, il est touché
+                elif not getattr(pacman, "invincible", False):
+                    collision_result["pacman_hit"] = pacman
+                    return collision_result
+                    
+    return collision_result
+
+def eat_ghost(pacman, ghost, room):
+    """Logique pour faire manger un fantôme par Pacman."""
+    # Augmenter le score de Pacman
+    pacman.score += 200
+    
+    # Marquer le fantôme comme mangé
+    ghost.is_eaten = False # pour l'instant, je ne le marque pas comme mangé
+        
+    # Calculer une position de respawn au centre (adapté pour le serveur)
+    center_x = 300  # Position centrale approximative
+    center_y = 300  # Position centrale approximative
+    ghost.respawn_target = (center_x, center_y)
+    
+    logger.info(f"Fantôme {getattr(ghost, 'id', 'unknown')} mangé par Pacman. Score: +200")
+    
+    return True
 
 def sync_game_state(room, current_id, event=None):
     """

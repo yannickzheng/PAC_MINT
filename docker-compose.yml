@@ -1,36 +1,40 @@
-version: '3.8'
-
 services:
-  server:
+  site_web:
     build:
-      context: .  # Contexte racine pour inclure common/
-      dockerfile: server/Dockerfile
-    container_name: pacmint-server
-    ports:
-      - "5555:5555"
+      context: .
+      dockerfile: site_web/Dockerfile
+    container_name: pacmint-site-web
     restart: unless-stopped
-    network_mode: host
+    volumes:
+      - ./site_web/staticfiles:/app/staticfiles
+
+  caddy:
+    image: caddy:2
+    container_name: pacmint-caddy
+    ports:
+      - "8080:80"
+    depends_on:
+      - site_web
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./site_web/staticfiles:/staticfiles
+
 
   client:
     build:
-      context: .  # Contexte racine pour inclure game/, common/, etc.
+      context: .
       dockerfile: game/Dockerfile
     container_name: pacmint-client
     environment:
       - DISPLAY=${DISPLAY:-host.docker.internal:0.0}
-      - SDL_AUDIODRIVER=alsa
       - XDG_RUNTIME_DIR=/tmp
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - /dev/snd:/dev/snd
-      - /dev/dri:/dev/dri  # Pour l'accès graphique
-    devices:
-      - /dev/snd:/dev/snd
       - /dev/dri:/dev/dri
-    privileged: true  # Pour l'accès audio et graphique
+    devices:
+      - /dev/dri:/dev/dri
+    privileged: true
     network_mode: host
-    depends_on:
-      - server
     command: >
       bash -c "sleep 5 && python game/pacmint.py"
     tty: true

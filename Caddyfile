@@ -1,0 +1,10 @@
+:80
+
+handle_path /static/* {
+    root * /staticfiles
+    file_server
+}
+
+handle {
+    reverse_proxy site_web:8080
+}
