@@ -133,10 +133,10 @@ STATIC_URL = '/static/'
 import os
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'pacmint_app', 'static'),
+    BASE_DIR / 'pacmint_app' / 'static',
 ]
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
