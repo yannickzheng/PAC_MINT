@@ -31,27 +31,9 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         (WIDTH // 2 - 20, HEIGHT // 2 + 20),
         (WIDTH // 2 + 20, HEIGHT // 2 + 20)
     ]
-
-    # ——— On décide quel objet est contrôlé par l'utilisateur ———
-    if role == "pacman":
-        playerControlled = pacman
-        controlled_key = "pacman"
-    else:
-        ghost_spawn_pos = ghost_positions[0]
-        playerControlled = Ghost("127.0.0.1", 0, ghost_spawn_pos)
-        playerControlled.id = "playerControlled"
-        controlled_key = "ghost_player"
-
-
-    # ——— On monte le dictionnaire de tous les joueurs ———
-    players = {
-        "pacman": pacman,
-        controlled_key: playerControlled
-    }
-    # Si on contrôle PacMan, players contient deux fois la même référence : c'est ok
-
-
     ghosts = []
+    players = {"pacman": pacman}
+
     for i, pos in enumerate(ghost_positions):
         # si le joueur contrôle un fantôme, on ne recrée pas le même
         if not (role == "fantome" and i == 0):
@@ -59,6 +41,12 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
             g.id = f"ghost{i + 1}"
             ghosts.append(g)
             players[g.id] = g
+
+    if role == "pacman":
+        playerControlled = pacman
+    elif role == "fantome":
+        # Tu choisis le fantôme que tu veux contrôler (par ex, le 1er)
+        playerControlled = ghosts[0]
 
     # Génération des pièces et fruits pour le mode hors ligne identique au serveur
     coins = []
@@ -88,16 +76,14 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
 
         # Déplacement du joueur (si c'est PacMan ou un fantôme, selon le rôle)
         if role == "pacman":
-            playerControlled.move(players, controlled=True)  # PacMan contrôlé par l'utilisateur
-            for g in ghosts:
-                g.move(players, controlled=False)
-        else:
-            # 1) PacMan IA
-            pacman.pacman_ai_move(players, coins, fruits, ghosts)
-            # 2) On déplace les fantômes
-            for g in ghosts:
-                g.move(players, controlled=False)
             playerControlled.move(players, controlled=True)
+            for g in ghosts:
+                g.move(players, controlled=False)
+        elif role == "fantome":
+            pacman.pacman_ai_move(players, coins, fruits, ghosts)
+            for g in ghosts:
+                # Le fantôme contrôlé réagit au clavier, les autres sont en IA
+                g.move(players, controlled=(g is playerControlled))
 
         # Vérification des collisions
         if role == "pacman":

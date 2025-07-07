@@ -325,7 +325,6 @@ class PacMan(Player):
                 coins.remove(coin)
         for fruit in fruits[:]:
             if distance(self.x, self.y, fruit[0], fruit[1]) < CELL_SIZE // 2:
-                print("🍒 Pacman mange un fruit !", self.x, self.y, fruit)
                 self.score += 50
                 fruits.remove(fruit)
                 self.activate_super_power()
