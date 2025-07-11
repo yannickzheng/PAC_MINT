@@ -26,6 +26,9 @@
                         <a class="nav-link text-light" href="{% url 'pacmint_app:leaderboard' %}">Classement</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link text-light" href="{% url 'pacmint_app:friends' %}">Amis</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link text-danger" href="{% url 'pacmint_app:logout' %}">Se déconnecter</a>
                     </li>
                 {% else %}
@@ -42,10 +45,9 @@
 <div class="container py-5">
 
     <!-- Logo uniquement, en plus grand -->
-<img src="{% static 'pacmint_app/images/new_logo.png' %}" alt="Logo Pac‑Mint"
-     class="img-fluid mb-5 logo-animation" style="width:500px;">
+    <img src="{% static 'pacmint_app/images/new_logo.png' %}" alt="Logo Pac‑Mint"
+         class="img-fluid mb-5 logo-animation" style="width:500px;">
 
-    {# Sous-titre spécifique à chaque page #}
     {% block subtitle %}{% endblock subtitle %}
 
     <!-- Messages Django -->
@@ -60,7 +62,6 @@
         </div>
     {% endif %}
 
-    {# Contenu spécifique à chaque page #}
     {% block main %}{% endblock main %}
 </div>
 
