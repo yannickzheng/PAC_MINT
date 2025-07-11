@@ -22,8 +22,20 @@ class Map(models.Model):
 class Friend(models.Model):
     player = models.ForeignKey(User, on_delete=models.CASCADE, related_name="friends")
     friend = models.ForeignKey(User, on_delete=models.CASCADE, related_name="friend_of")
-    status = models.CharField(max_length=20, choices=[("pending", "Pending"), ("accepted", "Accepted"), ("blocked", "Blocked")])
+    status = models.CharField(
+        max_length=20,
+        choices=[("pending", "Pending"), ("accepted", "Accepted"), ("blocked", "Blocked")],
+        default="pending"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('player', 'friend')
+
+    def __str__(self):
+        return f"{self.player.username} -> {self.friend.username} ({self.status})"
+
 
     class Meta:
         unique_together = ('player', 'friend')
