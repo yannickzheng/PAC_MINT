@@ -4,19 +4,27 @@ from common.global_variable import WIDTH, HEIGHT, BLUE, CYAN, PURPLE
 
 from game.ui.components import draw_button
 
-def select_role(screen, font):
+def select_role(screen, font, mode="offline"):
     """Affiche un menu pour choisir le rôle (Pacman ou Fantôme)"""
     run = True
     while run:
         screen.fill((0, 0, 0))
 
         # ——— Affichage du bandeau “Mode Hors-Ligne” ———
-        header_img = pygame.transform.scale(
-            pygame.image.load("images/mode-hors-ligne.png").convert_alpha(),
-            (400, 80)  # largeur, hauteur voulues
-        )
-        header_rect = header_img.get_rect(center=(WIDTH // 2, 70))
-        screen.blit(header_img, header_rect)
+        if mode == "offline":
+            header_img = pygame.transform.scale(
+                pygame.image.load("images/mode-hors-ligne.png").convert_alpha(),
+                (400, 80)
+            )
+            header_rect = header_img.get_rect(center=(WIDTH // 2, 70))
+            screen.blit(header_img, header_rect)
+        else:
+            header_img = pygame.transform.scale(
+                pygame.image.load("images/mode-en-ligne.png").convert_alpha(),
+                (400, 80)
+            )
+            header_rect = header_img.get_rect(center=(WIDTH // 2, 70))
+            screen.blit(header_img, header_rect)
 
         # Affichage du texte "Choisissez votre rôle"
         title_text = pygame.image.load(("images/Choisissez-votre-role.png"))
@@ -92,11 +100,10 @@ def main_menu(screen, image, font):
                 # Vérifier les boutons principaux en bas de l'écran
                 if 600 <= y <= 650:
                     if 250 <= x <= 450:  # Mode Hors Ligne
-                        role = select_role(screen, font)
+                        role = select_role(screen, font, mode="offline")
                         return "offline", role
                     elif 550 <= x <= 750:  # Mode En Ligne
-                        role = select_role(screen, font)
-                        return "online", role
+                        return "online", None
                     elif 850 <= x <= 1050:  # Quitter
                         run = False
                         pygame.quit()

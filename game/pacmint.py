@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pygame
 from common.global_variable import WIDTH, HEIGHT
 from game.core.assets import load_game_assets
-from game.menus.main_menu import main_menu
+from game.menus.main_menu import main_menu, select_role
 from game.menus.online_menu import online_menu, create_game, join_game
 from game.gameplay.offline_game import offline_game
 from game.gameplay.online_game import main_game
@@ -49,6 +49,7 @@ def main():
                     # Créer une partie
                     create_choice = create_game(screen, assets['background_image'], font)
                     if create_choice == "start":
+                        role = select_role(screen, font, mode="online")
                         main_game(
                             is_created_game=True, 
                             game_code=None,
@@ -57,7 +58,8 @@ def main():
                             coin_image=assets['coin_image'],
                             fruit_image=assets['fruit_image'],
                             coin_offset=assets['coin_offset'],
-                            fruit_offset=assets['fruit_offset']
+                            fruit_offset=assets['fruit_offset'],
+                            role = role
                         )
                     elif create_choice == "back":
                         continue
@@ -68,6 +70,7 @@ def main():
                     if join_result == "back":
                         continue
                     elif join_result:  # Code de partie saisi
+                        role = select_role(screen, font, mode= "online")
                         main_game(
                             is_created_game=False, 
                             game_code=join_result,
@@ -76,7 +79,8 @@ def main():
                             coin_image=assets['coin_image'],
                             fruit_image=assets['fruit_image'],
                             coin_offset=assets['coin_offset'],
-                            fruit_offset=assets['fruit_offset']
+                            fruit_offset=assets['fruit_offset'],
+                            role =role
                         )
                 
                 elif online_choice == "back":

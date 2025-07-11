@@ -91,7 +91,7 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             players[pid] = new_player
             print(f"[CLIENT] Nouveau joueur ajouté : {pid}")
 
-def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image, coin_offset, fruit_offset):
+def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image, coin_offset, fruit_offset, role):
     """Fonction principale du jeu en ligne"""
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
