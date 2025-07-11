@@ -206,6 +206,18 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                     
                     # Construire l'état de jeu final
                     state = sync_game_state(room, joueur_actuel, event=event)
+                    pacmans = [p for p in room.players.values() if "pacman" in p.role.lower()]
+                    game_over = False
+                    for pacman in pacmans:
+                        if getattr(pacman, "lives", 3) <= 0:
+                            game_over = True
+                            break
+
+                    if game_over:
+                        state["game_over"] = True
+                        state["winner"] = "fantomes"
+                        broadcast_to_room(room, state)
+                        continue  # On saute la suite de la boucle, car la partie est finie
                     if activate_super_power:
                         state["activate_super_power"] = True
                         # Diffuser à tous les clients de la room quand un super pouvoir est activé

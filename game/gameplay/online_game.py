@@ -6,7 +6,7 @@ from common.protocols import Protocols
 from game.player_online import Player
 from game.map import MAP_SURFACE
 from game.ui.chat_box import ChatBox
-from game.ui.components import display_loading_screen, draw_button, game_over
+from game.ui.components import display_loading_screen, draw_button, game_over, you_win
 
 def update_game_state_from_server(state, players, current_player_id, coins, fruits, chat_box=None):
     """Synchronise l'état local du jeu avec les données du serveur"""
@@ -195,12 +195,38 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
         
         # Synchroniser l'état du jeu avec les données du serveur
         update_game_state_from_server(response, players, current_player_id, coins, fruits, chat_box)
+        if response.get("game_over"):
+            winner = response.get("winner")
+            if winner == "fantomes":
+                if current_player.role.lower().startswith("pacman"):
+                    game_over(current_player.score, screen, font)
+                else:
+                    you_win(current_player.score, screen, font)
+            elif winner == "pacman":  # (au cas où tu ajoutes la victoire Pacman plus tard)
+                if current_player.role.lower().startswith("pacman"):
+                    you_win(current_player.score, screen, font)
+                else:
+                    game_over(current_player.score, screen, font)
+            return  # On quitte la partie !
         
         # Vérifier s'il y a des messages de chat entrants
         try:
             incoming_data = n.receive_json_non_blocking()
             if incoming_data:
                 update_game_state_from_server(incoming_data, players, current_player_id, coins, fruits, chat_box)
+                if response.get("game_over"):
+                    winner = response.get("winner")
+                    if winner == "fantomes":
+                        if current_player.role.lower().startswith("pacman"):
+                            game_over(current_player.score, screen, font)
+                        else:
+                            you_win(current_player.score, screen, font)
+                    elif winner == "pacman":  # (au cas où tu ajoutes la victoire Pacman plus tard)
+                        if current_player.role.lower().startswith("pacman"):
+                            you_win(current_player.score, screen, font)
+                        else:
+                            game_over(current_player.score, screen, font)
+                    return  # On quitte la partie !
         except Exception as e:
             print(f"Erreur lors de la réception des données: {e}")
         
