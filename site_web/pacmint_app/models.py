@@ -8,18 +8,6 @@ class Player(models.Model):
     def __str__(self):
         return self.user.username
 
-class Score(models.Model):
-    RESULT_CHOICES = [
-        ('win', 'Victoire'),
-        ('lose', 'Défaite'),
-    ]
-    player = models.ForeignKey(User, on_delete=models.CASCADE)
-    value = models.IntegerField()
-    result = models.CharField(max_length=10, choices=RESULT_CHOICES, default='win')
-    date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.player.username} - {self.value}"
 
 class Map(models.Model):
     map_id = models.AutoField(primary_key=True)

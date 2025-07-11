@@ -1,7 +1,26 @@
-FROM python:3.9-slim
+FROM python:3.12-slim
+
+# Installer les dépendances système
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Définir le répertoire de travail
 WORKDIR /app
-COPY site_web/requirements.txt .
+
+# Copier les fichiers nécessaires
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY site_web/ .
-EXPOSE 8080
-CMD ["sh", "-c", "python manage.py makemigrations && python manage.py migrate && gunicorn site_web.wsgi:application --bind 0.0.0.0:8080"]
+
+COPY . .
+
+# Collecte des fichiers statiques et migration
+RUN python manage.py collectstatic --noinput
+RUN python manage.py makemigrations
+RUN python manage.py migrate
+
+# Lancer le serveur avec Gunicorn
+CMD ["gunicorn", "site_web.wsgi:application", "--bind", "0.0.0.0:8000"]
+
+EXPOSE 8000

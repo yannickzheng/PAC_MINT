@@ -1,5 +1,7 @@
-Django
+Django>=5.1.5
+django-environ
+psycopg2-binary
 django-crispy-forms
-django-debug-toolbar
 crispy-bootstrap5
+django-debug-toolbar
 gunicorn>=23.0.0
