@@ -2,6 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from ..models import Friend
+from django.contrib import messages
+
 
 @login_required
 def send_friend_request(request, username):
@@ -35,3 +37,29 @@ def friends_view(request):
         "incoming_requests": incoming,
         "suggestions": suggestions,
     })
+
+@login_required
+def add_friend(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        if username == request.user.username:
+            messages.error(request, "Vous ne pouvez pas vous ajouter vous-même.")
+            return redirect('pacmint_app:friends')
+
+        try:
+            friend_user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            messages.error(request, "Aucun utilisateur avec ce nom.")
+            return redirect('pacmint_app:friends')
+
+        # Vérifie si une relation existe déjà
+        already_requested = Friend.objects.filter(player=request.user, friend=friend_user).exists()
+        already_received = Friend.objects.filter(player=friend_user, friend=request.user).exists()
+
+        if already_requested or already_received:
+            messages.info(request, "Une relation existe déjà avec cet utilisateur.")
+        else:
+            Friend.objects.create(player=request.user, friend=friend_user, status='pending')
+            messages.success(request, f"Demande envoyée à {username}.")
+
+    return redirect('pacmint_app:friends')

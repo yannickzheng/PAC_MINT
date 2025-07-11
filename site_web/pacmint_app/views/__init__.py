@@ -9,4 +9,5 @@ from .friends import (
     friends_view,
     send_friend_request,
     accept_friend_request,
+    add_friend,
 )

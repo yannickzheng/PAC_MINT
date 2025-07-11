@@ -1,9 +1,25 @@
 {% extends "base.html" %}
+
 {% block subtitle %}
     <h2>Mes Amis</h2>
 {% endblock %}
 
 {% block main %}
+<!-- Formulaire d'ajout d'ami par pseudo -->
+<div class="card bg-dark text-white border-warning mb-4">
+    <div class="card-header bg-warning text-dark fw-bold">Ajouter un ami</div>
+    <div class="card-body">
+        <form method="post" action="{% url 'pacmint_app:add_friend' %}">
+            {% csrf_token %}
+            <div class="input-group">
+                <input type="text" name="username" class="form-control" placeholder="Nom d'utilisateur" required>
+                <button type="submit" class="btn btn-warning">Envoyer la demande</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des amis acceptés -->
 <h3>Amis acceptés :</h3>
 <ul>
     {% for f in friends %}
@@ -13,6 +29,7 @@
     {% endfor %}
 </ul>
 
+<!-- Demandes reçues en attente -->
 <h3>Demandes en attente :</h3>
 <ul>
     {% for req in incoming_requests %}
@@ -25,6 +42,7 @@
     {% endfor %}
 </ul>
 
+<!-- Suggestions d'utilisateurs -->
 <h3>Suggestions :</h3>
 <ul>
     {% for user in suggestions %}
