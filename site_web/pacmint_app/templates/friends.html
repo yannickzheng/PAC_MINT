@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block subtitle %}
+    <h2>Mes Amis</h2>
+{% endblock %}
+
+{% block main %}
+<h3>Amis acceptés :</h3>
+<ul>
+    {% for f in friends %}
+        <li>{{ f.friend.username }}</li>
+    {% empty %}
+        <li>Aucun ami pour l'instant.</li>
+    {% endfor %}
+</ul>
+
+<h3>Demandes en attente :</h3>
+<ul>
+    {% for req in incoming_requests %}
+        <li>
+            {{ req.player.username }}
+            <a href="{% url 'pacmint_app:accept_friend' req.player.username %}" class="btn btn-sm btn-success">Accepter</a>
+        </li>
+    {% empty %}
+        <li>Aucune demande.</li>
+    {% endfor %}
+</ul>
+
+<h3>Suggestions :</h3>
+<ul>
+    {% for user in suggestions %}
+        <li>
+            {{ user.username }}
+            <a href="{% url 'pacmint_app:add_friend' user.username %}" class="btn btn-sm btn-primary">Ajouter</a>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}
