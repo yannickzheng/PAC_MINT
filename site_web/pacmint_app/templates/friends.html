@@ -23,7 +23,10 @@
 <h3>Amis acceptés :</h3>
 <ul>
     {% for f in friends %}
-        <li>{{ f.friend.username }}</li>
+        <li>
+            {{ f.friend.username }}
+            <a href="{% url 'pacmint_app:friend_stats' f.friend.username %}" class="btn btn-sm btn-info">Voir stats</a>
+        </li>
     {% empty %}
         <li>Aucun ami pour l'instant.</li>
     {% endfor %}

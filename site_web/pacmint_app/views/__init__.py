@@ -11,3 +11,4 @@ from .friends import (
     accept_friend_request,
     add_friend,
 )
+from .friend_profile_view import friend_profile_view
