@@ -92,52 +92,58 @@ class ChatBox:
         """Dessiner le chat"""
         if not self.is_visible:
             return
-        
-        chat_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-        
-        # Fond du chat
-        pygame.draw.rect(chat_surface, self.bg_color, (0, 0, self.width, self.height))
-        pygame.draw.rect(chat_surface, self.border_color, (0, 0, self.width, self.height), 1)
-        
-        # Zone de saisie
-        input_y = self.height - self.input_area_height - 2
-        input_color = self.input_active_color if self.is_active else self.input_bg_color
-        pygame.draw.rect(chat_surface, input_color, (2, input_y, self.width - 4, self.input_area_height))
-        
-        # Texte de saisie
-        input_text = self.current_input
+
         if self.is_active:
-            input_text += "|"
+            chat_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            # Fond bien visible pour focus (plus opaque, genre 160-200)
+            pygame.draw.rect(chat_surface, (0, 0, 0, 200), (0, 0, self.width, self.height))
+            pygame.draw.rect(chat_surface, self.border_color, (0, 0, self.width, self.height), 1)
         
-        if input_text:
-            text_surface = self.small_font.render(input_text[:50], True, self.text_color)  # Limiter l'affichage
-            chat_surface.blit(text_surface, (5, input_y + 3))
-        elif self.is_active:
-            placeholder = self.small_font.render("Tapez votre message...", True, (100, 100, 100))
-            chat_surface.blit(placeholder, (5, input_y + 3))
-        else:
-            hint = self.small_font.render("Appuyez sur 'T' pour chatter", True, (100, 100, 100))
-            chat_surface.blit(hint, (5, input_y + 3))
+            # Zone de saisie
+            input_y = self.height - self.input_area_height - 2
+            input_color = self.input_active_color
+            pygame.draw.rect(chat_surface, input_color, (2, input_y, self.width - 4, self.input_area_height))
         
-        # Messages
-        message_y = self.message_area_height - 20
-        visible_messages = self.messages[-15:]  # Afficher les 15 derniers messages
+            # Texte de saisie
+            input_text = self.current_input + "|"
+            if input_text:
+                text_surface = self.small_font.render(input_text[:50], True, (255, 255, 255))
+                chat_surface.blit(text_surface, (5, input_y + 3))
+            else:
+                placeholder = self.small_font.render("Tapez votre message...", True, (200, 200, 200))
+                chat_surface.blit(placeholder, (5, input_y + 3))
         
-        for message in reversed(visible_messages):
-            if message_y < 5:
-                break
-            
-            # Découper le message en lignes si nécessaire
-            lines = self.wrap_text(message["formatted"], self.width - 10)
-            
-            for line in reversed(lines):
+            # Messages
+            message_y = self.message_area_height - 20
+            visible_messages = self.messages[-15:]  # Afficher les 15 derniers messages
+        
+            for message in reversed(visible_messages):
                 if message_y < 5:
                     break
-                text_surface = self.small_font.render(line, True, self.text_color)
-                chat_surface.blit(text_surface, (5, message_y))
-                message_y -= 16
+            
+                # Découper le message en lignes si nécessaire
+                lines = self.wrap_text(message["formatted"], self.width - 10)
+            
+                for line in reversed(lines):
+                    if message_y < 5:
+                        break
+                    text_surface = self.small_font.render(line, True, self.text_color)
+                    chat_surface.blit(text_surface, (5, message_y))
+                    message_y -= 16
         
-        screen.blit(chat_surface, (self.x, self.y))
+            screen.blit(chat_surface, (self.x, self.y))
+            return
+        # ----- Mode input inactif : juste overlay des messages (pas de boîte) -----
+        overlay_x = self.x + 5
+        overlay_y = self.y + 10
+        visible_overlay = self.messages[-15:]  # Afficher 15 derniers messages
+        for message in visible_overlay:
+            lines = self.wrap_text(message["formatted"], self.width - 20)
+            for line in lines:
+                # Texte blanc, ombre légère si tu veux (optionnel)
+                text_surface = self.small_font.render(line, True, (0, 0, 0))
+                screen.blit(text_surface, (overlay_x, overlay_y))
+                overlay_y += 18
     
     def wrap_text(self, text, max_width):
         """Découper le texte en lignes pour qu'il rentre dans la largeur"""
