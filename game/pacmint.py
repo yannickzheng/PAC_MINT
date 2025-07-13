@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pygame
 from common.global_variable import WIDTH, HEIGHT
 from game.core.assets import load_game_assets
-from game.menus.main_menu import main_menu
+from game.menus.main_menu import main_menu, select_role, select_online_role
 from game.menus.online_menu import online_menu, create_game, join_game
 from game.gameplay.offline_game import offline_game
 from game.gameplay.online_game import main_game
@@ -44,40 +44,44 @@ def main():
             # Mode en ligne - navigation dans les sous-menus
             while True:
                 online_choice = online_menu(screen, assets['background_image'], font)
-                
                 if online_choice == "create":
                     # Créer une partie
-                    create_choice = create_game(screen, assets['background_image'], font)
-                    if create_choice == "start":
+                    role = select_online_role(screen, font)
+                    if role == "back":
+                        continue
+                    else:
                         main_game(
-                            is_created_game=True, 
+                            is_created_game=True,
                             game_code=None,
-                            screen=screen, 
+                            screen=screen,
                             font=font,
                             coin_image=assets['coin_image'],
                             fruit_image=assets['fruit_image'],
                             coin_offset=assets['coin_offset'],
-                            fruit_offset=assets['fruit_offset']
+                            fruit_offset=assets['fruit_offset'],
+                            role = role
                         )
-                    elif create_choice == "back":
-                        continue
-                
                 elif online_choice == "join":
                     # Rejoindre une partie
                     join_result = join_game(screen, assets['background_image'], font)
                     if join_result == "back":
                         continue
                     elif join_result:  # Code de partie saisi
-                        main_game(
-                            is_created_game=False, 
-                            game_code=join_result,
-                            screen=screen, 
-                            font=font,
-                            coin_image=assets['coin_image'],
-                            fruit_image=assets['fruit_image'],
-                            coin_offset=assets['coin_offset'],
-                            fruit_offset=assets['fruit_offset']
-                        )
+                        role = select_online_role(screen, font)
+                        if role == "back":
+                            continue
+                        else:
+                            main_game(
+                                is_created_game=False,
+                                game_code=join_result,
+                                screen=screen,
+                                font=font,
+                                coin_image=assets['coin_image'],
+                                fruit_image=assets['fruit_image'],
+                                coin_offset=assets['coin_offset'],
+                                fruit_offset=assets['fruit_offset'],
+                                role =role
+                            )
                 
                 elif online_choice == "back":
                     break

@@ -3,10 +3,7 @@ from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
 from game.map import MAP_DATA
 import heapq
 import math
-import pygame
-from common.global_variable import CELL_SIZE
 from game.utils.helpers import distance
-
 
 class Player:
     def __init__(self, ip, tcp_port, role, position):
@@ -27,7 +24,7 @@ class Player:
         self.size = CELL_SIZE
         self.hitbox_size = CELL_SIZE // 2
         self.speed = CELL_SIZE // 6
-
+        self.direction = "right"
 
         # Chargement des images
         self.image_right = pygame.transform.scale(pygame.image.load("images/pacman - right.png"), (self.size, self.size))
@@ -41,9 +38,10 @@ class Player:
         self.image_super_up = pygame.transform.scale(pygame.image.load("images/Black Pacman-up.png"), (self.size, self.size))
         self.image_super_down = pygame.transform.scale(pygame.image.load("images/Black Pacman-down.png"), (self.size, self.size))
 
-    def move(self, players):
-        """Déplace le joueur (Pacman ou Fantôme)"""
-        pass
+    def update_position(self, pos):
+        self.position = tuple(pos)
+        self.x, self.y = pos
+        self.coord = (self.x, self.y)
 
     def is_wall(self, x, y):
         cell_size = self.size
@@ -51,11 +49,10 @@ class Player:
 
         try:
             return (
-                    MAP_DATA[int((y + margin) // cell_size)][int((x + margin) // cell_size)] == 1 or
-                    MAP_DATA[int((y + margin) // cell_size)][int((x + self.size - margin) // cell_size)] == 1 or
-                    MAP_DATA[int((y + self.size - margin) // cell_size)][int((x + margin) // cell_size)] == 1 or
-                    MAP_DATA[int((y + self.size - margin) // cell_size)][
-                        int((x + self.size - margin) // cell_size)] == 1
+                MAP_DATA[int((y + margin) // cell_size)][int((x + margin) // cell_size)] == 1 or
+                MAP_DATA[int((y + margin) // cell_size)][int((x + self.size - margin) // cell_size)] == 1 or
+                MAP_DATA[int((y + self.size - margin) // cell_size)][int((x + margin) // cell_size)] == 1 or
+                MAP_DATA[int((y + self.size - margin) // cell_size)][int((x + self.size - margin) // cell_size)] == 1
             )
         except IndexError:
             return True
@@ -72,7 +69,7 @@ class Player:
         # heuristique Manhattan #
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-    def find_path(self, start, goal, map_data,  allow_goal_occupied=False):
+    def find_path(self, start, goal, map_data, allow_goal_occupied=False):
         "Algorithme A* basique pour trouver un chemin sur ta MAP_DATA"
         open_set = []
         heapq.heappush(open_set, (0, start))
@@ -140,10 +137,9 @@ class Player:
                 self.y += step_y
         self.update()
 
-
 class PacMan(Player):
     def __init__(self, ip, tcp_port, position):
-        super().__init__(ip, tcp_port, "PacMan", position)
+        super().__init__(ip, tcp_port, "pacman", position)
         self.lives = 3  # PacMan commence avec 3 vies
         self.score = 0
         self.super_power_active = False
@@ -264,7 +260,7 @@ class PacMan(Player):
         pacman_center = (self.x + self.size // 2, self.y + self.size // 2)
 
         for player in players.values():
-            if player != self and player.is_phantom:  # Si c'est un fantôme
+            if player != self and isinstance(player, Ghost):  # Si c'est un fantôme
                 ghost_center = (player.x + player.size // 2, player.y + player.size // 2)
                 dx = pacman_center[0] - ghost_center[0]
                 dy = pacman_center[1] - ghost_center[1]
@@ -316,6 +312,7 @@ class PacMan(Player):
             self.invincibility_timer -= 1
             if self.invincibility_timer <= 0:
                 self.invincible = False
+        self.coord = (self.x, self.y)
 
     def check_collision_with_items(self, coins, fruits):
         """Gère les collisions de Pacman avec les pièces et les fruits."""
@@ -341,11 +338,9 @@ class PacMan(Player):
                     self.invincible = True
                     self.invincibility_timer = 180
 
-
-
 class Ghost(Player):
-    def __init__(self, ip, tcp_port, position):
-        super().__init__(ip, tcp_port, "Fantôme", position)
+    def __init__(self, ip, tcp_port, position, role="Fantome"):
+        super().__init__(ip, tcp_port, role, position)
         self.lives = float('inf')  # Fantômes ont des vies illimitées
         self.is_eaten = False
         self.respawn_target = None
@@ -428,8 +423,8 @@ class Ghost(Player):
         # Parmi les fantômes qui sont déjà en cours de respawn,
         # on recense leurs cibles actuelles pour ne pas les réutiliser.
         used = {
-        other.respawn_target
-        for other in players.values()
+            other.respawn_target
+            for other in players.values()
             if isinstance(other, Ghost) and other.is_eaten and other.respawn_target is not None
         }
 
@@ -465,6 +460,7 @@ class Ghost(Player):
                 pacman.invincible = True
                 pacman.invincibility_timer = 180
                 self.score += 1000
+
     def update_eaten_state(self):
         """Déplace le fantôme mangé vers le centre en ligne droite sans collision."""
         if not self.is_eaten or self.respawn_target is None:

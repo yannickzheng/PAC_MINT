@@ -61,3 +61,15 @@ class Network:
         if self.has_data_waiting():
             return self.receive_json()
         return None
+
+    def close(self):
+        try:
+            if hasattr(self, "sockfile") and self.sockfile:
+                self.sockfile.close()
+        except Exception:
+            pass
+        try:
+            if hasattr(self, "sock") and self.sock:
+                self.sock.close()
+        except Exception:
+            pass

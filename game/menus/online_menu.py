@@ -3,14 +3,21 @@ import sys
 from common.global_variable import WIDTH, HEIGHT, BLUE, CYAN, PURPLE
 
 from game.ui.components import draw_button
+from game.menus.main_menu import select_online_role
 
 def create_game(screen, image, font):
     """Menu de création de partie"""
     game_code = None
     run = True
-
+    # Charger et préparer le bandeau "Mode En Ligne"
+    header_img = pygame.transform.scale(
+        pygame.image.load("images/mode-en-ligne.png").convert_alpha(),
+        (400, 80)
+    )
+    header_rect = header_img.get_rect(center=(WIDTH // 2, 70))
     while run:
         screen.blit(image, (0, 0))
+        screen.blit(header_img, header_rect)
         draw_button("Lancer la partie", 550, 600, 200, 50, BLUE, CYAN, screen, font)
         draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen, font)
         
@@ -36,7 +43,11 @@ def create_game(screen, image, font):
 def join_game(screen, image, font):
     """Menu pour rejoindre une partie"""
     from common.global_variable import WHITE
-    
+    header_img = pygame.transform.scale(
+        pygame.image.load("images/mode-en-ligne.png").convert_alpha(),
+        (400, 80)
+    )
+    header_rect = header_img.get_rect(center=(WIDTH // 2, 70))
     run = True
     game_code = ""
     input_active = False
@@ -47,7 +58,7 @@ def join_game(screen, image, font):
 
     while run:
         screen.blit(image, (0, 0))
-
+        screen.blit(header_img, header_rect)
         draw_button("Rejoindre", 550, 600, 200, 50, BLUE, CYAN, screen, font)
         draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen, font)
 
@@ -89,15 +100,18 @@ def join_game(screen, image, font):
 
 def online_menu(screen, image, font):
     """Page de sélection pour le mode en ligne (créer ou rejoindre une partie)"""
+
+    # Titre
+    header_img = pygame.transform.scale(
+        pygame.image.load("images/mode-en-ligne.png").convert_alpha(),
+        (400, 80)
+    )
+    header_rect = header_img.get_rect(center=(WIDTH // 2, 70))
     run = True
     while run:
         screen.blit(image, (0, 0))
-        
-        # Titre
-        title_font = pygame.font.SysFont("Arial", 48, bold=True)
-        title_text = title_font.render("Mode En Ligne", True, (255, 255, 0))
-        screen.blit(title_text, (WIDTH//2 - title_text.get_width()//2, HEIGHT//2 - 200))
-        
+        screen.blit(header_img, header_rect)
+
         # Boutons positionnés en bas de l'écran
         draw_button("Créer une partie", 250, 600, 200, 50, BLUE, CYAN, screen, font)
         draw_button("Rejoindre une partie", 550, 600, 200, 50, BLUE, CYAN, screen, font)
