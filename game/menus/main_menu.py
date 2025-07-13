@@ -104,18 +104,6 @@ def select_online_role(screen, font, taken_roles = None):
                     screen, font)
         draw_button("Retour", 520, 650, 200, 50, BLUE, CYAN, screen, font)
 
-
-
-
-
-
-        """draw_button("Pacman", 250, 400, 200, 50, BLUE, CYAN, screen, font)
-        draw_button("Fantôme 1", 800, 250, 200, 50, BLUE, CYAN, screen, font)
-        draw_button("Fantôme 2", 800, 350, 200, 50, BLUE, CYAN, screen, font)
-        draw_button("Fantôme 3", 800, 450, 200, 50, BLUE, CYAN, screen, font)
-        draw_button("Fantôme 4", 800, 550, 200, 50, BLUE, CYAN, screen, font)
-        draw_button("Retour", 520, 650, 200, 50, BLUE, CYAN, screen, font)"""
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False

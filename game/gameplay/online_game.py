@@ -318,11 +318,11 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
             player.draw(screen, playerControlled)
 
         # Affiche le code de la partie sous le score
-        game_code_text = font.render(f"Code de la partie: {game_code}", True, (255, 255, 0))
+        game_code_text = font.render(f"Code de la partie: {game_code}", True, (0, 0, 255))
         screen.blit(game_code_text, (10, 40))
 
         # Afficher le score du joueur actuel
-        score_text = font.render(f"Score: {playerControlled.score}", True, (255, 255, 255))
+        score_text = font.render(f"Score: {playerControlled.score}", True, (0, 0, 255))
         screen.blit(score_text, (10, 10))
         lives_text = font.render(f"Vies: {playerControlled.lives}", True, (0, 0, 255))
         screen.blit(lives_text, (WIDTH - 180, 1))
