@@ -33,7 +33,7 @@ class Player:
         # Chargement des images de base
         self.pacman_base_image = pygame.transform.scale(pygame.image.load("images/pacman_right.png"), (self.size, self.size))
         self.super_pacman_base_image = pygame.transform.scale(pygame.image.load("images/pacman_super_right.png"), (self.size, self.size))
-        self.image_red_ghost = pygame.transform.scale(pygame.image.load("images/red_ghost.png"), (self.size, self.size))
+        self.image_red_ghost = pygame.transform.scale(pygame.image.load("images/red_ghost2.png"), (self.size, self.size))
         
         self.image_right = self.pacman_base_image
         self.image_left = pygame.transform.flip(self.pacman_base_image, True, False)

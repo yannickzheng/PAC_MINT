@@ -1,4 +1,4 @@
-from game.player_online import Player
+from game.player import Player, PacMan, Ghost
 from game.items import ServerItemManager
 import random
 import time
@@ -22,8 +22,9 @@ class RoomManager:
         self.rooms[new_room.code] = new_room
         return new_room
 
-    def join(self, player_identifier, room_identifier):
+    def join(self, player_identifier, room_identifier, role = None):
         """Ajout d'un joueur dans une salle"""
+        print(f"[DEBUG][RoomManager] join: player_id={player_identifier}, room_id={room_identifier}, role={role}")
         # Retirer le joueur de toutes les salles où il serait présent
         for room in self.rooms.values():
             #On regarde si le joueur est dans un salon
@@ -32,7 +33,7 @@ class RoomManager:
         #ATTENTION room_identifer est un str mais les clés du dictiononnaires rooms sont des int
         room = self.rooms.get(int(room_identifier))
         if room:
-            return room.join(player_identifier)
+            return room.join(player_identifier, role = role)
         return False
 
     def leave(self, player_identifier, room_identifier):
@@ -114,29 +115,21 @@ class Room:
         if len(self.players) == 0:
             return True
 
-    def join(self, player_id):
+    def join(self, player_id, role = None):
+        print(f"[DEBUG][Room] join: player_id={player_id}, role={role}")
         if not self.is_full():
             # Déterminer le rôle en fonction de l'ordre d'arrivée
             role_keys = list(self.initial_positions.keys())
-            role = role_keys[len(self.players)]  # ex : "pacman", "fantome_1", etc.
+            chosen_role = None
             position = self.initial_positions[role]
-            player = Player(ip=None, tcp_port=None, role=role, position=position)
-            
+
             if "pacman" in role.lower():
-                player.lives = 3
-                player.score = 0
-                player.super_power_active = False
-                player.super_power_timer = 0
-                player.invincible = False
-                player.invincibility_timer = 0
-                player.direction = 'right'
+                player = PacMan(ip=None, tcp_port=None, position=position)
+            elif "fantome" in role.lower():
+                player = Ghost(ip=None, tcp_port=None, position=position)
             else:
-                player.lives = float('inf')
-                player.score = 0
-                player.is_eaten = False
-                player.respawn_target = None
-                player.direction = 'right'
-            
+                player = Player(ip=None, tcp_port=None, role=role, position=position)
+
             self.players[player_id] = player
             return True
         return False

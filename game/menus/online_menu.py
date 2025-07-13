@@ -3,6 +3,7 @@ import sys
 from common.global_variable import WIDTH, HEIGHT, BLUE, CYAN, PURPLE
 
 from game.ui.components import draw_button
+from game.menus.main_menu import select_online_role
 
 def create_game(screen, image, font):
     """Menu de création de partie"""

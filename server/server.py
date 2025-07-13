@@ -9,6 +9,8 @@ import time
 from _thread import start_new_thread
 from rooms import RoomManager
 from common.protocols import Protocols
+from game.utils.helpers import distance
+from common.global_variable import CELL_SIZE
 
 import threading
 
@@ -113,22 +115,14 @@ def broadcast_to_room(room, state, exclude_player=None):
                 logger.error(f"Erreur lors de la diffusion au joueur {pid}: {e}")
 
 
-def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
-    """
-       Fonction permettant de gérer les connexions des clients
-       :param connexion: socket de connexion
-       :param joueur_actuel: joueur actuel (entier)
-       :return:
-    """
+def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
     logger.info(f"Connexion établie avec le joueur {joueur_actuel} depuis {address}")
-
-    #Sécurité, on impose que room_id est bien un int
     room_id = int(room_id)
-
     try:
-        # On vérifie que la salle existe bien sinon on ferme la session
+        # Vérifie que la salle existe bien sinon on ferme la session
         if not room_manager.room_exists(room_id):
             logger.warning(f"Partie introuvable pour room_id={room_id}")
+            logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")
             connexion.close()
             return
 
@@ -142,21 +136,20 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
             player.tcp_port = address[1]
             player.tcp_socket = connexion
 
-        #Le serveur envoie les postions initiales aux joueurs
-        welcome = build_state(room, joueur_actuel,with_action= True, initial=True)
+        # Le serveur envoie les positions initiales aux joueurs
+        welcome = build_state(room, joueur_actuel, with_action=True, initial=True)
         send_json(connexion, welcome)
 
         while True:
             try:
-                #On écoute le client
+                # On écoute le client
                 raw_data = recv_json(connexion)
 
                 if not raw_data.get("command", False):
                     logger.info(f"Déconnexion du joueur {joueur_actuel}")
                     break
-                #print(raw_data)
+
                 if raw_data.get("command") == Protocols.Request.UPDATE_POSITION:
-                    #print(raw_data)
                     payload = raw_data.get("message", {})
                     activate_super_power = False
 
@@ -164,6 +157,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                         pid = pdata["id"]
                         pos = pdata["pos"]
                         direction = pdata.get("direction", "right")
+
                         if pid in room.players:
                             player = room.players[pid]
                             player.update_position(pos)
@@ -171,39 +165,30 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                             logger.debug(f"Position et direction mises à jour pour le joueur {pid}: {pos}, direction: {direction}")
 
                             # Vérifie la collecte d'items pour ce joueur (uniquement si c'est Pacman)
-                            if player.role == "pacman":
-                                collected = room.item_manager.check_collision(player)
-                                if collected["coins"]:
-                                    player.score += 10 * len(collected["coins"])
-                                if collected["fruits"]:
-                                    player.score += 50 * len(collected["fruits"])
-                                    activate_super_power = True
-                                    player.super_power_active = True
-                                    player.super_power_timer = 300  # 5 secondes à 60 FPS
+                            if "pacman" in player.role.lower():
+                                server_check_item_collision(room, player)
 
                     # Mise à jour des états des joueurs (timers, etc.)
                     update_player_states(room)
-                    
-                    # GESTION COLLISION FANTÔME/PACMAN 
+
+                    # GESTION COLLISION FANTÔME/PACMAN
                     collision_result = check_pacman_ghost_collision(room)
                     event = None
-                    
+
                     if collision_result["ghost_eaten"]:
-                        # Pacman mange un fantôme
                         pacman = collision_result["ghost_eaten"]["pacman"]
                         ghost = collision_result["ghost_eaten"]["ghost"]
                         eat_ghost(pacman, ghost, room)
                         event = "ghost_eaten"
                         logger.info(f"Fantôme mangé ! Score Pacman : {pacman.score}")
                     elif collision_result["pacman_hit"]:
-                        # Pacman est touché par un fantôme
                         pacman_touche = collision_result["pacman_hit"]
                         pacman_touche.lives = getattr(pacman_touche, "lives", 3) - 1
                         pacman_touche.invincible = True
                         pacman_touche.invincibility_timer = 180  # 3 secondes à 60 FPS
                         logger.info(f"Pacman touché ! Vies restantes : {pacman_touche.lives}")
                         event = "pacman_hit"
-                    
+
                     # Construire l'état de jeu final
                     state = sync_game_state(room, joueur_actuel, event=event)
                     pacmans = [p for p in room.players.values() if "pacman" in p.role.lower()]
@@ -218,60 +203,59 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address = None):
                         state["winner"] = "fantomes"
                         broadcast_to_room(room, state)
                         continue  # On saute la suite de la boucle, car la partie est finie
+
                     if activate_super_power:
                         state["activate_super_power"] = True
-                        # Diffuser à tous les clients de la room quand un super pouvoir est activé
                         broadcast_to_room(room, state)
                     elif event == "pacman_hit" or event == "ghost_eaten":
-                        # Diffuser à tous les clients quand Pacman est touché ou mange un fantôme
                         broadcast_to_room(room, state)
                     else:
-                        # Envoyer la réponse uniquement au client qui a fait la requête
-                        send_json(connexion, state)
-                
+                        broadcast_to_room(room, state)
+
                 elif raw_data.get("command") == Protocols.Request.SEND_CHAT_MESSAGE:
+                    logger.info(f"[SERVER] Traitement de la commande : {raw_data.get('command')}")
                     # Gestion des messages de chat
                     try:
                         message_text = raw_data.get("message", "").strip()
                         if message_text and len(message_text) <= 200:  # Limiter la taille des messages
-                            # Ajouter le message au chat de la room
                             chat_message = room.add_chat_message(joueur_actuel, message_text)
-                            
-                            # Créer la réponse pour diffuser le message
+
                             chat_response = {
                                 "action": "chat_message",
                                 "chat_message": chat_message
                             }
-                            
-                            # On diffuse le message à tous les joueurs de la room sauf l'expéditeur
+
                             broadcast_to_room(room, chat_response, exclude_player=joueur_actuel)
-                            
-                            # Envoyer une confirmation avec le message à l'expéditeur
+
                             send_json(connexion, {
-                                "status": "ok", 
+                                "status": "ok",
                                 "message": "Message sent",
                                 "action": "chat_message",
                                 "chat_message": chat_message
                             })
                         else:
-                            # Message trop long ou vide
                             send_json(connexion, {"status": "error", "message": "Invalid message"})
                     except Exception as e:
                         send_json(connexion, {"status": "error", "message": "Server error"})
-                    
 
-            except Exception as erreur:
-                logger.error(f"Erreur avec le joueur {joueur_actuel} : {erreur}")
+            except ConnectionError as ce:
+                logger.info(f"[Déconnexion] Socket fermée pour le joueur {joueur_actuel} : {ce}")
                 break
-
-        connexion.close()
-        room.leave(joueur_actuel)  # Supprime le joueur de la salle
-        logger.info(f"Connexion fermée pour le joueur {joueur_actuel}")
+            except Exception as erreur:
+                logger.error(f"Erreur serveur avec le joueur {joueur_actuel} : {erreur}")
+                import traceback
+                logger.error(f"Exception attrapée: {erreur}\n{traceback.format_exc()}")
+                break
 
 
     except Exception as e:
         logger.error(f"Erreur dans la gestion de la partie : {e}")
+    finally:
+        logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")
         connexion.close()
+        room.leave(joueur_actuel)  # Supprime le joueur de la salle
+        logger.info(f"Connexion fermée pour le joueur {joueur_actuel}")
+
 
 def threaded_client(connexion, address):
     """
@@ -281,6 +265,7 @@ def threaded_client(connexion, address):
         raw_data = recv_json(connexion)
         if not raw_data:
             logger.warning("Connexion interrompue avant la réception des données.")
+            logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")
             connexion.close()
             return
 
@@ -294,29 +279,41 @@ def threaded_client(connexion, address):
             room_code = room.code
 
             player_id = str(uuid.uuid4())   # Identifiant unique pour le joueur
-            if room_manager.join(player_id, room_code) is not None:
+            role = None
+            if "message" in data and isinstance(data["message"], dict):
+                role = data["message"].get("role")
+            if room_manager.join(player_id, room_code, role = role) is not None:
                 #On envoie le code de la partie au joueur
                 send_json(connexion, {"status": "ok", "code": room_code})
                 start_new_thread(threaded_game_client, (connexion, player_id, room_code, address))
-                #return
+                return
             else:
                 send_json(connexion, {"status": "full"})
+                logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")
                 connexion.close()
+                return
 
         elif data["command"] == Protocols.Request.JOIN_ROOM:
             logger.info(f"Un joueur tente de rejoindre la room {data['message']}")
-            room_id = data["message"]
+            if isinstance(data["message"], dict):
+                room_id = data["message"].get("game_code") or data["message"].get("room_id") or data["message"]
+                role = data["message"].get("role")
+            else:
+                room_id = data["message"]
+                role = None
             player_id = str(uuid.uuid4())
-            if room_manager.join(player_id, room_id):
+            if room_manager.join(player_id, room_id, role=role):
                 send_json(connexion, {"status": "joined", "message": "Welcome to the room"})
-                threaded_game_client(connexion, player_id, room_id, address)
-                #return
+                start_new_thread(threaded_game_client, (connexion, player_id, room_id, address))
+                return
             else:
                 send_json(connexion, {"status": "full" if room_manager.room_exists(room_id) else "not_found"})
+                logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")
                 connexion.close()
                 return
     except Exception as e:
         logger.error(f"Erreur lors de la gestion d'un client : {e}")
+        logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")
         connexion.close()
 
 
@@ -336,6 +333,26 @@ def update_player_states(room):
             if player.super_power_timer <= 0:
                 player.super_power_active = False
                 logger.info(f"Super-pouvoir désactivé pour le joueur {pid}")
+
+def server_check_item_collision(room, pacman):
+    """Vérifie et gère la collision de pacman avec les pièces/fruits, modifie room.item_manager, et score pacman."""
+    coins_collected = []
+    fruits_collected = []
+    for coin in room.item_manager.coins[:]:
+        if distance(pacman.position[0],pacman.position[1], coin[0], coin[1]) < CELL_SIZE // 2 :  # à ajuster selon ton CELL_SIZE
+            coins_collected.append(coin)
+            room.item_manager.coins.remove(coin)
+    for fruit in room.item_manager.fruits[:]:
+        if distance(pacman.position[0],pacman.position[1], fruit[0], fruit[1]) < CELL_SIZE // 2:
+            fruits_collected.append(fruit)
+            room.item_manager.fruits.remove(fruit)
+            server_activate_super_power(pacman)  # à écrire
+    pacman.score += 10 * len(coins_collected)
+    pacman.score += 50 * len(fruits_collected)
+
+def server_activate_super_power(pacman, duration=300):
+    pacman.super_power_active = True
+    pacman.super_power_timer = duration
 
 def check_pacman_ghost_collision(room):
     """Vérifie les collisions entre Pacman et les fantômes."""
@@ -373,7 +390,7 @@ def eat_ghost(pacman, ghost, room):
     pacman.score += 200
     
     # Marquer le fantôme comme mangé
-    ghost.is_eaten = False # pour l'instant, je ne le marque pas comme mangé
+    ghost.is_eaten = True
         
     # Calculer une position de respawn au centre (adapté pour le serveur)
     center_x = 300  # Position centrale approximative
@@ -410,7 +427,3 @@ while True:
     logger.debug(f"Room Manager état actuel: {room_manager.rooms}")
     thread = threading.Thread(target=threaded_client, args=(connexion,address))
     thread.start()
-
-
-
-
