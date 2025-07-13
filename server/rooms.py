@@ -33,7 +33,8 @@ class RoomManager:
         #ATTENTION room_identifer est un str mais les clés du dictiononnaires rooms sont des int
         room = self.rooms.get(int(room_identifier))
         if room:
-            return room.join(player_identifier, role = role)
+            result = room.join(player_identifier, role=role)
+            return result  # On retourne l'objet réponse (ok ou erreur)
         return False
 
     def leave(self, player_identifier, room_identifier):
@@ -102,7 +103,12 @@ class Room:
         self.item_manager = ServerItemManager()
         self.chat_history = []
 
-
+    def is_role_taken(self, role):
+        """Vérifie si un rôle est déjà pris dans cette room."""
+        return any(
+            hasattr(p, "role") and p.role and p.role.lower() == role.lower()
+            for p in self.players.values()
+        )
     def update_position(self, role_key, new_pos):
         if role_key in self.players:
             self.players[role_key].update_position(new_pos)
@@ -115,24 +121,30 @@ class Room:
         if len(self.players) == 0:
             return True
 
-    def join(self, player_id, role = None):
+    def join(self, player_id, role=None):
         print(f"[DEBUG][Room] join: player_id={player_id}, role={role}")
+
+        # --- Utilisation de is_role_taken ---
+        if role and self.is_role_taken(role):
+            taken_roles = [p.role for p in self.players.values() if p.role]
+            print(f"[DEBUG][Room] join refusé: rôle {role} déjà pris. Rôles pris: {taken_roles}")
+            return {"status": "error", "reason": "role_taken", "message": f"Le rôle '{role}' est déjà pris dans cette salle.", "taken_roles": taken_roles}  # Rôle déjà pris : refuse l’entrée
+
         if not self.is_full():
-            # Déterminer le rôle en fonction de l'ordre d'arrivée
-            role_keys = list(self.initial_positions.keys())
-            chosen_role = None
             position = self.initial_positions[role]
 
             if "pacman" in role.lower():
                 player = PacMan(ip=None, tcp_port=None, position=position)
             elif "fantome" in role.lower():
-                player = Ghost(ip=None, tcp_port=None, position=position)
+                player = Ghost(ip=None, tcp_port=None, position=position, role = role)
             else:
                 player = Player(ip=None, tcp_port=None, role=role, position=position)
 
             self.players[player_id] = player
-            return True
-        return False
+            return {"status": "ok", "message": "Joueur ajouté à la salle"}
+
+        return {"status": "error", "reason": "room_full", "message": "La salle est pleine."}
+
 
     def leave(self, player_id):
         """Suppression d'un joueur de la salle"""

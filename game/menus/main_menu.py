@@ -57,8 +57,10 @@ def select_role(screen, font, mode="offline"):
 
         pygame.display.flip()
 
-def select_online_role(screen, font):
+def select_online_role(screen, font, taken_roles = None):
     roles = ["pacman", "fantome_1", "fantome_2", "fantome_3", "fantome_4"]
+    if taken_roles is None:
+        taken_roles = []
     run = True
     while run:
         screen.fill((0, 0, 0))
@@ -78,12 +80,41 @@ def select_online_role(screen, font):
         screen.blit(title_img, title_rect)
 
         # Afficher les boutons Pacman et Fantômes
-        draw_button("Pacman", 250, 400, 200, 50, BLUE, CYAN, screen, font)
+        color_disabled = (100, 100, 100)
+        color_active = CYAN
+        draw_button("Pacman", 250, 400, 200, 50,
+                    color_disabled if "pacman" in taken_roles else BLUE,
+                    color_disabled if "pacman" in taken_roles else color_active,
+                    screen, font)
+        draw_button("Fantôme 1", 800, 250, 200, 50,
+                    color_disabled if "fantome_1" in taken_roles else BLUE,
+                    color_disabled if "fantome_1" in taken_roles else color_active,
+                    screen, font)
+        draw_button("Fantôme2 ", 800, 350, 200, 50,
+                    color_disabled if "fantome_2" in taken_roles else BLUE,
+                    color_disabled if "fantome_2" in taken_roles else color_active,
+                    screen, font)
+        draw_button("Fantôme 3", 800, 450, 200, 50,
+                    color_disabled if "fantome_3" in taken_roles else BLUE,
+                    color_disabled if "fantome_3" in taken_roles else color_active,
+                    screen, font)
+        draw_button("Fantôme 4", 800, 550, 200, 50,
+                    color_disabled if "fantome_4" in taken_roles else BLUE,
+                    color_disabled if "fantome_4" in taken_roles else color_active,
+                    screen, font)
+        draw_button("Retour", 520, 650, 200, 50, BLUE, CYAN, screen, font)
+
+
+
+
+
+
+        """draw_button("Pacman", 250, 400, 200, 50, BLUE, CYAN, screen, font)
         draw_button("Fantôme 1", 800, 250, 200, 50, BLUE, CYAN, screen, font)
         draw_button("Fantôme 2", 800, 350, 200, 50, BLUE, CYAN, screen, font)
         draw_button("Fantôme 3", 800, 450, 200, 50, BLUE, CYAN, screen, font)
         draw_button("Fantôme 4", 800, 550, 200, 50, BLUE, CYAN, screen, font)
-        draw_button("Retour", 520, 650, 200, 50, BLUE, CYAN, screen, font)
+        draw_button("Retour", 520, 650, 200, 50, BLUE, CYAN, screen, font)"""
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

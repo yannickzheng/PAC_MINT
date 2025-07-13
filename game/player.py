@@ -339,8 +339,8 @@ class PacMan(Player):
                     self.invincibility_timer = 180
 
 class Ghost(Player):
-    def __init__(self, ip, tcp_port, position):
-        super().__init__(ip, tcp_port, "Fantome", position)
+    def __init__(self, ip, tcp_port, position, role="Fantome"):
+        super().__init__(ip, tcp_port, role, position)
         self.lives = float('inf')  # Fantômes ont des vies illimitées
         self.is_eaten = False
         self.respawn_target = None

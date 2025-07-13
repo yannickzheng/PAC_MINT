@@ -302,15 +302,23 @@ def threaded_client(connexion, address):
                 room_id = data["message"]
                 role = None
             player_id = str(uuid.uuid4())
-            if room_manager.join(player_id, room_id, role=role):
+            result = room_manager.join(player_id, room_id, role=role)
+            if isinstance(result, dict) and result.get("status") == "error":
+                send_json(connexion, result)  # On renvoie l'objet erreur tel quel (role_taken, room_full, ...)
+                logger.info(f"[SERVER] Refus JOIN_ROOM pour joueur {player_id}: {result}")
+                connexion.close()
+                return
+            elif result and isinstance(result, dict) and result.get("status") == "ok":
                 send_json(connexion, {"status": "joined", "message": "Welcome to the room"})
                 start_new_thread(threaded_game_client, (connexion, player_id, room_id, address))
                 return
             else:
                 send_json(connexion, {"status": "full" if room_manager.room_exists(room_id) else "not_found"})
-                logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")
+                logger.info(f"[SERVER] Fermeture connexion pour joueur {player_id}")
                 connexion.close()
                 return
+
+
     except Exception as e:
         logger.error(f"Erreur lors de la gestion d'un client : {e}")
         logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")

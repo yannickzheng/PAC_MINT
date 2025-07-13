@@ -7,9 +7,17 @@ from game.player import Player, PacMan, Ghost
 from game.map import MAP_SURFACE
 from game.ui.chat_box import ChatBox
 from game.ui.components import display_loading_screen, game_over, you_win
+from game.menus.main_menu import select_online_role
 
-def update_game_state_from_server(state, players, current_player_id, coins, fruits, chat_box=None):
-    """Synchronise l'état local du jeu avec les données du serveur"""
+def update_game_state_from_server(state, players, current_player_id, coins, fruits, role_to_player_id, player_id_to_role, chat_box=None):
+    """Synchronise l'état local du jeu avec les données du serveur
+    role_to_player_id et player_id_to_role sont des dicts partagés !"""
+    if role_to_player_id is not None and player_id_to_role is not None:
+        for data in state.get("players", []):
+            role = data["roles"].lower()
+            pid = data["id"]
+            role_to_player_id[role] = pid
+            player_id_to_role[pid] = role
     # Gestion des messages de chat
     if state.get("action") == "chat_message" and chat_box:
         chat_message = state.get("chat_message")
@@ -104,6 +112,9 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
                 new_player.is_eaten = data.get("is_eaten", False)
 
             players[pid] = new_player
+            role_to_player_id[role] = pid
+            player_id_to_role[pid] = role
+
             print(f"[CLIENT] Nouveau joueur ajouté : {pid}")
 
 
@@ -116,15 +127,33 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
     # Afficher un écran de chargement pendant la connexion
     display_loading_screen("Connexion au serveur...", screen, font)
 
-    n = Network()
     if not is_created_game:
-        display_loading_screen("Connexion à la partie en cours...", screen, font)
-        response = n.send_command(Protocols.Request.JOIN_ROOM, {"game_code": game_code, "role": role})
-        print(f"[CLIENT] Je tente de join la room avec le rôle: {role}")
-        print(response)
+        taken_roles = []
+        while True:
+            display_loading_screen("Connexion à la partie en cours...", screen, font)
+            n=Network()
+            response = n.send_command(Protocols.Request.JOIN_ROOM, {"game_code": game_code, "role": role})
+            print(f"[CLIENT] Je tente de join la room avec le rôle: {role}")
+            print("Réponse serveur :", response)
+            if response.get("status") in ("ok", "joined"):  # adapte selon ta logique serveur
+                break
+            else:
+                # Teste si la raison est "role déjà pris"
+                taken_roles = response.get("taken_roles", [])
+                # Ici, on passe la liste des rôles pris à select_online_role
+                nouveau_role = select_online_role(screen, font, taken_roles)
+                print("Rôle choisi après refus :", nouveau_role)
+                if nouveau_role == "back":
+                    n.close()
+                    return
+                role = nouveau_role
+                n.close()
+                continue
+
     # Si le joueur souhaite créer une partie, il envoie une demande au serveur
-    if is_created_game:
+    elif is_created_game:
         # Le client demande la création d'une partie au serveur
+        n = Network()
         display_loading_screen("Création de la partie en cours...", screen, font)
         print("Game started")
         response = n.send_command(Protocols.Request.CREATE_GAME,{"role": role})
@@ -144,6 +173,8 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
 
     # création de la liste des joueurs
     players = {}
+    role_to_player_id = {}
+    player_id_to_role = {}
     current_player_id = all_players_data["current_player_id"]
     print(f"[CLIENT] current_player_id (pour ce client) : {current_player_id}")
 
@@ -152,6 +183,7 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
     for data in all_players_data["players"]:
         print(f"[CLIENT] Initialisation du joueur : {data['id']} | rôle : {data['roles']} | pos : {data['pos']}")
         role = data["roles"].lower()
+        pid = data["id"]
         if "pacman" in role:
             player = PacMan(ip=data["ip"], tcp_port=data["tcp_port"], position=tuple(data["pos"]))
         elif "fantome" in role:
@@ -159,10 +191,13 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
         else:
             print(f"Erreur: rôle inconnu {role}")
             continue
-        player.id = data["id"]
+        player.id = pid
+        player.role = role
         player.score = data.get("score", 0)
         player.lives = data.get("lives", 3)
-        players[player.id] = player
+        players[pid] = player
+        role_to_player_id[role] = pid
+        player_id_to_role[pid] = role
 
     coins = all_players_data.get("items", {}).get("coins", [])
     fruits = all_players_data.get("items", {}).get("fruits", [])
@@ -191,7 +226,7 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
                     response = n.send_command(Protocols.Request.SEND_CHAT_MESSAGE, chat_message)
                     # Traiter la réponse qui contient le message de chat pour l'expéditeur
                     if response:
-                        update_game_state_from_server(response, players, current_player_id, coins, fruits, chat_box)
+                        update_game_state_from_server(response, players, current_player_id, coins, fruits, role_to_player_id, player_id_to_role, chat_box)
 
                 except Exception as e:
                     print(f"Erreur lors de l'envoi du message de chat: {e}")
@@ -203,6 +238,10 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
                 chat_box.toggle_visibility()
 
         playerControlled = players.get(current_player_id)
+        if playerControlled is None:
+            # Ici, tu peux juste retourner, ou afficher un log si tu veux
+            print("[CLIENT] Aucun joueur contrôlé (playerControlled est None), retour au menu.")
+            return
 
         # Seul le joueur contrôlé par le client (identifié par current_player_id) peut être déplacé via les touches du clavier
         if isinstance(playerControlled, PacMan) and playerControlled.lives <= 0:
@@ -227,7 +266,7 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
 
 
         # Synchroniser l'état du jeu avec les données du serveur
-        update_game_state_from_server(response, players, current_player_id, coins, fruits, chat_box)
+        update_game_state_from_server(response, players, current_player_id, coins, fruits, role_to_player_id, player_id_to_role, chat_box)
         if response.get("game_over"):
             winner = response.get("winner")
             if winner == "fantomes":
@@ -246,7 +285,7 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
         try:
             incoming_data = n.receive_json_non_blocking()
             if incoming_data:
-                update_game_state_from_server(incoming_data, players, current_player_id, coins, fruits, chat_box)
+                update_game_state_from_server(incoming_data, players, current_player_id, coins, fruits, role_to_player_id, player_id_to_role, chat_box)
                 if response.get("game_over"):
                     winner = response.get("winner")
                     if winner == "fantomes":
