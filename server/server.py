@@ -64,7 +64,7 @@ def game_tick():
             update_player_states(room)
             update_ghost_eaten_states(room)
             # Diffuse l'état (optionnel, mais pratique)
-            broadcast_to_room(room)
+            # broadcast_to_room(room)  # désactivé pour éviter envois concurrents
         time.sleep(0.05)  # 20 fois par seconde (50 ms)
 
 tick_thread = threading.Thread(target=game_tick, daemon=True)
