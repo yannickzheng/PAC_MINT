@@ -9,6 +9,10 @@ from game.ui.chat_box import ChatBox
 from game.ui.components import display_loading_screen, game_over, you_win
 from game.menus.main_menu import select_online_role
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 
 def update_game_state_from_server(state, players, current_player_id, coins, fruits, role_to_player_id, player_id_to_role, chat_box=None):
     """Synchronise l'état local du jeu avec les données du serveur
