@@ -349,7 +349,12 @@ class Ghost(Player):
         print(f"Création GHOST id={id(self)} pour pid={self.id}")
 
     def move(self, players, controlled=False):
-        """Si controlled=True : le joueur déplace ce fantôme au clavier.Sinon : IA A* via ghost_ai_move."""
+
+        if self.is_eaten and self.respawn_target:
+            self.update_eaten_state()
+            self.update()  # Met à jour .position etc
+            return
+
         if controlled:
             keys = pygame.key.get_pressed()
             new_x, new_y = self.x, self.y
@@ -466,7 +471,6 @@ class Ghost(Player):
                 self.score += 1000
 
     def update_eaten_state(self):
-        """Déplace le fantôme mangé vers le centre en ligne droite sans collision."""
         if not self.is_eaten or self.respawn_target is None:
             return
 
@@ -476,21 +480,18 @@ class Ghost(Player):
         dist = math.hypot(dx, dy)
 
         # Si on est déjà au point de respawn, on termine
-        if dist == 0:
+        if dist < self.speed:  # PATCH: < self.speed et PAS dist == 0
+            self.x, self.y = tx, ty
+            self.position = (self.x, self.y)  # <--- INDISPENSABLE pour la synchro !!
             self.is_eaten = False
             self.respawn_target = None
+            print("[SERVEUR] Fantôme arrivé au point de respawn !")
             return
 
-        # On avance de `speed` pixels vers la cible (ou moins si on est tout proche)
-        step = min(self.speed, dist)
-        self.x += step * dx / dist
-        self.y += step * dy / dist
-
-        # Si on a atteint la cible, on réactive le fantôme normalement
-        if step == dist:
-            self.x, self.y = tx, ty
-            self.is_eaten = False
-            self.respawn_target = None
+        # Sinon on bouge vers la cible
+        self.x += self.speed * dx / dist
+        self.y += self.speed * dy / dist
+        self.position = (self.x, self.y)  # <--- INDISPENSABLE chaque frame !
 
     def ghost_ai_move(self, pacman):
         if self.is_eaten:

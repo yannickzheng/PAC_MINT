@@ -60,15 +60,20 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
         if pid in players:
             player = players[pid]
             # PATCH: gestion de la position
-            if pid == current_player_id:
-                # PATCH: On NE remplace PAS la position du joueur local (sauf si trop différente)
-                sx, sy = data["pos"]
-                dx = abs(sx - player.x)
-                dy = abs(sy - player.y)
-                if dx > CELL_SIZE // 2 or dy > CELL_SIZE // 2:  # Si trop d’écart → rollback
-                    print("[PATCH][SYNC] Correction brutale position joueur (rollback)")
+            if isinstance(player, Ghost) and player.is_eaten:
+                player.update_position(data["pos"])
+            elif pid == current_player_id:
+                if hasattr(player, "is_eaten") and player.is_eaten:
+                    # Si le joueur local est un fantôme mangé → ON SYNCHRONISE DE FORCE AVEC LE SERVEUR
                     player.update_position(data["pos"])
-                # Sinon: ne rien faire, on garde la position locale (fluide)
+                else:
+                    sx, sy = data["pos"]
+                    dx = abs(sx - player.x)
+                    dy = abs(sy - player.y)
+                    if dx > CELL_SIZE * 3 or dy > CELL_SIZE * 3:
+                        print("[PATCH][SYNC] Correction brutale position joueur (rollback)")
+                        player.update_position(data["pos"])
+                    # Sinon: on garde la position locale (pour la fluidité)
             else:
                 player.update_position(tuple(data["pos"]))
 
@@ -106,6 +111,7 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
                 tcp_port=data["tcp_port"],
                 position=tuple(data["pos"])
             )
+
         else:
             print(f"Rôle inconnu {role}, joueur ignoré !")
             continue
@@ -348,7 +354,7 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
             player.draw(screen, playerControlled)
 
         # Affiche le code de la partie sous le score
-        game_code_text = font.render(f"Code de la partie: {game_code}", True, (0, 0, 255))
+        game_code_text = font.render(f"Code de la partie: {game_code}", True, (69, 6, 44))
         screen.blit(game_code_text, (10, 40))
 
         # Afficher le score du joueur actuel

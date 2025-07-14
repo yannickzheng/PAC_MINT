@@ -1,21 +1,22 @@
 import sys
 import os
+import threading
+import json
+import uuid
+import socket
+import time
 
 # Configuration robuste des imports - DOIT ÊTRE EN PREMIER
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import socket
-import time
+
 from _thread import start_new_thread
 from rooms import RoomManager
 from common.protocols import Protocols
 from game.utils.helpers import distance
-from common.global_variable import CELL_SIZE
+from common.global_variable import CELL_SIZE, WIDTH, HEIGHT
 
-import threading
 
-import json
-import uuid
 
 # Configuration pour la journalisation
 import logging
@@ -56,6 +57,19 @@ except socket.error as e:
 # Nombre de connexions simultanées maximales
 s.listen(max_players)
 logger.info("Serveur démarré, en attente de connexions...")
+
+def game_tick():
+    while True:
+        for room in room_manager.rooms.values():
+            update_player_states(room)
+            update_ghost_eaten_states(room)
+            # Diffuse l'état (optionnel, mais pratique)
+            broadcast_to_room(room)
+        time.sleep(0.05)  # 20 fois par seconde (50 ms)
+
+tick_thread = threading.Thread(target=game_tick, daemon=True)
+tick_thread.start()
+
 
 #Gestion de l'arrêt du serveur
 def server_shutdown():
@@ -206,6 +220,8 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                     if game_over:
                         state["game_over"] = True
                         state["winner"] = "fantomes"
+                        room.game_over = True
+                        room.winner = "fantomes"
                         broadcast_to_room(room, event=event)
                         continue  # On saute la suite de la boucle, car la partie est finie
 
@@ -398,21 +414,20 @@ def check_pacman_ghost_collision(room):
     return collision_result
 
 def eat_ghost(pacman, ghost, room):
-    """Logique pour faire manger un fantôme par Pacman."""
-    # Augmenter le score de Pacman
     pacman.score += 200
-    
-    # Marquer le fantôme comme mangé
     ghost.is_eaten = True
-        
-    # Calculer une position de respawn au centre (adapté pour le serveur)
-    center_x = 300  # Position centrale approximative
-    center_y = 300  # Position centrale approximative
-    ghost.respawn_target = (center_x, center_y)
-    
-    logger.info(f"Fantôme {getattr(ghost, 'id', 'unknown')} mangé par Pacman. Score: +200")
-    
+
+    role = ghost.role.lower()
+    respawn_pos = None
+    if hasattr(room, "initial_positions") and role in room.initial_positions:
+        respawn_pos = room.initial_positions[role]
+    else:
+        respawn_pos = (WIDTH // 2, HEIGHT // 2)
+
+    ghost.respawn_target = respawn_pos
+    logger.info(f"Fantôme {getattr(ghost, 'id', 'unknown')} mangé par Pacman. Score: +200 (respawn {respawn_pos})")
     return True
+
 
 def update_ghost_eaten_states(room):
     for player in room.players.values():

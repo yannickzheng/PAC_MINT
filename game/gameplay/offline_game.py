@@ -1,6 +1,6 @@
 import pygame
 import random
-from common.global_variable import WIDTH, HEIGHT, CELL_SIZE, BLUE, CYAN
+from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
 from game.player import Player, PacMan, Ghost
 from game.core.assets import load_game_assets
 from game.map import MAP_SURFACE, MAP_DATA
