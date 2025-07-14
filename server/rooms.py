@@ -95,7 +95,7 @@ class Room:
         self.room_name = room_name
         self.code = code
         self.initial_positions = {
-            "pacman": (150, 150),
+            "pacman": (160, 150),
             "fantome_1": (WIDTH // 2 - 20, HEIGHT // 2 - 20),
             "fantome_2": (WIDTH // 2 + 20, HEIGHT // 2 - 20),
             "fantome_3": (WIDTH // 2 - 20, HEIGHT // 2 + 20),

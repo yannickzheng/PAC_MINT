@@ -96,6 +96,7 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
                 "is_eaten": getattr(p, "is_eaten", False),
                 "respawn_target": getattr(p, "respawn_target", None),
                 "direction": getattr(p, "direction", "right"),
+                "ghosts_eaten": getattr(p, "ghosts_eaten", 0),
                 "activate_super_power": activate_super_power if pid == current_id else False
             }
             for pid, p in room.players.items()
@@ -118,7 +119,7 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
     
     return state
 
-def broadcast_to_room(room, event=None, exclude_player=None):
+def broadcast_to_room(room, event=None, exclude_player=None, force_game_over=None, force_winner=None):
     """Diffuse l'état du jeu à tous les clients connectés d'une room"""
     for pid, player in list(room.players.items()):
         if exclude_player and pid == exclude_player:
@@ -127,6 +128,11 @@ def broadcast_to_room(room, event=None, exclude_player=None):
             try:
                 # ICI : construit le state POUR CE JOUEUR
                 state = sync_game_state(room, pid, event=event)
+                # PATCH: force l'injection de game_over si besoin
+                if force_game_over is not None:
+                    state["game_over"] = force_game_over
+                if force_winner is not None:
+                    state["winner"] = force_winner
                 send_json(player.tcp_socket, state)
                 logger.debug(f"État diffusé au joueur {pid}")
             except Exception as e:
@@ -217,13 +223,21 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                         if getattr(pacman, "lives", 3) <= 0:
                             game_over = True
                             break
+                        if getattr(pacman, "ghosts_eaten", 0) >= 15:
+                            #state["game_over"] = True
+                            #state["winner"] = "pacman"
+                            room.game_over = True
+                            room.winner = "pacman"
+                            broadcast_to_room(room, event=event, force_game_over=True, force_winner="pacman")
+                            continue  #
+
 
                     if game_over:
-                        state["game_over"] = True
-                        state["winner"] = "fantomes"
+                        #state["game_over"] = True
+                        #state["winner"] = "fantomes"
                         room.game_over = True
                         room.winner = "fantomes"
-                        broadcast_to_room(room, event=event)
+                        broadcast_to_room(room, event=event, force_game_over=True, force_winner="fantomes")
                         continue  # On saute la suite de la boucle, car la partie est finie
 
                     if activate_super_power:
@@ -417,6 +431,9 @@ def check_pacman_ghost_collision(room):
 def eat_ghost(pacman, ghost, room):
     pacman.score += 200
     ghost.is_eaten = True
+    if hasattr(pacman, "ghosts_eaten"):
+        pacman.ghosts_eaten += 1
+        print(f"[SERVER] Pacman a mangé {pacman.ghosts_eaten} fantômes")
 
     role = ghost.role.lower()
     respawn_pos = None

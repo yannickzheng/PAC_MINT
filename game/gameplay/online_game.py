@@ -99,6 +99,8 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             player.super_power_timer = data.get("super_power_timer", 0)
             player.direction = data.get("direction", "right")
 
+            if hasattr(player, "ghosts_eaten"):
+                player.ghosts_eaten = data.get("ghosts_eaten", 0)
             if hasattr(player, "is_eaten"):
                 before = player.is_eaten
                 player.is_eaten = data.get("is_eaten", False)
@@ -338,14 +340,14 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
             incoming_data = n.receive_json_non_blocking()
             if incoming_data:
                 update_game_state_from_server(incoming_data, players, current_player_id, coins, fruits, role_to_player_id, player_id_to_role, chat_box)
-                if response.get("game_over"):
-                    winner = response.get("winner")
+                if incoming_data.get("game_over"):
+                    winner = incoming_data.get("winner")
                     if winner == "fantomes":
                         if playerControlled.role.lower().startswith("pacman"):
                             game_over(playerControlled.score, screen, font)
                         else:
                             you_win(playerControlled.score, screen, font)
-                    elif winner == "pacman":  # (au cas où tu ajoutes la victoire Pacman plus tard)
+                    elif winner == "pacman":
                         if playerControlled.role.lower().startswith("pacman"):
                             you_win(playerControlled.score, screen, font)
                         else:
@@ -376,8 +378,15 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
         # Afficher le score du joueur actuel
         score_text = font.render(f"Score: {playerControlled.score}", True, (0, 0, 255))
         screen.blit(score_text, (10, 10))
+
         lives_text = font.render(f"Vies: {playerControlled.lives}", True, (0, 0, 255))
-        screen.blit(lives_text, (WIDTH - 180, 1))
+        screen.blit(lives_text, (WIDTH - 100, 10))
+
+        if hasattr(playerControlled, "ghosts_eaten"):
+            ghosts_eaten_text = font.render(
+                f"Fantômes mangés: {playerControlled.ghosts_eaten}/ 15", True, (0, 0, 255)
+            )
+            screen.blit(ghosts_eaten_text, (WIDTH - 220, 30))
 
         # Dessiner le chat
         chat_box.draw(screen)

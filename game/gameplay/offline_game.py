@@ -157,13 +157,13 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
             playerControlled.draw(screen, controlled=True)
 
         # Affichage du score et des vies
-        score_text = font.render(f"Score: {playerControlled.score}", True, (255, 255, 255))
+        score_text = font.render(f"Score: {playerControlled.score}", True, (0, 0, 255))
         screen.blit(score_text, (10, 10))
 
-        lives_text = font.render(f"Vies: {playerControlled.lives}", True, (255, 255, 255))
+        lives_text = font.render(f"Vies: {playerControlled.lives}", True, (0, 0, 255))
         screen.blit(lives_text, (WIDTH - 100, 10))
 
-        ghosts_eaten_text = font.render(f"Fantômes mangés: {pacman.ghosts_eaten}/15", True, (255, 255, 255))
+        ghosts_eaten_text = font.render(f"Fantômes mangés: {pacman.ghosts_eaten}/15", True, (0, 0, 255))
         screen.blit(ghosts_eaten_text, (WIDTH - 220, 30))
 
         pygame.display.flip()
