@@ -25,7 +25,7 @@ class RoomManager:
 
     def join(self, player_identifier, room_identifier, role = None):
         """Ajout d'un joueur dans une salle"""
-        print(f"[DEBUG][RoomManager] join: player_id={player_identifier}, room_id={room_identifier}, role={role}")
+
         # Retirer le joueur de toutes les salles où il serait présent
         for room in self.rooms.values():
             #On regarde si le joueur est dans un salon

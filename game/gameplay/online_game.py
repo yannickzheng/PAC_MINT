@@ -1,5 +1,6 @@
 import pygame
 import sys
+import logging
 from common.global_variable import WIDTH, CELL_SIZE
 from common.network import Network
 from common.protocols import Protocols
@@ -8,6 +9,10 @@ from game.map import MAP_SURFACE
 from game.ui.chat_box import ChatBox
 from game.ui.components import display_loading_screen, game_over, you_win
 from game.menus.main_menu import select_online_role
+
+
+logger = logging.getLogger(__name__)
+
 
 
 def update_game_state_from_server(state, players, current_player_id, coins, fruits, role_to_player_id, player_id_to_role, chat_box=None):
@@ -368,7 +373,7 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
             player.draw(screen, playerControlled)
 
         # Affiche le code de la partie sous le score
-        game_code_text = font.render(f"Code de la partie: {game_code}", True, (69, 6, 44))
+        game_code_text = font.render(f"Code de la partie: {game_code}", True, (0, 0, 255))
         screen.blit(game_code_text, (10, 40))
 
         # Afficher le score du joueur actuel

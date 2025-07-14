@@ -253,31 +253,6 @@ class PacMan(Player):
         if keys[pygame.K_DOWN]: return self.image_down
         return self.image_right
 
-    def handle_collisions_with_ghosts(self, players):
-        """Gère les collisions de PacMan avec les fantômes."""
-        if self.invincible:  # Si PacMan est invincible, il ne perd pas de vie
-            return
-
-        pacman_center = (self.x + self.size // 2, self.y + self.size // 2)
-
-        for player in players.values():
-            if player != self and isinstance(player, Ghost):  # Si c'est un fantôme
-                ghost_center = (player.x + player.size // 2, player.y + player.size // 2)
-                dx = pacman_center[0] - ghost_center[0]
-                dy = pacman_center[1] - ghost_center[1]
-                distance_squared = dx * dx + dy * dy
-                combined_radius = self.hitbox_size + player.hitbox_size
-                combined_squared = combined_radius ** 2
-
-                if distance_squared <= combined_squared:  # Collision avec le fantôme
-                    if self.super_power_active:
-                        self.eat_ghost(player, players)  # Si PacMan a le super pouvoir, manger le fantôme
-                    else:
-                        self.lose_life()  # Sinon, perdre une vie
-
-                    self.x, self.y = self.coord  # Réinitialise la position de PacMan après la collision
-                    return  # Fin de la gestion de la collision
-
     def activate_super_power(self, duration=360):
         """Active le super pouvoir de PacMan pour une durée donnée"""
         self.super_power_active = True

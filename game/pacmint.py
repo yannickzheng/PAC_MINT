@@ -1,10 +1,10 @@
 import sys
 import os
-
+import pygame
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pygame
+
 from common.global_variable import WIDTH, HEIGHT
 from game.core.assets import load_game_assets
 from game.menus.main_menu import main_menu, select_role, select_online_role
