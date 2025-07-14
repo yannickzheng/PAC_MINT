@@ -16,8 +16,8 @@ def login_player(request):
                 return redirect('pacmint_app:welcome')
             else:
                 messages.error(request, "Nom d'utilisateur ou mot de passe incorrect.")
-        else :
-            messages.error(request,"Veuillez corriger les erreurs dans le formulaire.")
+        else:
+            messages.error(request, "Veuillez corriger les erreurs dans le formulaire.")
     else:
         form = PlayerLoginForm()
     return render(request, "login.html", {'formulaire': form})

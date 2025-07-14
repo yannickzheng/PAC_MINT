@@ -19,7 +19,6 @@ def accept_friend_request(request, username):
         request_obj = Friend.objects.get(player=sender, friend=request.user, status="pending")
         request_obj.status = "accepted"
         request_obj.save()
-        # Ajouter la relation inverse
         Friend.objects.get_or_create(player=request.user, friend=sender, status="accepted")
     except Friend.DoesNotExist:
         pass
@@ -27,11 +26,13 @@ def accept_friend_request(request, username):
 
 @login_required
 def friends_view(request):
-    friends = Friend.objects.filter(player=request.user, status="accepted")
-    incoming = Friend.objects.filter(friend=request.user, status="pending")
+    friends = Friend.objects.select_related('friend').filter(player=request.user, status="accepted")
+    incoming = Friend.objects.select_related('player').filter(friend=request.user, status="pending")
+
     suggestions = User.objects.exclude(id=request.user.id).exclude(
         id__in=Friend.objects.filter(player=request.user).values_list('friend_id', flat=True)
     )
+
     return render(request, "friends.html", {
         "friends": friends,
         "incoming_requests": incoming,
@@ -52,7 +53,6 @@ def add_friend(request):
             messages.error(request, "Aucun utilisateur avec ce nom.")
             return redirect('pacmint_app:friends')
 
-        # Vérifie si une relation existe déjà
         already_requested = Friend.objects.filter(player=request.user, friend=friend_user).exists()
         already_received = Friend.objects.filter(player=friend_user, friend=request.user).exists()
 
