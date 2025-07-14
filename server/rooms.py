@@ -136,10 +136,13 @@ class Room:
 
             if "pacman" in role.lower():
                 player = PacMan(ip=None, tcp_port=None, position=position)
+                player.id = player_id
             elif "fantome" in role.lower():
                 player = Ghost(ip=None, tcp_port=None, position=position, role = role)
+                player.id = player_id
             else:
                 player = Player(ip=None, tcp_port=None, role=role, position=position)
+                player.id = player_id
 
             self.players[player_id] = player
             return {"status": "ok", "message": "Joueur ajouté à la salle"}

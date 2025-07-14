@@ -31,7 +31,7 @@ class Player:
         self.image_left = pygame.transform.scale(pygame.image.load("images/pacman - left.png"), (self.size, self.size))
         self.image_up = pygame.transform.scale(pygame.image.load("images/pacman - up.png"), (self.size, self.size))
         self.image_down = pygame.transform.scale(pygame.image.load("images/pacman - down.png"), (self.size, self.size))
-        self.image_red_ghost = pygame.transform.scale(pygame.image.load("images/red_ghost2.png"), (self.size, self.size))
+        self.image_red_ghost = pygame.transform.scale(pygame.image.load("images/red_ghost.png"), (self.size, self.size))
 
         self.image_super_right = pygame.transform.scale(pygame.image.load("images/Black Pacman.png"), (self.size, self.size))
         self.image_super_left = pygame.transform.scale(pygame.image.load("images/Black Pacman-left.png"), (self.size, self.size))
@@ -232,7 +232,7 @@ class PacMan(Player):
 
         keys = pygame.key.get_pressed()
 
-        if self.invincible and (self.invincibility_timer // 10) % 2 == 0:
+        if self.invincible and (self.invincibility_timer // 30) % 2 == 0:
             if keys[pygame.K_LEFT]: return self.image_super_left
             if keys[pygame.K_RIGHT]: return self.image_super_right
             if keys[pygame.K_UP]: return self.image_super_up
@@ -346,6 +346,7 @@ class Ghost(Player):
         self.respawn_target = None
         self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
         self.current_path = []  # Chemin actuel pour le fantôme
+        print(f"Création GHOST id={id(self)} pour pid={self.id}")
 
     def move(self, players, controlled=False):
         """Si controlled=True : le joueur déplace ce fantôme au clavier.Sinon : IA A* via ghost_ai_move."""
@@ -373,7 +374,10 @@ class Ghost(Player):
 
     def draw(self, screen, controlled):
         """Affiche le fantôme à l'écran"""
+        print(f"[DEBUG] draw ghost {self.id} is_eaten={self.is_eaten}")
         if self.is_eaten:
+            print(f"[DEBUG] draw ghost {self.id} is_eaten={self.is_eaten}, id mémoire={id(self)}")
+
             # Si le fantôme est mangé, on le dessine en tant que boule translucide
             ghost_surface = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
             pygame.draw.circle(

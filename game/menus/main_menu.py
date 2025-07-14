@@ -26,7 +26,7 @@ def select_role(screen, font, mode="offline"):
 
         # Charger les images
         pacman_image = pygame.image.load("images/pacman - right.png").convert_alpha()
-        ghost_image = pygame.image.load("images/red_ghost2.png").convert_alpha()
+        ghost_image = pygame.image.load("images/red_ghost.png").convert_alpha()
 
         # Redimensionner les images pour qu'elles s'adaptent bien à l'interface
         pacman_image = pygame.transform.scale(pacman_image, (50, 50))  # Ajuste la taille de l'image

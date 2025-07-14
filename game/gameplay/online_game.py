@@ -1,6 +1,6 @@
 import pygame
 import sys
-from common.global_variable import WIDTH, BLUE, CYAN
+from common.global_variable import WIDTH, CELL_SIZE
 from common.network import Network
 from common.protocols import Protocols
 from game.player import Player, PacMan, Ghost
@@ -8,6 +8,7 @@ from game.map import MAP_SURFACE
 from game.ui.chat_box import ChatBox
 from game.ui.components import display_loading_screen, game_over, you_win
 from game.menus.main_menu import select_online_role
+
 
 def update_game_state_from_server(state, players, current_player_id, coins, fruits, role_to_player_id, player_id_to_role, chat_box=None):
     """Synchronise l'état local du jeu avec les données du serveur
@@ -51,71 +52,101 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
 
     # Mise à jour des joueurs
     for data in state.get("players", []):
+        print(f"[DEBUG][SYNC] Serveur dit pour {data['id']} (role={data['roles']}): is_eaten={data.get('is_eaten')}")
         pid = data["id"]
-        if pid == current_player_id:
-            # Notre joueur
-            current_player = players[pid]
-            current_player.score = data["score"]
-            current_player.lives = data.get("lives", current_player.lives)
-            current_player.invincible = data.get("invincible", False)
-            current_player.super_power_active = data.get("super_power_active", False)
-            current_player.super_power_timer = data.get("super_power_timer", 0)
-            if data.get("activate_super_power"):
+        role = data["roles"].lower()
+
+        # 1. S'il existe déjà, MAJ des attributs uniquement
+        if pid in players:
+            player = players[pid]
+            # PATCH: gestion de la position
+            if pid == current_player_id:
+                # PATCH: On NE remplace PAS la position du joueur local (sauf si trop différente)
+                sx, sy = data["pos"]
+                dx = abs(sx - player.x)
+                dy = abs(sy - player.y)
+                if dx > CELL_SIZE // 2 or dy > CELL_SIZE // 2:  # Si trop d’écart → rollback
+                    print("[PATCH][SYNC] Correction brutale position joueur (rollback)")
+                    player.update_position(data["pos"])
+                # Sinon: ne rien faire, on garde la position locale (fluide)
+            else:
+                player.update_position(tuple(data["pos"]))
+
+            # ---- ATTRIBUTS TOUJOURS À JOUR (score, vie etc) ----
+            player.score = data.get("score", 0)
+            player.lives = data.get("lives", getattr(player, "lives", 3))
+            player.invincible = data.get("invincible", False)
+            player.invincibility_timer = data.get("invincibility_timer", 0)
+            player.super_power_active = data.get("super_power_active", False)
+            player.super_power_timer = data.get("super_power_timer", 0)
+            player.direction = data.get("direction", "right")
+
+            if hasattr(player, "is_eaten"):
+                before = player.is_eaten
+                player.is_eaten = data.get("is_eaten", False)
+                after = player.is_eaten
+                print(f"[DEBUG][SYNC] Fantôme {pid}: is_eaten avant={before} → après={after}, id mémoire={id(player)}")
+
+            if pid == current_player_id and data.get("activate_super_power"):
                 print(f"[CLIENT] Activation du super pouvoir reçue pour le joueur {pid}")
-                current_player.activate_super_power()
-        elif pid in players:
-            # Joueur existant
-            players[pid].update_position(tuple(data["pos"]))
-            players[pid].score = data.get("score", 0)
-            players[pid].lives = data.get("lives", 3)
-            players[pid].invincible = data.get("invincible", False)
-            players[pid].super_power_active = data.get("super_power_active", False)
-            players[pid].super_power_timer = data.get("super_power_timer", 0)
-            players[pid].direction = data.get("direction", "right")
-            # Mettre à jour l'état mangé pour les fantômes
-            if "fantome" in players[pid].role.lower():
-                players[pid].is_eaten = data.get("is_eaten", False)
-            # Gestion de l'état mangé pour les fantômes
-            if hasattr(players[pid], 'is_eaten'):
-                players[pid].is_eaten = data.get("is_eaten", False)
-        else:
-            # Nouveau joueur (on crée la bonne classe selon le rôle)
-            role = data["roles"].lower()
-            if "pacman" in role:
-                new_player = PacMan(
+                player.activate_super_power()
+
+            continue  # <--- FINI pour ce joueur, on ne fait pas le else suivant !
+
+        # 2. Sinon, NOUVEAU joueur : on instancie la bonne classe
+        if "pacman" in role:
+            new_player = PacMan(
                 ip=data["ip"],
                 tcp_port=data["tcp_port"],
                 position=tuple(data["pos"])
-                )
-            elif "fantome" in role:
-                new_player = Ghost(
-                    ip=data["ip"],
-                    tcp_port=data["tcp_port"],
-                    position=tuple(data["pos"])
-                )
-            else:
-                print(f"Rôle inconnu {role}, joueur ignoré !")
-                continue
+            )
+        elif "fantome" in role:
+            new_player = Ghost(
+                ip=data["ip"],
+                tcp_port=data["tcp_port"],
+                position=tuple(data["pos"])
+            )
+        else:
+            print(f"Rôle inconnu {role}, joueur ignoré !")
+            continue
 
-            new_player.id = pid
-            new_player.score = data.get("score", 0)
-            if hasattr(new_player, "lives"):
-                new_player.lives = data.get("lives", 3)
-            if hasattr(new_player, "invincible"):
-                new_player.invincible = data.get("invincible", False)
-            if hasattr(new_player, "super_power_active"):
-                new_player.super_power_active = data.get("super_power_active", False)
-            if hasattr(new_player, "super_power_timer"):
-                new_player.super_power_timer = data.get("super_power_timer", 0)
-                new_player.direction = data.get("direction", "right")
-            if hasattr(new_player, "is_eaten"):
-                new_player.is_eaten = data.get("is_eaten", False)
+        new_player.id = pid
+        new_player.score = data.get("score", 0)
+        if hasattr(new_player, "lives"):
+            new_player.lives = data.get("lives", 3)
+        if hasattr(new_player, "invincible"):
+            new_player.invincible = data.get("invincible", False)
+        if hasattr(new_player, "super_power_active"):
+            new_player.super_power_active = data.get("super_power_active", False)
+        if hasattr(new_player, "super_power_timer"):
+            new_player.super_power_timer = data.get("super_power_timer", 0)
+        new_player.direction = data.get("direction", "right")
+        if hasattr(new_player, "is_eaten"):
+            new_player.is_eaten = data.get("is_eaten", False)
 
-            players[pid] = new_player
-            role_to_player_id[role] = pid
-            player_id_to_role[pid] = role
+        players[pid] = new_player
+        role_to_player_id[role] = pid
+        player_id_to_role[pid] = role
 
-            print(f"[CLIENT] Nouveau joueur ajouté : {pid}")
+        print(f"[CLIENT] Nouveau joueur ajouté : {pid}")
+
+    # Nettoyage : supprimer les joueurs qui ne sont plus envoyés par le serveur
+    player_ids_from_server = {data["id"] for data in state.get("players", [])}
+    for pid in list(players):
+        if pid not in player_ids_from_server:
+            del players[pid]
+            if player_id_to_role and pid in player_id_to_role:
+                role = player_id_to_role.pop(pid)
+                if role_to_player_id and role in role_to_player_id and role_to_player_id[role] == pid:
+                    del role_to_player_id[role]
+            print(f"[CLIENT] Joueur {pid} supprimé (parti ou déconnecté)")
+    for pid, player in players.items():
+        if "fantome" in player.role.lower():
+            print(
+                f"[DEBUG][LOCAL] Instance {pid} (role={player.role}): is_eaten={player.is_eaten}, id mémoire={id(player)}, objet={repr(player)}"
+            )
+            print(
+                f"[DEBUG][LOCAL] Instance {pid} (role={player.role}): is_eaten={player.is_eaten}, id mémoire={id(player)}")
 
 
 def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image, coin_offset, fruit_offset, role):
@@ -239,7 +270,6 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
 
         playerControlled = players.get(current_player_id)
         if playerControlled is None:
-            # Ici, tu peux juste retourner, ou afficher un log si tu veux
             print("[CLIENT] Aucun joueur contrôlé (playerControlled est None), retour au menu.")
             return
 
@@ -248,10 +278,10 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
             game_over(playerControlled.score, screen, font)
             return
 
+        # --- MOVE LOCAL ---
         playerControlled.move(players, controlled=True)
-        
 
-        # Envoie les nouvelles positions au serveur
+        # --- ENVOI POSITION (UNE SEULE FOIS PAR FRAME) ---
         payload = {
             "players": [
                 {
@@ -261,12 +291,12 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
                 }
             ]
         }
-
+        # On envoie la position et on reçoit la vérité serveur
         response = n.send_command(Protocols.Request.UPDATE_POSITION, payload)
+        update_game_state_from_server(response, players, current_player_id, coins, fruits, role_to_player_id,
+                                      player_id_to_role, chat_box)
 
 
-        # Synchroniser l'état du jeu avec les données du serveur
-        update_game_state_from_server(response, players, current_player_id, coins, fruits, role_to_player_id, player_id_to_role, chat_box)
         if response.get("game_over"):
             winner = response.get("winner")
             if winner == "fantomes":

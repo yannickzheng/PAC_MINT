@@ -76,6 +76,7 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
                 "score": p.score,
                 "lives": getattr(p, "lives", 3),
                 "invincible": getattr(p, "invincible", False),
+                "invincibility_timer": getattr(p, "invincibility_timer", 0),
                 "super_power_active": getattr(p, "super_power_active", False),
                 "super_power_timer": getattr(p, "super_power_timer", 0),
                 "is_eaten": getattr(p, "is_eaten", False),
@@ -102,17 +103,20 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
     
     return state
 
-def broadcast_to_room(room, state, exclude_player=None):
+def broadcast_to_room(room, event=None, exclude_player=None):
     """Diffuse l'état du jeu à tous les clients connectés d'une room"""
-    for pid, player in room.players.items():
+    for pid, player in list(room.players.items()):
         if exclude_player and pid == exclude_player:
             continue
         if hasattr(player, 'tcp_socket') and player.tcp_socket:
             try:
+                # ICI : construit le state POUR CE JOUEUR
+                state = sync_game_state(room, pid, event=event)
                 send_json(player.tcp_socket, state)
                 logger.debug(f"État diffusé au joueur {pid}")
             except Exception as e:
                 logger.error(f"Erreur lors de la diffusion au joueur {pid}: {e}")
+
 
 
 def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
@@ -185,9 +189,10 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                         pacman_touche = collision_result["pacman_hit"]
                         pacman_touche.lives = getattr(pacman_touche, "lives", 3) - 1
                         pacman_touche.invincible = True
-                        pacman_touche.invincibility_timer = 180  # 3 secondes à 60 FPS
+                        pacman_touche.invincibility_timer = 600  # 4 secondes à 60 FPS
                         logger.info(f"Pacman touché ! Vies restantes : {pacman_touche.lives}")
                         event = "pacman_hit"
+                    update_ghost_eaten_states(room)
 
                     # Construire l'état de jeu final
                     state = sync_game_state(room, joueur_actuel, event=event)
@@ -201,16 +206,16 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                     if game_over:
                         state["game_over"] = True
                         state["winner"] = "fantomes"
-                        broadcast_to_room(room, state)
+                        broadcast_to_room(room, event=event)
                         continue  # On saute la suite de la boucle, car la partie est finie
 
                     if activate_super_power:
                         state["activate_super_power"] = True
-                        broadcast_to_room(room, state)
+                        broadcast_to_room(room, event=event)
                     elif event == "pacman_hit" or event == "ghost_eaten":
-                        broadcast_to_room(room, state)
+                        broadcast_to_room(room, event=event)
                     else:
-                        broadcast_to_room(room, state)
+                        broadcast_to_room(room, event=event)
 
                 elif raw_data.get("command") == Protocols.Request.SEND_CHAT_MESSAGE:
                     logger.info(f"[SERVER] Traitement de la commande : {raw_data.get('command')}")
@@ -327,7 +332,7 @@ def threaded_client(connexion, address):
 
 def update_player_states(room):
     """Met à jour les timers et états des joueurs (invincibilité, super-pouvoir)"""
-    for pid, player in room.players.items():
+    for pid, player in list(room.players.items()):
         # Mise à jour du timer d'invincibilité
         if getattr(player, "invincible", False):
             player.invincibility_timer -= 1
@@ -408,6 +413,13 @@ def eat_ghost(pacman, ghost, room):
     logger.info(f"Fantôme {getattr(ghost, 'id', 'unknown')} mangé par Pacman. Score: +200")
     
     return True
+
+def update_ghost_eaten_states(room):
+    for player in room.players.values():
+        # Si c'est un fantôme et qu'il est mangé, on met à jour son état
+        if player.role.lower().startswith("fantome") and getattr(player, "is_eaten", False):
+            if hasattr(player, "update_eaten_state"):
+                player.update_eaten_state()
 
 def sync_game_state(room, current_id, event=None):
     """
