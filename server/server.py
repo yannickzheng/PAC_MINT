@@ -94,6 +94,7 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
                 "super_power_active": getattr(p, "super_power_active", False),
                 "super_power_timer": getattr(p, "super_power_timer", 0),
                 "is_eaten": getattr(p, "is_eaten", False),
+                "respawn_target": getattr(p, "respawn_target", None),
                 "direction": getattr(p, "direction", "right"),
                 "activate_super_power": activate_super_power if pid == current_id else False
             }

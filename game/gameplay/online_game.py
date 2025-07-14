@@ -61,16 +61,25 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             player = players[pid]
             # PATCH: gestion de la position
             if isinstance(player, Ghost) and player.is_eaten:
-                player.update_position(data["pos"])
+                # 1. Ne synchronise la position QUE si on reçoit l'info du serveur que le fantôme est ARRIVÉ au respawn (is_eaten passe à False)
+                if not data.get("is_eaten", False):  # Le serveur dit que le fantôme n'est plus mangé
+                    player.update_position(data["pos"])
+                    player.is_eaten = False
+                    player.respawn_target = None
+                # Sinon, laisse le client animer le déplacement localement (voir point suivant)
             elif pid == current_player_id:
                 if hasattr(player, "is_eaten") and player.is_eaten:
-                    # Si le joueur local est un fantôme mangé → ON SYNCHRONISE DE FORCE AVEC LE SERVEUR
-                    player.update_position(data["pos"])
+                    # Même logique pour le joueur contrôlé
+                    if not data.get("is_eaten", False):
+                        player.update_position(data["pos"])
+                        player.is_eaten = False
+                        player.respawn_target = None
+                    # Sinon: NE RIEN FAIRE, laisse l'animation locale gérer
                 else:
                     sx, sy = data["pos"]
                     dx = abs(sx - player.x)
                     dy = abs(sy - player.y)
-                    if dx > CELL_SIZE * 3 or dy > CELL_SIZE * 3:
+                    if dx > CELL_SIZE * 2 or dy > CELL_SIZE * 2:
                         print("[PATCH][SYNC] Correction brutale position joueur (rollback)")
                         player.update_position(data["pos"])
                     # Sinon: on garde la position locale (pour la fluidité)
@@ -91,6 +100,8 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
                 player.is_eaten = data.get("is_eaten", False)
                 after = player.is_eaten
                 #print(f"[DEBUG][SYNC] Fantôme {pid}: is_eaten avant={before} → après={after}, id mémoire={id(player)}")
+            if hasattr(player, "respawn_target"):
+                player.respawn_target = data.get("respawn_target", None)
 
             if pid == current_player_id and data.get("activate_super_power"):
                 print(f"[CLIENT] Activation du super pouvoir reçue pour le joueur {pid}")
@@ -283,6 +294,10 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
 
         # --- MOVE LOCAL ---
         playerControlled.move(players, controlled=True)
+
+        for pid, player in players.items():
+            if pid != current_player_id:
+                player.move(players, controlled=False)
 
         # --- ENVOI POSITION (UNE SEULE FOIS PAR FRAME) ---
         payload = {
