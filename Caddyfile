@@ -2,9 +2,14 @@
 
 handle_path /static/* {
     root * /staticfiles
-    file_server browse
+    file_server
+}
+
+handle_path /media/* {
+    root * /media
+    file_server
 }
 
 handle {
-    reverse_proxy site_web:8000
+    reverse_proxy site_web:8080
 }
