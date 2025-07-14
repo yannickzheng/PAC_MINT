@@ -1,4 +1,4 @@
-Django>=5.1.5
+Django>=4.2.13,<5.0
 django-environ
 psycopg2-binary
 django-crispy-forms
