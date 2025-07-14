@@ -1,11 +1,14 @@
 import pygame
+from game.api import login
 
 def login_screen(screen, font):
     clock = pygame.time.Clock()
 
     username = ""
     password = ""
+    error_message = ""
     active_input = "username"
+
     input_rects = {
         "username": pygame.Rect(300, 200, 300, 40),
         "password": pygame.Rect(300, 270, 300, 40),
@@ -16,13 +19,11 @@ def login_screen(screen, font):
     while running:
         screen.fill((0, 0, 0))
 
-        # Dessin des étiquettes
-        username_label = font.render("Nom d'utilisateur:", True, (255, 255, 255))
-        password_label = font.render("Mot de passe:", True, (255, 255, 255))
-        screen.blit(username_label, (100, 205))
-        screen.blit(password_label, (100, 275))
+        # Labels
+        screen.blit(font.render("Nom d'utilisateur:", True, (255, 255, 255)), (100, 205))
+        screen.blit(font.render("Mot de passe:", True, (255, 255, 255)), (100, 275))
 
-        # Affichage des zones de texte
+        # Input boxes
         pygame.draw.rect(screen, (255, 255, 255), input_rects["username"], 2)
         pygame.draw.rect(screen, (255, 255, 255), input_rects["password"], 2)
 
@@ -32,17 +33,20 @@ def login_screen(screen, font):
         screen.blit(username_surface, (input_rects["username"].x + 5, input_rects["username"].y + 5))
         screen.blit(password_surface, (input_rects["password"].x + 5, input_rects["password"].y + 5))
 
-        # Dessin du bouton
+        # Login button
         pygame.draw.rect(screen, (50, 200, 50), input_rects["button"])
-        button_text = font.render("Se connecter", True, (0, 0, 0))
-        screen.blit(button_text, (input_rects["button"].x + 50, input_rects["button"].y + 10))
+        screen.blit(font.render("Se connecter", True, (0, 0, 0)), (input_rects["button"].x + 50, input_rects["button"].y + 10))
+
+        # Error message if needed
+        if error_message:
+            error_surface = font.render(error_message, True, (255, 0, 0))
+            screen.blit(error_surface, (300, 410))
 
         pygame.display.flip()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
-                return None, None
+                return None, None, None
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if input_rects["username"].collidepoint(event.pos):
@@ -50,15 +54,21 @@ def login_screen(screen, font):
                 elif input_rects["password"].collidepoint(event.pos):
                     active_input = "password"
                 elif input_rects["button"].collidepoint(event.pos):
-                    return username, password
+                    result = login(username, password)
+                    if isinstance(result, int):
+                        return username, password, result
+                    else:
+                        error_message = "Identifiants invalides"
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_TAB:
                     active_input = "password" if active_input == "username" else "username"
-
                 elif event.key == pygame.K_RETURN:
-                    return username, password
-
+                    result = login(username, password)
+                    if isinstance(result, int):
+                        return username, password, result
+                    else:
+                        error_message = "Identifiants invalides"
                 elif event.key == pygame.K_BACKSPACE:
                     if active_input == "username":
                         username = username[:-1]

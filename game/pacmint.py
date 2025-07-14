@@ -25,7 +25,7 @@ def main():
     # --- Connexion utilisateur ---
     user_id = None
     while user_id is None:
-        username, password = login_screen(screen, font)
+        username, password, user_id = login_screen(screen, font)
         user_id = login(username, password)
         if not user_id:
             show_error(screen, font, "Identifiants invalides. Réessaie.")

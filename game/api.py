@@ -7,18 +7,21 @@ API_BASE = "http://localhost:8080/api"
 AUTH_FILE = "auth.json"
 
 def login(username, password):
-    url = f"{API_BASE}/login/"
-    response = requests.post(url, json={"username": username, "password": password})
-    if response.status_code == 200:
-        user_data = response.json()
-        user_id = user_data.get("user_id")
-        if user_id:
-            with open(AUTH_FILE, "w") as f:
-                json.dump({"user_id": user_id}, f)
+    try:
+        response = requests.post(
+            "http://localhost:8080/api/login/",
+            headers={"Content-Type": "application/json"},
+            data=json.dumps({"username": username, "password": password})
+        )
+        if response.status_code == 200:
             print("Connexion réussie.")
-            return user_id
-    print("Erreur de connexion :", response.status_code, response.text)
-    return None
+            return response.json().get("user_id")  # <- on retourne directement l'id
+        else:
+            print(f"Erreur de connexion : {response.status_code} {response.text}")
+            return None
+    except requests.RequestException as e:
+        print(f"Erreur réseau : {e}")
+        return None
 
 def get_user_id():
     if os.path.exists(AUTH_FILE):
