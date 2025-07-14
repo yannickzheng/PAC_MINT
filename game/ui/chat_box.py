@@ -9,7 +9,7 @@ class ChatBox:
         self.width = width
         self.height = height
         self.font = font
-        self.small_font = pygame.font.SysFont("Arial", 14)
+        self.small_font = pygame.font.SysFont("Arial", 16)
         
         # Zone de messages
         self.message_area_height = height - 30

@@ -26,7 +26,7 @@ def select_role(screen, font, mode="offline"):
 
         # Charger les images
         pacman_image = pygame.image.load("images/pacman - right.png").convert_alpha()
-        ghost_image = pygame.image.load("images/red_ghost2.png").convert_alpha()
+        ghost_image = pygame.image.load("images/red_ghost.png").convert_alpha()
 
         # Redimensionner les images pour qu'elles s'adaptent bien à l'interface
         pacman_image = pygame.transform.scale(pacman_image, (50, 50))  # Ajuste la taille de l'image
@@ -103,18 +103,6 @@ def select_online_role(screen, font, taken_roles = None):
                     color_disabled if "fantome_4" in taken_roles else color_active,
                     screen, font)
         draw_button("Retour", 520, 650, 200, 50, BLUE, CYAN, screen, font)
-
-
-
-
-
-
-        """draw_button("Pacman", 250, 400, 200, 50, BLUE, CYAN, screen, font)
-        draw_button("Fantôme 1", 800, 250, 200, 50, BLUE, CYAN, screen, font)
-        draw_button("Fantôme 2", 800, 350, 200, 50, BLUE, CYAN, screen, font)
-        draw_button("Fantôme 3", 800, 450, 200, 50, BLUE, CYAN, screen, font)
-        draw_button("Fantôme 4", 800, 550, 200, 50, BLUE, CYAN, screen, font)
-        draw_button("Retour", 520, 650, 200, 50, BLUE, CYAN, screen, font)"""
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

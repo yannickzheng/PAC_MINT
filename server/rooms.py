@@ -1,8 +1,9 @@
-from game.player import Player, PacMan, Ghost
-from game.items import ServerItemManager
 import random
 import time
 
+from game.player import Player, PacMan, Ghost
+from game.items import ServerItemManager
+from common.global_variable import WIDTH, HEIGHT
 """Faire en sort qu'un joueur n'est présent que dans une seule salle"""
 
 class RoomManager:
@@ -95,10 +96,10 @@ class Room:
         self.code = code
         self.initial_positions = {
             "pacman": (150, 150),
-            "fantome_1": (950, 450),
-            "fantome_2": (920, 450),
-            "fantome_3": (950, 420),
-            "fantome_4": (920, 420)
+            "fantome_1": (WIDTH // 2 - 20, HEIGHT // 2 - 20),
+            "fantome_2": (WIDTH // 2 + 20, HEIGHT // 2 - 20),
+            "fantome_3": (WIDTH // 2 - 20, HEIGHT // 2 + 20),
+            "fantome_4": (WIDTH // 2 + 20, HEIGHT // 2 + 20)
         }
         self.item_manager = ServerItemManager()
         self.chat_history = []
@@ -135,10 +136,13 @@ class Room:
 
             if "pacman" in role.lower():
                 player = PacMan(ip=None, tcp_port=None, position=position)
+                player.id = player_id
             elif "fantome" in role.lower():
                 player = Ghost(ip=None, tcp_port=None, position=position, role = role)
+                player.id = player_id
             else:
                 player = Player(ip=None, tcp_port=None, role=role, position=position)
+                player.id = player_id
 
             self.players[player_id] = player
             return {"status": "ok", "message": "Joueur ajouté à la salle"}

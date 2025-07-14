@@ -1,21 +1,22 @@
 import sys
 import os
+import threading
+import json
+import uuid
+import socket
+import time
 
 # Configuration robuste des imports - DOIT ÊTRE EN PREMIER
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import socket
-import time
+
 from _thread import start_new_thread
 from rooms import RoomManager
 from common.protocols import Protocols
 from game.utils.helpers import distance
-from common.global_variable import CELL_SIZE
+from common.global_variable import CELL_SIZE, WIDTH, HEIGHT
 
-import threading
 
-import json
-import uuid
 
 # Configuration pour la journalisation
 import logging
@@ -57,6 +58,19 @@ except socket.error as e:
 s.listen(max_players)
 logger.info("Serveur démarré, en attente de connexions...")
 
+def game_tick():
+    while True:
+        for room in room_manager.rooms.values():
+            update_player_states(room)
+            update_ghost_eaten_states(room)
+            # Diffuse l'état (optionnel, mais pratique)
+            broadcast_to_room(room)
+        time.sleep(0.05)  # 20 fois par seconde (50 ms)
+
+tick_thread = threading.Thread(target=game_tick, daemon=True)
+tick_thread.start()
+
+
 #Gestion de l'arrêt du serveur
 def server_shutdown():
     logger.info("Arrêt du serveur...")
@@ -76,9 +90,11 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
                 "score": p.score,
                 "lives": getattr(p, "lives", 3),
                 "invincible": getattr(p, "invincible", False),
+                "invincibility_timer": getattr(p, "invincibility_timer", 0),
                 "super_power_active": getattr(p, "super_power_active", False),
                 "super_power_timer": getattr(p, "super_power_timer", 0),
                 "is_eaten": getattr(p, "is_eaten", False),
+                "respawn_target": getattr(p, "respawn_target", None),
                 "direction": getattr(p, "direction", "right"),
                 "activate_super_power": activate_super_power if pid == current_id else False
             }
@@ -102,17 +118,20 @@ def build_state(room, current_id, *,with_action = False, initial=False, activate
     
     return state
 
-def broadcast_to_room(room, state, exclude_player=None):
+def broadcast_to_room(room, event=None, exclude_player=None):
     """Diffuse l'état du jeu à tous les clients connectés d'une room"""
-    for pid, player in room.players.items():
+    for pid, player in list(room.players.items()):
         if exclude_player and pid == exclude_player:
             continue
         if hasattr(player, 'tcp_socket') and player.tcp_socket:
             try:
+                # ICI : construit le state POUR CE JOUEUR
+                state = sync_game_state(room, pid, event=event)
                 send_json(player.tcp_socket, state)
                 logger.debug(f"État diffusé au joueur {pid}")
             except Exception as e:
                 logger.error(f"Erreur lors de la diffusion au joueur {pid}: {e}")
+
 
 
 def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
@@ -185,9 +204,10 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                         pacman_touche = collision_result["pacman_hit"]
                         pacman_touche.lives = getattr(pacman_touche, "lives", 3) - 1
                         pacman_touche.invincible = True
-                        pacman_touche.invincibility_timer = 180  # 3 secondes à 60 FPS
+                        pacman_touche.invincibility_timer = 600  # 4 secondes à 60 FPS
                         logger.info(f"Pacman touché ! Vies restantes : {pacman_touche.lives}")
                         event = "pacman_hit"
+                    update_ghost_eaten_states(room)
 
                     # Construire l'état de jeu final
                     state = sync_game_state(room, joueur_actuel, event=event)
@@ -201,16 +221,18 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                     if game_over:
                         state["game_over"] = True
                         state["winner"] = "fantomes"
-                        broadcast_to_room(room, state)
+                        room.game_over = True
+                        room.winner = "fantomes"
+                        broadcast_to_room(room, event=event)
                         continue  # On saute la suite de la boucle, car la partie est finie
 
                     if activate_super_power:
                         state["activate_super_power"] = True
-                        broadcast_to_room(room, state)
+                        broadcast_to_room(room, event=event)
                     elif event == "pacman_hit" or event == "ghost_eaten":
-                        broadcast_to_room(room, state)
+                        broadcast_to_room(room, event=event)
                     else:
-                        broadcast_to_room(room, state)
+                        broadcast_to_room(room, event=event)
 
                 elif raw_data.get("command") == Protocols.Request.SEND_CHAT_MESSAGE:
                     logger.info(f"[SERVER] Traitement de la commande : {raw_data.get('command')}")
@@ -327,7 +349,7 @@ def threaded_client(connexion, address):
 
 def update_player_states(room):
     """Met à jour les timers et états des joueurs (invincibilité, super-pouvoir)"""
-    for pid, player in room.players.items():
+    for pid, player in list(room.players.items()):
         # Mise à jour du timer d'invincibilité
         if getattr(player, "invincible", False):
             player.invincibility_timer -= 1
@@ -393,21 +415,27 @@ def check_pacman_ghost_collision(room):
     return collision_result
 
 def eat_ghost(pacman, ghost, room):
-    """Logique pour faire manger un fantôme par Pacman."""
-    # Augmenter le score de Pacman
     pacman.score += 200
-    
-    # Marquer le fantôme comme mangé
     ghost.is_eaten = True
-        
-    # Calculer une position de respawn au centre (adapté pour le serveur)
-    center_x = 300  # Position centrale approximative
-    center_y = 300  # Position centrale approximative
-    ghost.respawn_target = (center_x, center_y)
-    
-    logger.info(f"Fantôme {getattr(ghost, 'id', 'unknown')} mangé par Pacman. Score: +200")
-    
+
+    role = ghost.role.lower()
+    respawn_pos = None
+    if hasattr(room, "initial_positions") and role in room.initial_positions:
+        respawn_pos = room.initial_positions[role]
+    else:
+        respawn_pos = (WIDTH // 2, HEIGHT // 2)
+
+    ghost.respawn_target = respawn_pos
+    logger.info(f"Fantôme {getattr(ghost, 'id', 'unknown')} mangé par Pacman. Score: +200 (respawn {respawn_pos})")
     return True
+
+
+def update_ghost_eaten_states(room):
+    for player in room.players.values():
+        # Si c'est un fantôme et qu'il est mangé, on met à jour son état
+        if player.role.lower().startswith("fantome") and getattr(player, "is_eaten", False):
+            if hasattr(player, "update_eaten_state"):
+                player.update_eaten_state()
 
 def sync_game_state(room, current_id, event=None):
     """

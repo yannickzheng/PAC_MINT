@@ -31,7 +31,7 @@ class Player:
         self.image_left = pygame.transform.scale(pygame.image.load("images/pacman - left.png"), (self.size, self.size))
         self.image_up = pygame.transform.scale(pygame.image.load("images/pacman - up.png"), (self.size, self.size))
         self.image_down = pygame.transform.scale(pygame.image.load("images/pacman - down.png"), (self.size, self.size))
-        self.image_red_ghost = pygame.transform.scale(pygame.image.load("images/red_ghost2.png"), (self.size, self.size))
+        self.image_red_ghost = pygame.transform.scale(pygame.image.load("images/red_ghost.png"), (self.size, self.size))
 
         self.image_super_right = pygame.transform.scale(pygame.image.load("images/Black Pacman.png"), (self.size, self.size))
         self.image_super_left = pygame.transform.scale(pygame.image.load("images/Black Pacman-left.png"), (self.size, self.size))
@@ -232,7 +232,7 @@ class PacMan(Player):
 
         keys = pygame.key.get_pressed()
 
-        if self.invincible and (self.invincibility_timer // 10) % 2 == 0:
+        if self.invincible and (self.invincibility_timer // 30) % 2 == 0:
             if keys[pygame.K_LEFT]: return self.image_super_left
             if keys[pygame.K_RIGHT]: return self.image_super_right
             if keys[pygame.K_UP]: return self.image_super_up
@@ -346,9 +346,15 @@ class Ghost(Player):
         self.respawn_target = None
         self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
         self.current_path = []  # Chemin actuel pour le fantôme
+        print(f"Création GHOST id={id(self)} pour pid={self.id}")
 
     def move(self, players, controlled=False):
-        """Si controlled=True : le joueur déplace ce fantôme au clavier.Sinon : IA A* via ghost_ai_move."""
+
+        if self.is_eaten and self.respawn_target:
+            self.update_eaten_state()
+            self.update()  # Met à jour .position etc
+            return
+
         if controlled:
             keys = pygame.key.get_pressed()
             new_x, new_y = self.x, self.y
@@ -373,7 +379,10 @@ class Ghost(Player):
 
     def draw(self, screen, controlled):
         """Affiche le fantôme à l'écran"""
+        #print(f"[DEBUG] draw ghost {self.id} is_eaten={self.is_eaten}")
         if self.is_eaten:
+            #print(f"[DEBUG] draw ghost {self.id} is_eaten={self.is_eaten}, id mémoire={id(self)}")
+
             # Si le fantôme est mangé, on le dessine en tant que boule translucide
             ghost_surface = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
             pygame.draw.circle(
@@ -462,7 +471,6 @@ class Ghost(Player):
                 self.score += 1000
 
     def update_eaten_state(self):
-        """Déplace le fantôme mangé vers le centre en ligne droite sans collision."""
         if not self.is_eaten or self.respawn_target is None:
             return
 
@@ -472,21 +480,18 @@ class Ghost(Player):
         dist = math.hypot(dx, dy)
 
         # Si on est déjà au point de respawn, on termine
-        if dist == 0:
+        if dist < self.speed:  # PATCH: < self.speed et PAS dist == 0
+            self.x, self.y = tx, ty
+            self.position = (self.x, self.y)  # <--- INDISPENSABLE pour la synchro !!
             self.is_eaten = False
             self.respawn_target = None
+            print("[SERVEUR] Fantôme arrivé au point de respawn !")
             return
 
-        # On avance de `speed` pixels vers la cible (ou moins si on est tout proche)
-        step = min(self.speed, dist)
-        self.x += step * dx / dist
-        self.y += step * dy / dist
-
-        # Si on a atteint la cible, on réactive le fantôme normalement
-        if step == dist:
-            self.x, self.y = tx, ty
-            self.is_eaten = False
-            self.respawn_target = None
+        # Sinon on bouge vers la cible
+        self.x += self.speed * dx / dist
+        self.y += self.speed * dy / dist
+        self.position = (self.x, self.y)  # <--- INDISPENSABLE chaque frame !
 
     def ghost_ai_move(self, pacman):
         if self.is_eaten:
