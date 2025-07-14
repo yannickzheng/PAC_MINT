@@ -19,6 +19,9 @@ urlpatterns = [
     path('friends/accept/<str:username>/', views.accept_friend_request, name="accept_friend"),
     path('friends/add/', views.add_friend, name='add_friend'),
     path('friends/<str:username>/stats/', views.friend_profile_view, name='friend_stats'),
+    path('api/login/', views.api_login, name="api_login"),
+    path('api/submit_score/', views.api_submit_score, name="api_submit_score"),
+    path("urls/", views.list_urls)
 
 ]
 

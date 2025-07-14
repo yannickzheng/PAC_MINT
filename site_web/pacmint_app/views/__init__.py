@@ -12,3 +12,6 @@ from .friends import (
     add_friend,
 )
 from .friend_profile_view import friend_profile_view
+from .api_auth import api_login
+from .api_score import api_submit_score
+from .test_urls import list_urls

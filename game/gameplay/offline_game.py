@@ -6,25 +6,49 @@ from game.core.assets import load_game_assets
 from game.map import MAP_SURFACE, MAP_DATA
 from game.ui.components import display_loading_screen, draw_button, game_over, you_win
 from game.utils.helpers import distance, is_wall_at_position
+from game.api import submit_score  # ✅ AJOUT
+
+import pygame
+import random
+import requests  # ✅
+from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
+from game.player import Player, PacMan, Ghost
+from game.core.assets import load_game_assets
+from game.map import MAP_SURFACE, MAP_DATA
+from game.ui.components import display_loading_screen, draw_button, game_over, you_win
+from game.utils.helpers import distance, is_wall_at_position
 
 
+def send_score_to_server(user_id, role, score, outcome):
+    try:
+        url = "http://localhost:8080/api/submit_score/"  # ✅ Corrigé ici
+        payload = {
+            "user_id": user_id,
+            "role": role,
+            "score": score,
+            "outcome": outcome
+        }
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            print("✅ Score envoyé avec succès au serveur.")
+        else:
+            print(f"❌ Échec de l'envoi du score ({response.status_code}):\n{response.text}")
+    except Exception as e:
+        print(f"❌ Erreur de connexion au serveur: {e}")
 
-def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, role):
-    """Mode de jeu hors ligne sans besoin de serveur"""
+
+def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, role, user_id=None):  # ✅ user_id
     assets = load_game_assets()
     coin_offset = assets['coin_offset']
     fruit_offset = assets['fruit_offset']
-
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
     clock = pygame.time.Clock()
 
-    # ——— On instancie un seul PacMan, qu'on utilisera pour IA ou contrôle ———
     spawn_pos = (CELL_SIZE * 9, CELL_SIZE * 10)
     pacman = PacMan("127.0.0.1", 0, spawn_pos)
     pacman.id = "pacman"
 
-    # Création des 4 fantômes IA (autres fantômes non contrôlés par le joueur)
     ghost_positions = [
         (WIDTH // 2 - 20, HEIGHT // 2 - 20),
         (WIDTH // 2 + 20, HEIGHT // 2 - 20),
@@ -35,20 +59,14 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
     players = {"pacman": pacman}
 
     for i, pos in enumerate(ghost_positions):
-        # si le joueur contrôle un fantôme, on ne recrée pas le même
         if not (role == "fantome" and i == 0):
             g = Ghost("127.0.0.1", 0, pos)
             g.id = f"ghost{i + 1}"
             ghosts.append(g)
             players[g.id] = g
 
-    if role == "pacman":
-        playerControlled = pacman
-    elif role == "fantome":
-        # Tu choisis le fantôme que tu veux contrôler (par ex, le 1er)
-        playerControlled = ghosts[0]
+    playerControlled = pacman if role == "pacman" else ghosts[0]
 
-    # Génération des pièces et fruits pour le mode hors ligne identique au serveur
     coins = []
     fruits = []
     for y in range(len(MAP_DATA)):
@@ -58,7 +76,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
             elif MAP_DATA[y][x] == 4:
                 fruits.append((x * CELL_SIZE, y * CELL_SIZE))
 
-    pygame.time.delay(500)  # Petit délai pour l'affichage de l'écran de chargement
+    pygame.time.delay(500)
 
     run = True
     while run:
@@ -66,21 +84,28 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
             if event.type == pygame.QUIT:
                 run = False
 
-        # Vérifier si PacMan a perdu toutes ses vies
         if pacman.lives <= 0:
             if role == "pacman":
                 game_over(playerControlled.score, screen, font)
+                if user_id:
+                    send_score_to_server(user_id, "Pacman", playerControlled.score, "lose")
             else:
                 you_win(playerControlled.score, screen, font)
+                if user_id:
+                    send_score_to_server(user_id, "Fantome", playerControlled.score, "win")
             return
+
         if pacman.ghosts_eaten >= 15:
             if role == "pacman":
                 you_win(playerControlled.score, screen, font)
+                if user_id:
+                    send_score_to_server(user_id, "Pacman", playerControlled.score, "win")
             else:
                 game_over(playerControlled.score, screen, font)
+                if user_id:
+                    send_score_to_server(user_id, "Fantome", playerControlled.score, "lose")
             return
 
-        # Déplacement du joueur (si c'est PacMan ou un fantôme, selon le rôle)
         if role == "pacman":
             playerControlled.move(players, controlled=True)
             for g in ghosts:
@@ -88,16 +113,11 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         elif role == "fantome":
             pacman.pacman_ai_move(players, coins, fruits, ghosts)
             for g in ghosts:
-                # Le fantôme contrôlé réagit au clavier, les autres sont en IA
                 g.move(players, controlled=(g is playerControlled))
 
-        # Vérification des collisions
         if role == "pacman":
-            # 1) COLLISIONS PACMAN vs COINS & FRUITS
             playerControlled.check_collision_with_items(coins, fruits)
-            # 2) COLLISIONS PACMAN <=> FANTOMES
             playerControlled.check_collision_with_ghosts(ghosts, players)
-
         elif role == "fantome":
             pacman.check_collision_with_ghosts(ghosts, players)
             pacman.check_collision_with_items(coins, fruits)
@@ -111,7 +131,6 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
                 if pacman.super_power_timer <= 0:
                     pacman.super_power_active = False
 
-        # Mise à jour des timers
         if role == "pacman":
             if playerControlled.invincible:
                 playerControlled.invincibility_timer -= 1
@@ -122,47 +141,33 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
                 if playerControlled.super_power_timer <= 0:
                     playerControlled.super_power_active = False
 
-        # Affichage du jeu
         screen.fill((0, 0, 0))
         screen.blit(MAP_SURFACE, (0, 0))
 
-        # Affichage des pièces et fruits
         for coin in coins:
             screen.blit(coin_image, (coin[0] + coin_offset, coin[1] + coin_offset))
-
         for fruit in fruits:
             screen.blit(fruit_image, (fruit[0] + fruit_offset, fruit[1] + fruit_offset))
 
-        # Affichage des joueurs
         for ghost in ghosts:
             ghost.update_eaten_state()
         if role == "fantome":
             playerControlled.update_eaten_state()
 
-        # Affichage de PacMan puis de tous les fantômes
         if role == "pacman":
-            # 1) PacMan contrôlé
             playerControlled.draw(screen, controlled=True)
-
-            # 2) Les 4 fantômes (IA)
             for g in ghosts:
                 g.draw(screen, controlled=False)
         else:
-          # 1) PacMan en IA
             pacman.draw(screen, controlled=True)
-          # 2) Les fantômes IA
             for g in ghosts:
                 g.draw(screen, controlled=False)
-          # 3) Le fantôme contrôlé
             playerControlled.draw(screen, controlled=True)
 
-        # Affichage du score et des vies
         score_text = font.render(f"Score: {playerControlled.score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
-
         lives_text = font.render(f"Vies: {playerControlled.lives}", True, (255, 255, 255))
         screen.blit(lives_text, (WIDTH - 100, 10))
-
         ghosts_eaten_text = font.render(f"Fantômes mangés: {pacman.ghosts_eaten}/15", True, (255, 255, 255))
         screen.blit(ghosts_eaten_text, (WIDTH - 220, 30))
 
@@ -170,3 +175,4 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         clock.tick(60)
 
     return
+
