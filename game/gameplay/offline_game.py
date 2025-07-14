@@ -73,6 +73,12 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
             else:
                 you_win(playerControlled.score, screen, font)
             return
+        if pacman.ghosts_eaten >= 15:
+            if role == "pacman":
+                you_win(playerControlled.score, screen, font)
+            else:
+                game_over(playerControlled.score, screen, font)
+            return
 
         # Déplacement du joueur (si c'est PacMan ou un fantôme, selon le rôle)
         if role == "pacman":
@@ -155,7 +161,10 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         screen.blit(score_text, (10, 10))
 
         lives_text = font.render(f"Vies: {playerControlled.lives}", True, (255, 255, 255))
-        screen.blit(lives_text, (WIDTH - 180, 10))
+        screen.blit(lives_text, (WIDTH - 100, 10))
+
+        ghosts_eaten_text = font.render(f"Fantômes mangés: {pacman.ghosts_eaten}/15", True, (255, 255, 255))
+        screen.blit(ghosts_eaten_text, (WIDTH - 220, 30))
 
         pygame.display.flip()
         clock.tick(60)

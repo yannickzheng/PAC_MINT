@@ -146,6 +146,7 @@ class PacMan(Player):
         self.super_power_timer = 0
         self.invincible = False
         self.invincibility_timer = 0
+        self.ghosts_eaten = 0
 
     def move(self, players, controlled=False):
         """Déplace PacMan contrôlé par le joueur avec les touches du clavier"""
@@ -329,10 +330,11 @@ class PacMan(Player):
     def check_collision_with_ghosts(self, ghosts, players):
         """Gère la collision Pacman vs tous les fantômes."""
         for ghost in ghosts:
-            if distance(self.x, self.y, ghost.x, ghost.y) < CELL_SIZE:
+            if not ghost.is_eaten and distance(self.x, self.y, ghost.x, ghost.y) < CELL_SIZE:
                 if self.super_power_active:
                     self.eat_ghost(ghost, players)
                     self.score += 200
+                    self.ghosts_eaten += 1
                 elif not self.invincible:
                     self.lose_life()
                     self.invincible = True

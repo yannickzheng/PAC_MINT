@@ -86,22 +86,38 @@ def select_online_role(screen, font, taken_roles = None):
                     color_disabled if "pacman" in taken_roles else BLUE,
                     color_disabled if "pacman" in taken_roles else color_active,
                     screen, font)
+        if "pacman" in taken_roles:
+            taken_roles_text = font.render(f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0))
+            screen.blit(taken_roles_text, (250, 470))
+
         draw_button("Fantôme 1", 800, 250, 200, 50,
                     color_disabled if "fantome_1" in taken_roles else BLUE,
                     color_disabled if "fantome_1" in taken_roles else color_active,
                     screen, font)
+        if "fantome_1" in taken_roles:
+            taken_roles_text = font.render(f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0))
+            screen.blit(taken_roles_text, (1020, 260))
         draw_button("Fantôme2 ", 800, 350, 200, 50,
                     color_disabled if "fantome_2" in taken_roles else BLUE,
                     color_disabled if "fantome_2" in taken_roles else color_active,
                     screen, font)
+        if "fantome_2" in taken_roles:
+            taken_roles_text = font.render(f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0))
+            screen.blit(taken_roles_text, (1020, 360))
         draw_button("Fantôme 3", 800, 450, 200, 50,
                     color_disabled if "fantome_3" in taken_roles else BLUE,
                     color_disabled if "fantome_3" in taken_roles else color_active,
                     screen, font)
+        if "fantome_3" in taken_roles:
+            taken_roles_text = font.render(f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0))
+            screen.blit(taken_roles_text, (1020, 460))
         draw_button("Fantôme 4", 800, 550, 200, 50,
                     color_disabled if "fantome_4" in taken_roles else BLUE,
                     color_disabled if "fantome_4" in taken_roles else color_active,
                     screen, font)
+        if "famtome_4" in taken_roles:
+            taken_roles_text = font.render(f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0))
+            screen.blit(taken_roles_text, (1020, 560))
         draw_button("Retour", 520, 650, 200, 50, BLUE, CYAN, screen, font)
 
         for event in pygame.event.get():
