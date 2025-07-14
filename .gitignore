@@ -11,6 +11,12 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Setup.py
+*.egg-info/
+*.egg
+*.whl
+*.tar.gz
+
 # System
 .DS_Store
 
