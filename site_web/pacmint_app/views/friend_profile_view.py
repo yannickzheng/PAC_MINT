@@ -5,7 +5,6 @@ from ..models import GameResult, Friend
 
 @login_required
 def friend_profile_view(request, username):
-    # Vérifie si l'utilisateur ciblé est un ami
     target_user = get_object_or_404(User, username=username)
     is_friend = Friend.objects.filter(player=request.user, friend=target_user, status="accepted").exists()
 
@@ -18,7 +17,6 @@ def friend_profile_view(request, username):
     total_wins = results.filter(outcome='win').count()
     total_losses = results.filter(outcome='lose').count()
     total_score = sum(r.score for r in results)
-
     win_ratio = f"{(total_wins / total_games * 100):.1f}%" if total_games > 0 else "N/A"
 
     context = {

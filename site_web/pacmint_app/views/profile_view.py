@@ -4,7 +4,7 @@ from ..models import GameResult
 
 @login_required
 def profile_view(request):
-    user_results = GameResult.objects.filter(player=request.user)
+    user_results = GameResult.objects.select_related('player').filter(player=request.user)
 
     total_games = user_results.count()
     total_wins = user_results.filter(outcome='win').count()
