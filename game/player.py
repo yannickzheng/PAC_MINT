@@ -379,9 +379,9 @@ class Ghost(Player):
 
     def draw(self, screen, controlled):
         """Affiche le fantôme à l'écran"""
-        print(f"[DEBUG] draw ghost {self.id} is_eaten={self.is_eaten}")
+        #print(f"[DEBUG] draw ghost {self.id} is_eaten={self.is_eaten}")
         if self.is_eaten:
-            print(f"[DEBUG] draw ghost {self.id} is_eaten={self.is_eaten}, id mémoire={id(self)}")
+            #print(f"[DEBUG] draw ghost {self.id} is_eaten={self.is_eaten}, id mémoire={id(self)}")
 
             # Si le fantôme est mangé, on le dessine en tant que boule translucide
             ghost_surface = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
