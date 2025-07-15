@@ -80,7 +80,6 @@ def update_game_state_from_server(
 
     # Mise à jour des joueurs
     for data in state.get("players", []):
-        # print(f"[DEBUG][SYNC] Serveur dit pour {data['id']} (role={data['roles']}): is_eaten={data.get('is_eaten')}")
         pid = data["id"]
         role = data["roles"].lower()
 
@@ -130,7 +129,6 @@ def update_game_state_from_server(
                 before = player.is_eaten
                 player.is_eaten = data.get("is_eaten", False)
                 after = player.is_eaten
-                # print(f"[DEBUG][SYNC] Fantôme {pid}: is_eaten avant={before} → après={after}, id mémoire={id(player)}")
             if hasattr(player, "respawn_target"):
                 player.respawn_target = data.get("respawn_target", None)
 
@@ -186,10 +184,6 @@ def update_game_state_from_server(
                 ):
                     del role_to_player_id[role]
             print(f"[CLIENT] Joueur {pid} supprimé (parti ou déconnecté)")
-    """for pid, player in players.items():
-        if "fantome" in player.role.lower():
-            print(f"[DEBUG][LOCAL] Instance {pid} (role={player.role}): is_eaten={player.is_eaten}, id mémoire={id(player)}, objet={repr(player)}")
-            print(f"[DEBUG][LOCAL] Instance {pid} (role={player.role}): is_eaten={player.is_eaten}, id mémoire={id(player)}")"""
 
 
 def main_game(
