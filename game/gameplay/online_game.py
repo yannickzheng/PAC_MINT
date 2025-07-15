@@ -314,24 +314,27 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
             ]
         }
         # On envoie la position et on reçoit la vérité serveur
-        response = n.send_command(Protocols.Request.UPDATE_POSITION, payload)
-        update_game_state_from_server(response, players, current_player_id, coins, fruits, role_to_player_id,
-                                      player_id_to_role, chat_box)
+        n.send_command_async(Protocols.Request.UPDATE_POSITION, payload)
 
+        # --- RECEVOIR ET TRAITER LA RÉPONSE DU SERVEUR ---
+        response = n.receive_json_non_blocking()
+        if response:
+            update_game_state_from_server(response, players, current_player_id, coins, fruits, role_to_player_id,
+                                          player_id_to_role, chat_box)
 
-        if response.get("game_over"):
-            winner = response.get("winner")
-            if winner == "fantomes":
-                if playerControlled.role.lower().startswith("pacman"):
-                    game_over(playerControlled.score, screen, font)
-                else:
-                    you_win(playerControlled.score, screen, font)
-            elif winner == "pacman":  # (au cas où tu ajoutes la victoire Pacman plus tard)
-                if playerControlled.role.lower().startswith("pacman"):
-                    you_win(playerControlled.score, screen, font)
-                else:
-                    game_over(playerControlled.score, screen, font)
-            return  # On quitte la partie !
+            if response.get("game_over"):
+                winner = response.get("winner")
+                if winner == "fantomes":
+                    if playerControlled.role.lower().startswith("pacman"):
+                        game_over(playerControlled.score, screen, font)
+                    else:
+                        you_win(playerControlled.score, screen, font)
+                elif winner == "pacman":  # (au cas où tu ajoutes la victoire Pacman plus tard)
+                    if playerControlled.role.lower().startswith("pacman"):
+                        you_win(playerControlled.score, screen, font)
+                    else:
+                        game_over(playerControlled.score, screen, font)
+                return  # On quitte la partie !
 
         # Vérifier s'il y a des messages de chat entrants
         try:

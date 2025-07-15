@@ -50,6 +50,14 @@ class Network:
         self.client.sendall(json.dumps(payload).encode() + b'\n')
         return self.receive_json()
     
+    def send_command_async(self, request, message=None):
+        """Envoie une commande au serveur sans attendre de réponse."""
+        payload = {"command": request, "message": message}
+        try:
+            self.client.sendall(json.dumps(payload).encode() + b'\n')
+        except Exception as e:
+            print(f"Erreur lors de l'envoi de la commande asynchrone : {e}")
+
     def has_data_waiting(self):
         """Vérifie s'il y a des données en attente sans bloquer"""
         
