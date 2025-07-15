@@ -1,16 +1,16 @@
-import pygame
-import sys
 import logging
-from common.global_variable import WIDTH, CELL_SIZE
+import sys
+
+import pygame
+
+from common.global_variable import CELL_SIZE, WIDTH
 from common.network import Network
 from common.protocols import Protocols
-from game.player import Player, PacMan, Ghost
 from game.map import MAP_SURFACE
+from game.menus.main_menu import select_online_role
+from game.player import Ghost, PacMan, Player
 from game.ui.chat_box import ChatBox
 from game.ui.components import display_loading_screen, game_over, you_win
-from game.menus.main_menu import select_online_role
-
-import logging
 
 logger = logging.getLogger(__name__)
 

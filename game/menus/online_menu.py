@@ -1,9 +1,10 @@
-import pygame
 import sys
-from common.global_variable import WIDTH, HEIGHT, BLUE, CYAN, PURPLE
 
-from game.ui.components import draw_button
+import pygame
+
+from common.global_variable import BLUE, CYAN, HEIGHT, PURPLE, WIDTH
 from game.menus.main_menu import select_online_role
+from game.ui.components import draw_button
 
 
 def create_game(screen, image, font):

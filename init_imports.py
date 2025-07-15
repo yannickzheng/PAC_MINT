@@ -3,8 +3,8 @@ Configuration simple et robuste des imports pour PAC_MINT
 Ce module doit être importé en premier dans les points d'entrée
 """
 
-import sys
 import os
+import sys
 
 
 def init_project_imports():

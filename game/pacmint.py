@@ -1,16 +1,17 @@
-import sys
 import os
+import sys
+
 import pygame
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-from common.global_variable import WIDTH, HEIGHT
+from common.global_variable import HEIGHT, WIDTH
 from game.core.assets import load_game_assets
-from game.menus.main_menu import main_menu, select_role, select_online_role
-from game.menus.online_menu import online_menu, create_game, join_game
 from game.gameplay.offline_game import offline_game
 from game.gameplay.online_game import main_game
+from game.menus.main_menu import main_menu, select_online_role, select_role
+from game.menus.online_menu import create_game, join_game, online_menu
 from game.utils.helpers import preload_assets
 
 # Pygame initialization

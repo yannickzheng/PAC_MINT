@@ -2,9 +2,10 @@
 # It can be either a coin that increases the score
 # or a power-up that allows eating ghosts for a certain time.
 
-import pygame
 import os
 import sys
+
+import pygame
 
 from common.global_variable import CELL_SIZE
 from game.map import MAP_DATA

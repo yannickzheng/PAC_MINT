@@ -1,6 +1,7 @@
 import pygame
-from game.map import MAP_DATA
+
 from common.global_variable import CELL_SIZE
+from game.map import MAP_DATA
 from game.ui.components import display_loading_screen
 
 

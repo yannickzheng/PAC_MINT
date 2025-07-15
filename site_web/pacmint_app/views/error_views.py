@@ -1,5 +1,5 @@
-from django.shortcuts import render
 from django.http import HttpResponseNotFound
+from django.shortcuts import render
 
 
 def custom_404_view(request, exception):

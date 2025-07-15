@@ -1,6 +1,7 @@
-from django.shortcuts import render, redirect
-from ..forms import PlayerRegistrationForm
 from django.contrib import messages
+from django.shortcuts import redirect, render
+
+from ..forms import PlayerRegistrationForm
 
 
 def register_player(request):

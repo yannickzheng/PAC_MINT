@@ -1,5 +1,6 @@
-from django.urls import path
 from django.conf import settings
+from django.urls import path
+
 from . import views
 from .views.api import submit_game_result
 

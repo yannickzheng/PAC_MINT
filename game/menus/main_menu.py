@@ -1,7 +1,8 @@
-import pygame
 import sys
-from common.global_variable import WIDTH, HEIGHT, BLUE, CYAN, PURPLE
 
+import pygame
+
+from common.global_variable import BLUE, CYAN, HEIGHT, PURPLE, WIDTH
 from game.ui.components import draw_button
 
 

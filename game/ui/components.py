@@ -1,4 +1,5 @@
 import pygame
+
 from common.global_variable import WHITE
 
 

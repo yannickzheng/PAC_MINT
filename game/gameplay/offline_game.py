@@ -1,9 +1,11 @@
-import pygame
 import random
-from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
-from game.player import Player, PacMan, Ghost
+
+import pygame
+
+from common.global_variable import CELL_SIZE, HEIGHT, WIDTH
 from game.core.assets import load_game_assets
-from game.map import MAP_SURFACE, MAP_DATA
+from game.map import MAP_DATA, MAP_SURFACE
+from game.player import Ghost, PacMan, Player
 from game.ui.components import display_loading_screen, game_over, you_win
 from game.utils.helpers import distance, is_wall_at_position
 

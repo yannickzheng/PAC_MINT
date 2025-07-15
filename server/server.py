@@ -1,24 +1,24 @@
-import sys
-import os
-import threading
 import json
-import uuid
+import os
 import socket
+import sys
+import threading
 import time
+import uuid
 
 # Configuration robuste des imports - DOIT ÊTRE EN PREMIER
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-from _thread import start_new_thread
-from rooms import RoomManager
-from common.protocols import Protocols
-from game.utils.helpers import distance
-from common.global_variable import CELL_SIZE, WIDTH, HEIGHT
-
-
 # Configuration pour la journalisation
 import logging
+from _thread import start_new_thread
+
+from rooms import RoomManager
+
+from common.global_variable import CELL_SIZE, HEIGHT, WIDTH
+from common.protocols import Protocols
+from game.utils.helpers import distance
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"

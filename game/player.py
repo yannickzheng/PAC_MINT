@@ -1,8 +1,10 @@
-import pygame
-from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
-from game.map import MAP_DATA
 import heapq
 import math
+
+import pygame
+
+from common.global_variable import CELL_SIZE, HEIGHT, WIDTH
+from game.map import MAP_DATA
 from game.utils.helpers import distance
 
 

@@ -1,9 +1,9 @@
 import random
 import time
 
-from game.player import Player, PacMan, Ghost
+from common.global_variable import HEIGHT, WIDTH
 from game.items import ServerItemManager
-from common.global_variable import WIDTH, HEIGHT
+from game.player import Ghost, PacMan, Player
 
 """Faire en sort qu'un joueur n'est présent que dans une seule salle"""
 

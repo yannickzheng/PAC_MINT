@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
 from django.contrib.auth.models import User
-from ..models import GameResult, Friend
+from django.shortcuts import get_object_or_404, render
+
+from ..models import Friend, GameResult
 
 
 @login_required

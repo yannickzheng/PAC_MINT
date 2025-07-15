@@ -1,8 +1,9 @@
-from django import forms
-from .models import Player
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Submit, Layout, Field
+from crispy_forms.layout import Field, Layout, Submit
+from django import forms
 from django.contrib.auth.models import User
+
+from .models import Player
 
 
 class PlayerRegistrationForm(forms.ModelForm):

@@ -1,6 +1,6 @@
 import json
-import socket
 import select
+import socket
 
 
 class Network:

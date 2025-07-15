@@ -1,5 +1,7 @@
-import pygame
 import os
+
+import pygame
+
 from common.global_variable import CELL_SIZE
 
 

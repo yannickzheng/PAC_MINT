@@ -1,15 +1,10 @@
-from common.global_variable import (
-    WIDTH,
-    HEIGHT,
-    CELL_SIZE,
-    MAP_WIDTH,
-    MAP_HEIGHT,
-    WALL_COLOR,
-    PATH_COLOR,
-    DEFAULT_COLOR,
-)
-import pygame
 import random
+
+import pygame
+
+from common.global_variable import (CELL_SIZE, DEFAULT_COLOR, HEIGHT,
+                                    MAP_HEIGHT, MAP_WIDTH, PATH_COLOR,
+                                    WALL_COLOR, WIDTH)
 
 
 def create_map():
