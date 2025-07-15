@@ -4,7 +4,7 @@ from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
 from game.player import Player, PacMan, Ghost
 from game.core.assets import load_game_assets
 from game.map import MAP_SURFACE, MAP_DATA
-from game.ui.components import display_loading_screen, draw_button, game_over, you_win
+from game.ui.components import display_loading_screen, game_over, you_win
 from game.utils.helpers import distance, is_wall_at_position
 
 
@@ -164,7 +164,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         screen.blit(lives_text, (WIDTH - 100, 10))
 
         ghosts_eaten_text = font.render(f"Fantômes mangés: {pacman.ghosts_eaten}/15", True, (0, 0, 255))
-        screen.blit(ghosts_eaten_text, (WIDTH - 220, 30))
+        screen.blit(ghosts_eaten_text, (WIDTH - 200, 30))
 
         pygame.display.flip()
         clock.tick(60)

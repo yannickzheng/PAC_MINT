@@ -213,6 +213,11 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                     if collision_result["ghost_eaten"]:
                         pacman = collision_result["ghost_eaten"]["pacman"]
                         ghost = collision_result["ghost_eaten"]["ghost"]
+
+                        # marquer le fantôme comme mangé IMMEDIATEMENT pour  ne pas le manger plusieurs fois
+                        if not ghost.is_eaten:
+                            ghost.is_eaten = True
+
                         eat_ghost(pacman, ghost, room)
                         event = "ghost_eaten"
                         logger.info(f"Fantôme mangé ! Score Pacman : {pacman.score}")
@@ -380,8 +385,7 @@ def update_player_states(room):
         
         # Mise à jour du timer de super-pouvoir
         if getattr(player, "super_power_active", False):
-            player.super_power_timer -= 1
-            if player.super_power_timer <= 0:
+            if time.time() >= getattr(player, "super_power_end_time", 0):
                 player.super_power_active = False
                 logger.info(f"Super-pouvoir désactivé pour le joueur {pid}")
 
@@ -401,9 +405,9 @@ def server_check_item_collision(room, pacman):
     pacman.score += 10 * len(coins_collected)
     pacman.score += 50 * len(fruits_collected)
 
-def server_activate_super_power(pacman, duration=300):
+def server_activate_super_power(pacman, duration=5):
     pacman.super_power_active = True
-    pacman.super_power_timer = duration
+    pacman.super_power_end_time = time.time() + duration
 
 def check_pacman_ghost_collision(room):
     """Vérifie les collisions entre Pacman et les fantômes."""
@@ -440,7 +444,6 @@ def eat_ghost(pacman, ghost, room):
     ghost.is_eaten = True
     if hasattr(pacman, "ghosts_eaten"):
         pacman.ghosts_eaten += 1
-        print(f"[SERVER] Pacman a mangé {pacman.ghosts_eaten} fantômes")
 
     role = ghost.role.lower()
     respawn_pos = None

@@ -83,7 +83,7 @@ def generate_map_walls(map):
     return map
 
 def generate_items(map):
-    """Ajoute des pièces (2) et des cerises (4) sur les chemins de la carte."""
+    """Ajoute des pièces (2) et des fruits (4) sur les chemins de la carte."""
     for y in range(len(map)):
         for x in range(len(map[y])):
             if map[y][x] == 0:  # On place des objets seulement sur les chemins
