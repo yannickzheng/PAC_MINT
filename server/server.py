@@ -59,16 +59,26 @@ s.listen(max_players)
 logger.info("Serveur démarré, en attente de connexions...")
 
 def game_tick():
+    """Envoie des mises à jour régulières à tous les joueurs."""
     while True:
         for room in room_manager.rooms.values():
+            # Mettre à jour les états des joueurs
             update_player_states(room)
             update_ghost_eaten_states(room)
-            # Diffuse l'état (optionnel, mais pratique)
-            # broadcast_to_room(room)  # désactivé pour éviter envois concurrents
-        time.sleep(0.05)  # 20 fois par seconde (50 ms)
 
-tick_thread = threading.Thread(target=game_tick, daemon=True)
-tick_thread.start()
+            # Diffuser l'état du jeu à tous les joueurs
+            for player_id, player in room.players.items():
+                if hasattr(player, 'tcp_socket') and player.tcp_socket:
+                    try:
+                        state = sync_game_state(room, player_id)
+                        send_json(player.tcp_socket, state)
+                    except Exception as e:
+                        logger.error(f"Erreur lors de la diffusion au joueur {player_id}: {e}")
+
+        time.sleep(0.1)  # Envoie des mises à jour toutes les 100ms
+
+# Démarrer le thread de mise à jour régulière
+threading.Thread(target=game_tick, daemon=True).start()
 
 
 #Gestion de l'arrêt du serveur
