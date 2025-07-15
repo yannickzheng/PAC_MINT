@@ -387,7 +387,7 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
             ghosts_eaten_text = font.render(
                 f"Fantômes mangés: {playerControlled.ghosts_eaten}/ 15", True, (0, 0, 255)
             )
-            screen.blit(ghosts_eaten_text, (WIDTH - 220, 30))
+            screen.blit(ghosts_eaten_text, (WIDTH - 200, 30))
 
         # Dessiner le chat
         chat_box.draw(screen)

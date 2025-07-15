@@ -164,7 +164,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         screen.blit(lives_text, (WIDTH - 100, 10))
 
         ghosts_eaten_text = font.render(f"Fantômes mangés: {pacman.ghosts_eaten}/15", True, (0, 0, 255))
-        screen.blit(ghosts_eaten_text, (WIDTH - 220, 30))
+        screen.blit(ghosts_eaten_text, (WIDTH - 200, 30))
 
         pygame.display.flip()
         clock.tick(60)
