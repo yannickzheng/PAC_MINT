@@ -66,8 +66,8 @@ def main():
                         fruit_image=assets['fruit_image'],
                         coin_offset=assets['coin_offset'],
                         fruit_offset=assets['fruit_offset'],
-                        role=role,
-                        user_id=user_id
+                        role=role
+
                     )
 
                 elif online_choice == "join":
@@ -88,7 +88,7 @@ def main():
                             coin_offset=assets['coin_offset'],
                             fruit_offset=assets['fruit_offset'],
                             role=role,
-                            user_id=user_id
+
                         )
 
                 elif online_choice == "back":
