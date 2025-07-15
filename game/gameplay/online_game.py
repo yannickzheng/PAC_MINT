@@ -23,7 +23,20 @@ def update_game_state_from_server(state, players, current_player_id, coins, frui
             pid = data["id"]
             role_to_player_id[role] = pid
             player_id_to_role[pid] = role
-    # Gestion des messages de chat
+
+    # Gestion de l'événement de chat (pour la diffusion)
+    event_data = state.get("event")
+    if event_data and event_data.get("action") == "chat_message" and chat_box:
+        chat_message = event_data.get("chat_message")
+        if chat_message:
+            logger.info(f"[CLIENT] Message de chat reçu via event: {chat_message}")
+            chat_box.add_message(
+                chat_message["player_name"],
+                chat_message["message"],
+                chat_message["timestamp"]
+            )
+
+    # Gestion des messages de chat (pour la confirmation à l'expéditeur)
     if state.get("action") == "chat_message" and chat_box:
         chat_message = state.get("chat_message")
         if chat_message:
@@ -219,8 +232,6 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
     print("WELCOME reçu:", welcome)
     all_players_data = welcome
     print("fin")
-    print("Joueurs récupérés :", all_players_data["players"])
-    print(f"[CLIENT] Données reçues du serveur (welcome) : {all_players_data}")
 
     # création de la liste des joueurs
     players = {}
@@ -315,27 +326,18 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
                 }
             ]
         }
-        # On envoie la position et on reçoit la vérité serveur
-        response = n.send_command(Protocols.Request.UPDATE_POSITION, payload)
-        update_game_state_from_server(response, players, current_player_id, coins, fruits, role_to_player_id,
-                                      player_id_to_role, chat_box)
+        n.send_command_async(Protocols.Request.UPDATE_POSITION, payload)
 
+        # --- RECEVOIR ET TRAITER LA RÉPONSE DU SERVEUR ---
+        try:
+            response = n.receive_json_non_blocking()
+            if response:
+                update_game_state_from_server(response, players, current_player_id, coins, fruits, role_to_player_id,
+                                              player_id_to_role, chat_box)
+        except Exception as e:
+            logger.error(f"Erreur en recevant les données du serveur: {e}")
 
-        if response.get("game_over"):
-            winner = response.get("winner")
-            if winner == "fantomes":
-                if playerControlled.role.lower().startswith("pacman"):
-                    game_over(playerControlled.score, screen, font)
-                else:
-                    you_win(playerControlled.score, screen, font)
-            elif winner == "pacman":  # (au cas où tu ajoutes la victoire Pacman plus tard)
-                if playerControlled.role.lower().startswith("pacman"):
-                    you_win(playerControlled.score, screen, font)
-                else:
-                    game_over(playerControlled.score, screen, font)
-            return  # On quitte la partie !
-
-        # Vérifier s'il y a des messages de chat entrants
+        # --- RECEVOIR ET TRAITER LES DONNÉES ENTRANTES (CHAT, ÉTAT DU JEU) ---
         try:
             incoming_data = n.receive_json_non_blocking()
             if incoming_data:

@@ -39,7 +39,7 @@ def recv_json(conn):
 #Paramètres
 timeout = 10 #temps en seconde pour considérer un joueur inactif
 max_players = 5 # Limite de joueurs
-server = "localhost" # Adresse IP du serveur
+server = "0.0.0.0"
 port = 5555 # Port de communication
 
 # Initialisation d'un RoomManager
@@ -59,16 +59,26 @@ s.listen(max_players)
 logger.info("Serveur démarré, en attente de connexions...")
 
 def game_tick():
+    """Envoie des mises à jour régulières à tous les joueurs."""
     while True:
         for room in room_manager.rooms.values():
+            # Mettre à jour les états des joueurs
             update_player_states(room)
             update_ghost_eaten_states(room)
-            # Diffuse l'état (optionnel, mais pratique)
-            # broadcast_to_room(room)  # désactivé pour éviter envois concurrents
-        time.sleep(0.05)  # 20 fois par seconde (50 ms)
 
-tick_thread = threading.Thread(target=game_tick, daemon=True)
-tick_thread.start()
+            # Diffuser l'état du jeu à tous les joueurs
+            for player_id, player in room.players.items():
+                if hasattr(player, 'tcp_socket') and player.tcp_socket:
+                    try:
+                        state = sync_game_state(room, player_id)
+                        send_json(player.tcp_socket, state)
+                    except Exception as e:
+                        logger.error(f"Erreur lors de la diffusion au joueur {player_id}: {e}")
+
+        time.sleep(0.1)  # Envoie des mises à jour toutes les 100ms
+
+# Démarrer le thread de mise à jour régulière
+threading.Thread(target=game_tick, daemon=True).start()
 
 
 #Gestion de l'arrêt du serveur
@@ -240,13 +250,8 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                         broadcast_to_room(room, event=event, force_game_over=True, force_winner="fantomes")
                         continue  # On saute la suite de la boucle, car la partie est finie
 
-                    if activate_super_power:
-                        state["activate_super_power"] = True
-                        broadcast_to_room(room, event=event)
-                    elif event == "pacman_hit" or event == "ghost_eaten":
-                        broadcast_to_room(room, event=event)
-                    else:
-                        broadcast_to_room(room, event=event)
+                    # On envoie l'état mis à jour uniquement au client qui a initié la demande
+                    send_json(connexion, state)
 
                 elif raw_data.get("command") == Protocols.Request.SEND_CHAT_MESSAGE:
                     logger.info(f"[SERVER] Traitement de la commande : {raw_data.get('command')}")
@@ -261,7 +266,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                                 "chat_message": chat_message
                             }
 
-                            broadcast_to_room(room, chat_response, exclude_player=joueur_actuel)
+                            broadcast_to_room(room, event=chat_response, exclude_player=joueur_actuel)
 
                             send_json(connexion, {
                                 "status": "ok",
@@ -297,11 +302,12 @@ def threaded_client(connexion, address):
     """
     Gère la création et la connexion aux parties.
     """
+    player_id = None  # Initialiser le player_id
     try:
         raw_data = recv_json(connexion)
         if not raw_data:
             logger.warning("Connexion interrompue avant la réception des données.")
-            logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")
+            logger.info(f"[SERVER] Fermeture connexion pour {address}")
             connexion.close()
             return
 
@@ -325,7 +331,7 @@ def threaded_client(connexion, address):
                 return
             else:
                 send_json(connexion, {"status": "full"})
-                logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")
+                logger.info(f"[SERVER] Fermeture connexion pour joueur {player_id}")
                 connexion.close()
                 return
 
@@ -357,7 +363,8 @@ def threaded_client(connexion, address):
 
     except Exception as e:
         logger.error(f"Erreur lors de la gestion d'un client : {e}")
-        logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")
+        log_msg = f"[SERVER] Fermeture connexion pour joueur {player_id}" if player_id else f"[SERVER] Fermeture connexion pour {address}"
+        logger.info(log_msg)
         connexion.close()
 
 
