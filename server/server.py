@@ -228,7 +228,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                         if getattr(pacman, "lives", 3) <= 0:
                             game_over = True
                             break
-                        if getattr(pacman, "ghosts_eaten", 0) >= 15:
+                        if getattr(pacman, "ghosts_eaten", 0) >= 3:
                             #state["game_over"] = True
                             #state["winner"] = "pacman"
                             room.game_over = True
