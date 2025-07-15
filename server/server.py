@@ -214,7 +214,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                         pacman = collision_result["ghost_eaten"]["pacman"]
                         ghost = collision_result["ghost_eaten"]["ghost"]
                         eat_ghost(pacman, ghost, room)
-                        event = "ghost_eaten"
+                        event = {"type": "ghost_eaten"}
                         logger.info(f"Fantôme mangé ! Score Pacman : {pacman.score}")
                     elif collision_result["pacman_hit"]:
                         pacman_touche = collision_result["pacman_hit"]
@@ -222,7 +222,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                         pacman_touche.invincible = True
                         pacman_touche.invincibility_timer = 600  # 4 secondes à 60 FPS
                         logger.info(f"Pacman touché ! Vies restantes : {pacman_touche.lives}")
-                        event = "pacman_hit"
+                        event = {"type": "pacman_hit"}
                     update_ghost_eaten_states(room)
 
                     # Construire l'état de jeu final
