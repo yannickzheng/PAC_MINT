@@ -332,7 +332,9 @@ def threaded_client(connexion, address):
             if room_manager.join(player_id, room_code, role = role) is not None:
                 #On envoie le code de la partie au joueur
                 send_json(connexion, {"status": "ok", "code": room_code})
-                start_new_thread(threaded_game_client, (connexion, player_id, room_code, address))
+                thread = threading.Thread(target=threaded_game_client, args=(connexion, player_id, room_code, address))
+                thread.daemon = True
+                thread.start()
                 return
             else:
                 send_json(connexion, {"status": "full"})
@@ -357,7 +359,9 @@ def threaded_client(connexion, address):
                 return
             elif result and isinstance(result, dict) and result.get("status") == "ok":
                 send_json(connexion, {"status": "joined", "message": "Welcome to the room"})
-                start_new_thread(threaded_game_client, (connexion, player_id, room_id, address))
+                thread = threading.Thread(target=threaded_game_client, args=(connexion, player_id, room_id, address))
+                thread.daemon = True
+                thread.start()
                 return
             else:
                 send_json(connexion, {"status": "full" if room_manager.room_exists(room_id) else "not_found"})
