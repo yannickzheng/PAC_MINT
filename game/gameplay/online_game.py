@@ -391,7 +391,7 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
 
         if hasattr(playerControlled, "ghosts_eaten"):
             ghosts_eaten_text = font.render(
-                f"Fantômes mangés: {playerControlled.ghosts_eaten}/ 15", True, (0, 0, 255)
+                f"Fantômes mangés: {playerControlled.ghosts_eaten}/ 3", True, (0, 0, 255)
             )
             screen.blit(ghosts_eaten_text, (WIDTH - 200, 30))
 

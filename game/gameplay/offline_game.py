@@ -73,7 +73,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
             else:
                 you_win(playerControlled.score, screen, font)
             return
-        if pacman.ghosts_eaten >= 15:
+        if pacman.ghosts_eaten >= 3:
             if role == "pacman":
                 you_win(playerControlled.score, screen, font)
             else:
