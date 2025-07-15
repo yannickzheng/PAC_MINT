@@ -266,7 +266,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                                 "chat_message": chat_message
                             }
 
-                            broadcast_to_room(room, chat_response, exclude_player=joueur_actuel)
+                            broadcast_to_room(room, event=chat_response, exclude_player=joueur_actuel)
 
                             send_json(connexion, {
                                 "status": "ok",
