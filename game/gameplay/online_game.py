@@ -219,8 +219,6 @@ def main_game(is_created_game, game_code, screen, font, coin_image, fruit_image,
     print("WELCOME reçu:", welcome)
     all_players_data = welcome
     print("fin")
-    print("Joueurs récupérés :", all_players_data["players"])
-    print(f"[CLIENT] Données reçues du serveur (welcome) : {all_players_data}")
 
     # création de la liste des joueurs
     players = {}

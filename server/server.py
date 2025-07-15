@@ -240,13 +240,8 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                         broadcast_to_room(room, event=event, force_game_over=True, force_winner="fantomes")
                         continue  # On saute la suite de la boucle, car la partie est finie
 
-                    if activate_super_power:
-                        state["activate_super_power"] = True
-                        broadcast_to_room(room, event=event)
-                    elif event == "pacman_hit" or event == "ghost_eaten":
-                        broadcast_to_room(room, event=event)
-                    else:
-                        broadcast_to_room(room, event=event)
+                    # On envoie l'état mis à jour uniquement au client qui a initié la demande
+                    send_json(connexion, state)
 
                 elif raw_data.get("command") == Protocols.Request.SEND_CHAT_MESSAGE:
                     logger.info(f"[SERVER] Traitement de la commande : {raw_data.get('command')}")
@@ -297,11 +292,12 @@ def threaded_client(connexion, address):
     """
     Gère la création et la connexion aux parties.
     """
+    player_id = None  # Initialiser le player_id
     try:
         raw_data = recv_json(connexion)
         if not raw_data:
             logger.warning("Connexion interrompue avant la réception des données.")
-            logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")
+            logger.info(f"[SERVER] Fermeture connexion pour {address}")
             connexion.close()
             return
 
@@ -325,7 +321,7 @@ def threaded_client(connexion, address):
                 return
             else:
                 send_json(connexion, {"status": "full"})
-                logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")
+                logger.info(f"[SERVER] Fermeture connexion pour joueur {player_id}")
                 connexion.close()
                 return
 
@@ -357,7 +353,8 @@ def threaded_client(connexion, address):
 
     except Exception as e:
         logger.error(f"Erreur lors de la gestion d'un client : {e}")
-        logger.info(f"[SERVER] Fermeture connexion pour joueur {joueur_actuel}")
+        log_msg = f"[SERVER] Fermeture connexion pour joueur {player_id}" if player_id else f"[SERVER] Fermeture connexion pour {address}"
+        logger.info(log_msg)
         connexion.close()
 
 
