@@ -1,10 +1,6 @@
-# Un item est un objet que PacMan peut ramasser.
-# Il s'agit de soit d'une pièce qui augmente son score
-# ou d'un super pouvoir qui lui permet de manger les fantômes pendant un certain temps.
-# soit une pièce soit un super pouvoir, type : boost ou non boost (si c'est un super pouvoir alors
-# il est boost),
-# Pour le système de super pouvoir, on peut utiliser un système de tick, quand PacMan ramasse un super
-# pouvoir, on va attribuer la possibilité à pacman de manger les fantômes pendant un certain nombre de ticks
+# An item is an object that PacMan can pick up.
+# It can be either a coin that increases the score
+# or a power-up that allows eating ghosts for a certain time.
 
 import pygame
 import os
@@ -15,15 +11,15 @@ from game.map import MAP_DATA
 
 
 def resource_path(
-    relative_path,
-):  # dupliqué car pas envie de faire un import circulaire
+        relative_path,
+):
     if hasattr(sys, "_MEIPASS"):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
 
 
-small_size = CELL_SIZE // 4  # Taille des pièces
-cherry_size = CELL_SIZE // 2  #  Augmente la taille des cerises
+small_size = CELL_SIZE // 4  # Coin size
+cherry_size = CELL_SIZE // 2  # Cherry size
 
 coin_size = CELL_SIZE * 0.65
 fruit_size = CELL_SIZE // 2
@@ -34,7 +30,7 @@ coin_image = pygame.image.load(os.path.join("images", "piece.png"))
 coin_image = pygame.transform.scale(coin_image, (coin_size, coin_size))
 
 fruit_image = pygame.image.load(os.path.join("images", "fraise.png"))
-fruit_size = int(CELL_SIZE * 1.2)  #  Ajustement à 80% de la taille d'une case
+fruit_size = int(CELL_SIZE * 1.2)  # Adjust to 120% of cell size
 fruit_image = pygame.transform.scale(fruit_image, (fruit_size, fruit_size))
 
 

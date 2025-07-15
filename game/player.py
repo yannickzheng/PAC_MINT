@@ -322,38 +322,35 @@ class PacMan(Player):
         return self.image_right
 
     def activate_super_power(self, duration=360):
-        """Active le super pouvoir de PacMan pour une durée donnée"""
+        """Activates PacMan's super power for a given duration"""
         self.super_power_active = True
         self.super_power_timer = duration
         self.speed = CELL_SIZE // 5
-        print(f"Super pouvoir activé pour {duration//60} secondes!")
 
     def eat_ghost(self, ghost, players):
-        self.score += 1000  # Ajout de points à PacMan
+        self.score += 1000  # Add points to PacMan
 
         respawn_position = ghost.get_respawn_position(players)
 
         if respawn_position:
             ghost.is_eaten = True
             ghost.respawn_target = (
-                respawn_position  # Assigner le point de respawn au fantôme
+                respawn_position  # Assign respawn point to ghost
             )
-        else:
-            print("⚠ Aucun point libre pour le respawn du fantôme.")
 
     def lose_life(self):
-        """Perdre une vie"""
+        """Lose a life"""
         if self.invincible:
             return
         if self.lives > 1:
             self.lives -= 1
             self.invincible = True
-            self.invincibility_timer = 180  # PacMan est invincible pendant 3 secondes
+            self.invincibility_timer = 180  # PacMan is invincible for 3 seconds
         else:
             self.lives = 0
 
     def update(self):
-        """Met à jour les informations de PacMan"""
+        """Updates PacMan's information"""
         if self.invincible:
             self.invincibility_timer -= 1
             if self.invincibility_timer <= 0:
@@ -392,18 +389,17 @@ class PacMan(Player):
 class Ghost(Player):
     def __init__(self, ip, tcp_port, position, role="Fantome"):
         super().__init__(ip, tcp_port, role, position)
-        self.lives = float("inf")  # Fantômes ont des vies illimitées
+        self.lives = float("inf")  # Ghosts have unlimited lives
         self.is_eaten = False
         self.respawn_target = None
-        self.pathfinding_timer = 0  # Temps restant avant nouveau recalcul
-        self.current_path = []  # Chemin actuel pour le fantôme
-        print(f"Création GHOST id={id(self)} pour pid={self.id}")
+        self.pathfinding_timer = 0  # Time remaining before new calculation
+        self.current_path = []  # Current path for the ghost
 
     def move(self, players, controlled=False):
 
         if self.is_eaten and self.respawn_target:
             self.update_eaten_state()
-            self.update()  # Met à jour .position etc
+            self.update()  # Updates position etc
             return
 
         if controlled:
@@ -429,29 +425,26 @@ class Ghost(Player):
         self.update()
 
     def draw(self, screen, controlled):
-        """Affiche le fantôme à l'écran"""
-        # print(f"[DEBUG] draw ghost {self.id} is_eaten={self.is_eaten}")
+        """Draws the ghost on screen"""
         if self.is_eaten:
-            # print(f"[DEBUG] draw ghost {self.id} is_eaten={self.is_eaten}, id mémoire={id(self)}")
-
-            # Si le fantôme est mangé, on le dessine en tant que boule translucide
+            # If ghost is eaten, draw it as a translucent ball
             ghost_surface = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
             pygame.draw.circle(
                 ghost_surface,
-                (150, 200, 255, 150),  # Couleur et transparence pour effet "mangé"
+                (150, 200, 255, 150),  # Color and transparency for "eaten" effect
                 (self.size // 2, self.size // 2),
                 self.size // 2,
             )
             screen.blit(ghost_surface, (int(self.x), int(self.y)))
         else:
-            # Affichage normal du fantôme
+            # Normal ghost display
             image = (
                 self.get_img_phantom()
-            )  # On récupère l'image du fantôme via la méthode
+            )  # Get ghost image via method
             screen.blit(image, (int(self.x), int(self.y)))
 
     def get_img_phantom(self):
-        """Retourne l'image du fantôme"""
+        """Returns the ghost image"""
         return self.image_red_ghost
 
     def is_position_free(self, x, y, players):
@@ -544,22 +537,21 @@ class Ghost(Player):
         # Si on est déjà au point de respawn, on termine
         if dist < self.speed:  # PATCH: < self.speed et PAS dist == 0
             self.x, self.y = tx, ty
-            self.position = (self.x, self.y)  # <--- INDISPENSABLE pour la synchro !!
+            self.position = (self.x, self.y)
             self.is_eaten = False
             self.respawn_target = None
-            print("[SERVEUR] Fantôme arrivé au point de respawn !")
             return
 
-        # Sinon on bouge vers la cible
+        # Move towards target
         self.x += self.speed * dx / dist
         self.y += self.speed * dy / dist
-        self.position = (self.x, self.y)  # <--- INDISPENSABLE chaque frame !
+        self.position = (self.x, self.y)
 
     def ghost_ai_move(self, pacman):
         if self.is_eaten:
-            return  # Ne pas faire d'IA si le fantôme est en train de respawn
+            return  # Don't use AI if ghost is respawning
 
-        # Forcer le recalcul si changement de stratégie (fuite vs poursuite)
+        # Force recalculation if strategy change (flee vs chase)
         if pacman.super_power_active and self.pathfinding_timer > 0:
             self.pathfinding_timer = 0
 

@@ -28,8 +28,8 @@ def update_game_state_from_server(
     player_id_to_role,
     chat_box=None,
 ):
-    """Synchronise l'état local du jeu avec les données du serveur
-    role_to_player_id et player_id_to_role sont des dicts partagés !"""
+    """Synchronizes local game state with server data
+    role_to_player_id and player_id_to_role are shared dicts!"""
     if role_to_player_id is not None and player_id_to_role is not None:
         for data in state.get("players", []):
             role = data["roles"].lower()
@@ -37,12 +37,12 @@ def update_game_state_from_server(
             role_to_player_id[role] = pid
             player_id_to_role[pid] = role
 
-    # Gestion de l'événement de chat (pour la diffusion)
+    # Handle chat event (for broadcasting)
     event_data = state.get("event")
     if event_data and event_data.get("action") == "chat_message" and chat_box:
         chat_message = event_data.get("chat_message")
         if chat_message:
-            logger.info(f"[CLIENT] Message de chat reçu via event: {chat_message}")
+            logger.info(f"[CLIENT] Chat message received via event: {chat_message}")
             chat_box.add_message(
                 chat_message["player_name"],
                 chat_message["message"],
@@ -99,26 +99,23 @@ def update_game_state_from_server(
                 # Sinon, laisse le client animer le déplacement localement (voir point suivant)
             elif pid == current_player_id:
                 if hasattr(player, "is_eaten") and player.is_eaten:
-                    # Même logique pour le joueur contrôlé
+                    # Same logic for controlled player
                     if not data.get("is_eaten", False):
                         player.update_position(data["pos"])
                         player.is_eaten = False
                         player.respawn_target = None
-                    # Sinon: NE RIEN FAIRE, laisse l'animation locale gérer
+                    # Otherwise: DO NOTHING, let local animation handle it
                 else:
                     sx, sy = data["pos"]
                     dx = abs(sx - player.x)
                     dy = abs(sy - player.y)
                     if dx > CELL_SIZE * 2 or dy > CELL_SIZE * 2:
-                        print(
-                            "[PATCH][SYNC] Correction brutale position joueur (rollback)"
-                        )
                         player.update_position(data["pos"])
-                    # Sinon: on garde la position locale (pour la fluidité)
+                    # Otherwise: keep local position (for fluidity)
             else:
                 player.update_position(tuple(data["pos"]))
 
-            # ---- ATTRIBUTS TOUJOURS À JOUR (score, vie etc) ----
+            #ALWAYS UP-TO-DATE ATTRIBUTES (score, life etc)
             player.score = data.get("score", 0)
             player.lives = data.get("lives", getattr(player, "lives", 3))
             player.invincible = data.get("invincible", False)
@@ -138,14 +135,11 @@ def update_game_state_from_server(
                 player.respawn_target = data.get("respawn_target", None)
 
             if pid == current_player_id and data.get("activate_super_power"):
-                print(
-                    f"[CLIENT] Activation du super pouvoir reçue pour le joueur {pid}"
-                )
                 player.activate_super_power()
 
-            continue  # <--- FINI pour ce joueur, on ne fait pas le else suivant !
+            continue  # DONE for this player, don't do the else below!
 
-        # 2. Sinon, NOUVEAU joueur : on instancie la bonne classe
+        # 2. Otherwise, NEW player: instantiate the right class
         if "pacman" in role:
             new_player = PacMan(
                 ip=data["ip"], tcp_port=data["tcp_port"], position=tuple(data["pos"])
@@ -156,7 +150,6 @@ def update_game_state_from_server(
             )
 
         else:
-            print(f"Rôle inconnu {role}, joueur ignoré !")
             continue
 
         new_player.id = pid
@@ -210,24 +203,22 @@ def main_game(
     fruit_offset,
     role,
 ):
-    """Fonction principale du jeu en ligne"""
+    """Main online game function"""
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
     clock = pygame.time.Clock()
 
-    # Afficher un écran de chargement pendant la connexion
-    display_loading_screen("Connexion au serveur...", screen, font)
+    # Display loading screen during connection
+    display_loading_screen("Connecting to server...", screen, font)
 
     if not is_created_game:
         taken_roles = []
         while True:
-            display_loading_screen("Connexion à la partie en cours...", screen, font)
+            display_loading_screen("Connecting to game...", screen, font)
             n = Network()
             response = n.send_command(
                 Protocols.Request.JOIN_ROOM, {"game_code": game_code, "role": role}
             )
-            print(f"[CLIENT] Je tente de join la room avec le rôle: {role}")
-            print("Réponse serveur :", response)
             if response.get("status") in (
                 "ok",
                 "joined",

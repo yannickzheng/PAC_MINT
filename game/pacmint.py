@@ -13,18 +13,18 @@ from game.gameplay.offline_game import offline_game
 from game.gameplay.online_game import main_game
 from game.utils.helpers import preload_assets
 
-# Initialisation de pygame
+# Pygame initialization
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PacMint")
 font = pygame.font.SysFont("Arial", 24)
 
-# Chargement des ressource
+# Load resources
 assets = load_game_assets()
 
 
 def main():
-    """Fonction principale du jeu - identique à l'original"""
+    """Main game function"""
     # Précharger les assets
     preload_assets(screen, font)
 

@@ -5,18 +5,16 @@ import select
 
 class Network:
     SERVER_ADDRESS = "157.159.104.199"
-    SERVER_PORT = 5555  # Constante pour le port
-    BUFFER_SIZE = 2048  # Taille du buffer pour les messages reçus
+    SERVER_PORT = 5555  # Port constant
+    BUFFER_SIZE = 2048  # Buffer size for received messages
 
     def __init__(self):
-        # La classe pour une partie
         """
-        Initialisation de la classe :
-        - Création d'un socket
-        - Connexion au serveur
-        - Récupération de la position initiale du joueur
+        Initialize the network class:
+        - Create a socket
+        - Connect to server
+        - Get initial player position
         """
-        print("Connexion au client")
         self.client = None
         self.server_address = (self.SERVER_ADDRESS, self.SERVER_PORT)
         self.player_position = ""
@@ -27,24 +25,17 @@ class Network:
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.settimeout(
             5
-        )  # Timeout de 5 secondes pour éviter de bloquer trop longtemps
+        )  # 5 seconds timeout to avoid blocking too long
         try:
             self.client.connect(self.server_address)
-            self.client.settimeout(None)  # Remettre en mode bloquant après connexion
+            self.client.settimeout(None)  # Reset to blocking mode after connection
             self.sockfile = self.client.makefile(
                 "r"
-            )  # Créer un fichier pour lire les données du socket
-            print("Connexion au serveur établie!")
+            )  # Create file to read socket data
         except socket.timeout:
-            print(
-                "ERREUR: Timeout de connexion au serveur. Vérifiez que le serveur est bien démarré."
-            )
-            raise ConnectionError("Timeout lors de la connexion au serveur")
+            raise ConnectionError("Timeout during server connection")
         except ConnectionRefusedError:
-            print(
-                "ERREUR: Connexion refusée. Vérifiez que le serveur est bien démarré."
-            )
-            raise ConnectionError("Connexion au serveur refusée")
+            raise ConnectionError("Server connection refused")
 
     def receive_json(self):
         line = self.sockfile.readline()
@@ -58,21 +49,20 @@ class Network:
         return self.receive_json()
 
     def send_command_async(self, request, message=None):
-        """Envoie une commande au serveur sans attendre de réponse."""
+        """Sends a command to server without waiting for response."""
         payload = {"command": request, "message": message}
         try:
             self.client.sendall(json.dumps(payload).encode() + b"\n")
         except Exception as e:
-            print(f"Erreur lors de l'envoi de la commande asynchrone : {e}")
+            pass
 
     def has_data_waiting(self):
-        """Vérifie s'il y a des données en attente sans bloquer"""
-
+        """Checks if there's data waiting without blocking"""
         ready, _, _ = select.select([self.client], [], [], 0)
         return len(ready) > 0
 
     def receive_json_non_blocking(self):
-        """Reçoit des données JSON de manière non-bloquante"""
+        """Receives JSON data in non-blocking mode"""
         if self.has_data_waiting():
             return self.receive_json()
         return None
