@@ -1,5 +1,7 @@
 from django.contrib.auth.hashers import check_password
+
 from ..models import Player
+
 
 class PlayerAuthBackend:
     def authenticate(self, request, username=None, password=None, **kwargs):
@@ -16,4 +18,3 @@ class PlayerAuthBackend:
             return Player.objects.get(pk=user_id)
         except Player.DoesNotExist:
             return None
-

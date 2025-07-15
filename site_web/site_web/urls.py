@@ -14,15 +14,16 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path, include
+
 from debug_toolbar.toolbar import debug_toolbar_urls
+from django.contrib import admin
+from django.urls import include, path
 
 urlpatterns = [
-    path('', include('pacmint_app.urls')),
-    path('admin/', admin.site.urls),
+    path("", include("pacmint_app.urls")),
+    path("admin/", admin.site.urls),
 ] + debug_toolbar_urls()
 
 # Gestionnaires d'erreurs personnalisés
-handler404 = 'pacmint_app.views.error_views.custom_404_view'
-handler500 = 'pacmint_app.views.error_views.custom_500_view'
+handler404 = "pacmint_app.views.error_views.custom_404_view"
+handler500 = "pacmint_app.views.error_views.custom_500_view"
