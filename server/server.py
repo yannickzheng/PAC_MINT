@@ -39,7 +39,7 @@ def recv_json(conn):
 #Paramètres
 timeout = 10 #temps en seconde pour considérer un joueur inactif
 max_players = 5 # Limite de joueurs
-server = "localhost" # Adresse IP du serveur
+server = "0.0.0.0"
 port = 5555 # Port de communication
 
 # Initialisation d'un RoomManager
@@ -214,7 +214,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                         pacman = collision_result["ghost_eaten"]["pacman"]
                         ghost = collision_result["ghost_eaten"]["ghost"]
                         eat_ghost(pacman, ghost, room)
-                        event = {"type": "ghost_eaten"}
+                        event = "ghost_eaten"
                         logger.info(f"Fantôme mangé ! Score Pacman : {pacman.score}")
                     elif collision_result["pacman_hit"]:
                         pacman_touche = collision_result["pacman_hit"]
@@ -222,7 +222,7 @@ def threaded_game_client(connexion, joueur_actuel, room_id, address=None):
                         pacman_touche.invincible = True
                         pacman_touche.invincibility_timer = 600  # 4 secondes à 60 FPS
                         logger.info(f"Pacman touché ! Vies restantes : {pacman_touche.lives}")
-                        event = {"type": "pacman_hit"}
+                        event = "pacman_hit"
                     update_ghost_eaten_states(room)
 
                     # Construire l'état de jeu final

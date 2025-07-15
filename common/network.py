@@ -3,7 +3,7 @@ import socket
 import select
 
 class Network:
-    SERVER_ADDRESS = "localhost"  # Constante pour l'adresse IP du serveur
+    SERVER_ADDRESS = "157.159.104.199"
     SERVER_PORT = 5555  # Constante pour le port
     BUFFER_SIZE = 2048  # Taille du buffer pour les messages reçus
 
