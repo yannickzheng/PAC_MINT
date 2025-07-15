@@ -1,16 +1,6 @@
 import pygame
 import random
-from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
-from game.player import Player, PacMan, Ghost
-from game.core.assets import load_game_assets
-from game.map import MAP_SURFACE, MAP_DATA
-from game.ui.components import display_loading_screen, draw_button, game_over, you_win
-from game.utils.helpers import distance, is_wall_at_position
-from game.api import submit_score  # ✅ AJOUT
-
-import pygame
-import random
-import requests  # ✅
+import requests  # ✅ Pour l'envoi du score
 from common.global_variable import WIDTH, HEIGHT, CELL_SIZE
 from game.player import Player, PacMan, Ghost
 from game.core.assets import load_game_assets
@@ -21,7 +11,7 @@ from game.utils.helpers import distance, is_wall_at_position
 
 def send_score_to_server(user_id, role, score, outcome):
     try:
-        url = "http://localhost:8080/api/submit_score/"  # ✅ Corrigé ici
+        url = "http://localhost:8080/api/submit_score/"
         payload = {
             "user_id": user_id,
             "role": role,
@@ -37,10 +27,12 @@ def send_score_to_server(user_id, role, score, outcome):
         print(f"❌ Erreur de connexion au serveur: {e}")
 
 
-def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, role, user_id=None):  # ✅ user_id
+def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, role, user_id=None):
+    """Mode de jeu hors ligne sans besoin de serveur"""
     assets = load_game_assets()
     coin_offset = assets['coin_offset']
     fruit_offset = assets['fruit_offset']
+
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
     clock = pygame.time.Clock()
@@ -146,6 +138,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
 
         for coin in coins:
             screen.blit(coin_image, (coin[0] + coin_offset, coin[1] + coin_offset))
+
         for fruit in fruits:
             screen.blit(fruit_image, (fruit[0] + fruit_offset, fruit[1] + fruit_offset))
 
@@ -166,8 +159,10 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
 
         score_text = font.render(f"Score: {playerControlled.score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
+
         lives_text = font.render(f"Vies: {playerControlled.lives}", True, (255, 255, 255))
         screen.blit(lives_text, (WIDTH - 100, 10))
+
         ghosts_eaten_text = font.render(f"Fantômes mangés: {pacman.ghosts_eaten}/15", True, (255, 255, 255))
         screen.blit(ghosts_eaten_text, (WIDTH - 220, 30))
 
@@ -175,4 +170,3 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         clock.tick(60)
 
     return
-
