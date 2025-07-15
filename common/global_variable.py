@@ -1,4 +1,5 @@
 import os
+
 WIDTH = 1280
 HEIGHT = 720
 
@@ -16,4 +17,3 @@ BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
 CYAN = (0, 255, 255)
 PURPLE = (128, 0, 255)
-

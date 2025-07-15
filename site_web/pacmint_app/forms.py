@@ -6,43 +6,52 @@ from django.contrib.auth.models import User
 
 
 class PlayerRegistrationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput, max_length=50, label="Mot de passe", required=True)
-    confirm_password = forms.CharField(widget=forms.PasswordInput, max_length=50, label="Confirmez le mot de passe", required=True)
+    password = forms.CharField(
+        widget=forms.PasswordInput, max_length=50, label="Mot de passe", required=True
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput,
+        max_length=50,
+        label="Confirmez le mot de passe",
+        required=True,
+    )
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields = ["username", "email", "password"]
         labels = {
-            'username': 'Pseudonyme',
-            'email': 'Adresse e-mail',
-            'password': 'Mot de passe',
-            'confirm_password': 'Confirmez le mot de passe'
+            "username": "Pseudonyme",
+            "email": "Adresse e-mail",
+            "password": "Mot de passe",
+            "confirm_password": "Confirmez le mot de passe",
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.add_input(Submit('submit', 'S\'inscrire', css_class='btn btn-success'))
+        self.helper.form_method = "post"
+        self.helper.add_input(
+            Submit("submit", "S'inscrire", css_class="btn btn-success")
+        )
         self.helper.layout = Layout(
-            Field('username', css_class='form-control'),
-            Field('email', css_class='form-control'),
-            Field('password', css_class='form-control'),
-            Field('confirm_password', css_class='form-control'),
+            Field("username", css_class="form-control"),
+            Field("email", css_class="form-control"),
+            Field("password", css_class="form-control"),
+            Field("confirm_password", css_class="form-control"),
         )
 
     def clean(self):
         cleaned_data = super().clean()
-        password = cleaned_data.get('password')
-        confirm_password = cleaned_data.get('confirm_password')
+        password = cleaned_data.get("password")
+        confirm_password = cleaned_data.get("confirm_password")
         if password and confirm_password and password != confirm_password:
             raise forms.ValidationError("Les mots de passe ne correspondent pas.")
         return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data['password'])
-        user.email = self.cleaned_data['email']
+        user.set_password(self.cleaned_data["password"])
+        user.email = self.cleaned_data["email"]
         if commit:
             user.save()
             Player.objects.create(user=user)
@@ -51,22 +60,21 @@ class PlayerRegistrationForm(forms.ModelForm):
 
 class PlayerLoginForm(forms.Form):
     username = forms.CharField(max_length=50, label="Pseudonyme", required=True)
-    password = forms.CharField(widget=forms.PasswordInput, max_length=50, label="Mot de passe", required=True)
+    password = forms.CharField(
+        widget=forms.PasswordInput, max_length=50, label="Mot de passe", required=True
+    )
 
-    class Meta :
+    class Meta:
         model = User
-        fields = ['username', 'password']
-        labels = {
-            'username': 'Pseudonyme',
-            'password': 'Mot de passe'
-        }
+        fields = ["username", "password"]
+        labels = {"username": "Pseudonyme", "password": "Mot de passe"}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
-        self.helper.form_method = 'post'
+        self.helper.form_method = "post"
         self.helper.layout = Layout(
-            Field('username', css_class='form-control'),
-            Field('password', css_class='form-control'),
-            Submit('submit', 'Se connecter', css_class='btn btn-primary')
+            Field("username", css_class="form-control"),
+            Field("password", css_class="form-control"),
+            Submit("submit", "Se connecter", css_class="btn btn-primary"),
         )

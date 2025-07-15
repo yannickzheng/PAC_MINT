@@ -5,9 +5,9 @@ class Protocols:
         QUESTIONS = "protocol.questions"
         START = "protocol.start"
         OPPONENT = "protocol.opponent"
-        OPPONENT_ADVANCE = 'protocol.opponent_advance'
+        OPPONENT_ADVANCE = "protocol.opponent_advance"
         ANSWER_VALID = "protocol.answer_valid"
-        ANSWER_INVALID = 'protocol.answer_invalid'
+        ANSWER_INVALID = "protocol.answer_invalid"
         WINNER = "protocol.winner"
         OPPONENT_LEFT = "protocol.opponent_left"
         ACTIVATE_SUPER_POWER = "activate_super_power"

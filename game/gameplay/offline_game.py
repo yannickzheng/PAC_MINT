@@ -8,12 +8,11 @@ from game.ui.components import display_loading_screen, game_over, you_win
 from game.utils.helpers import distance, is_wall_at_position
 
 
-
 def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, role):
     """Mode de jeu hors ligne sans besoin de serveur"""
     assets = load_game_assets()
-    coin_offset = assets['coin_offset']
-    fruit_offset = assets['fruit_offset']
+    coin_offset = assets["coin_offset"]
+    fruit_offset = assets["fruit_offset"]
 
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 24)
@@ -29,7 +28,7 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         (WIDTH // 2 - 20, HEIGHT // 2 - 20),
         (WIDTH // 2 + 20, HEIGHT // 2 - 20),
         (WIDTH // 2 - 20, HEIGHT // 2 + 20),
-        (WIDTH // 2 + 20, HEIGHT // 2 + 20)
+        (WIDTH // 2 + 20, HEIGHT // 2 + 20),
     ]
     ghosts = []
     players = {"pacman": pacman}
@@ -148,12 +147,12 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
             for g in ghosts:
                 g.draw(screen, controlled=False)
         else:
-          # 1) PacMan en IA
+            # 1) PacMan en IA
             pacman.draw(screen, controlled=True)
-          # 2) Les fantômes IA
+            # 2) Les fantômes IA
             for g in ghosts:
                 g.draw(screen, controlled=False)
-          # 3) Le fantôme contrôlé
+            # 3) Le fantôme contrôlé
             playerControlled.draw(screen, controlled=True)
 
         # Affichage du score et des vies
@@ -163,7 +162,9 @@ def offline_game(screen, font, coin_image, fruit_image, coin_size, fruit_size, r
         lives_text = font.render(f"Vies: {playerControlled.lives}", True, (0, 0, 255))
         screen.blit(lives_text, (WIDTH - 100, 10))
 
-        ghosts_eaten_text = font.render(f"Fantômes mangés: {pacman.ghosts_eaten}/15", True, (0, 0, 255))
+        ghosts_eaten_text = font.render(
+            f"Fantômes mangés: {pacman.ghosts_eaten}/15", True, (0, 0, 255)
+        )
         screen.blit(ghosts_eaten_text, (WIDTH - 200, 30))
 
         pygame.display.flip()

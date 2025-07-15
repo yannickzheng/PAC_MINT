@@ -4,6 +4,7 @@ from common.global_variable import WIDTH, HEIGHT, BLUE, CYAN, PURPLE
 
 from game.ui.components import draw_button
 
+
 def select_role(screen, font, mode="offline"):
     """Affiche un menu pour choisir le rôle (Pacman ou Fantôme)"""
     run = True
@@ -14,7 +15,7 @@ def select_role(screen, font, mode="offline"):
         if mode == "offline":
             header_img = pygame.transform.scale(
                 pygame.image.load("images/mode-hors-ligne.png").convert_alpha(),
-                (400, 80)
+                (400, 80),
             )
             header_rect = header_img.get_rect(center=(WIDTH // 2, 70))
             screen.blit(header_img, header_rect)
@@ -29,12 +30,20 @@ def select_role(screen, font, mode="offline"):
         ghost_image = pygame.image.load("images/red_ghost.png").convert_alpha()
 
         # Redimensionner les images pour qu'elles s'adaptent bien à l'interface
-        pacman_image = pygame.transform.scale(pacman_image, (50, 50))  # Ajuste la taille de l'image
-        ghost_image = pygame.transform.scale(ghost_image, (50, 50))  # Ajuste la taille de l'image
+        pacman_image = pygame.transform.scale(
+            pacman_image, (50, 50)
+        )  # Ajuste la taille de l'image
+        ghost_image = pygame.transform.scale(
+            ghost_image, (50, 50)
+        )  # Ajuste la taille de l'image
 
         # Afficher les images à côté des boutons
-        pacman_image_rect = pacman_image.get_rect(midright=(WIDTH // 2 - 265, HEIGHT // 2 + 130 )) #Pour qu'il soit juste en dessous du bouton
-        ghost_image_rect = ghost_image.get_rect(midright=(WIDTH // 2 + 180, HEIGHT // 2 + 130))
+        pacman_image_rect = pacman_image.get_rect(
+            midright=(WIDTH // 2 - 265, HEIGHT // 2 + 130)
+        )  # Pour qu'il soit juste en dessous du bouton
+        ghost_image_rect = ghost_image.get_rect(
+            midright=(WIDTH // 2 + 180, HEIGHT // 2 + 130)
+        )
 
         # Afficher les boutons Pacman et Fantôme
         draw_button("Pacman", 250, 500, 200, 50, BLUE, CYAN, screen, font)
@@ -57,7 +66,8 @@ def select_role(screen, font, mode="offline"):
 
         pygame.display.flip()
 
-def select_online_role(screen, font, taken_roles = None):
+
+def select_online_role(screen, font, taken_roles=None):
     roles = ["pacman", "fantome_1", "fantome_2", "fantome_3", "fantome_4"]
     if taken_roles is None:
         taken_roles = []
@@ -67,8 +77,7 @@ def select_online_role(screen, font, taken_roles = None):
 
         # affichage du mode
         header_img = pygame.transform.scale(
-            pygame.image.load("images/mode-en-ligne.png").convert_alpha(),
-            (400, 80)
+            pygame.image.load("images/mode-en-ligne.png").convert_alpha(), (400, 80)
         )
         header_rect = header_img.get_rect(center=(WIDTH // 2, 70))
         screen.blit(header_img, header_rect)
@@ -76,47 +85,94 @@ def select_online_role(screen, font, taken_roles = None):
         # Affichage du texte "Choisissez votre rôle"
         title_img = pygame.image.load("images/Choisissez-votre-role.png")
         title_img = pygame.transform.smoothscale(title_img, (550, 150))
-        title_rect = title_img.get_rect(center=(WIDTH // 2, 170))  # 180 ou moins pour le monter
+        title_rect = title_img.get_rect(
+            center=(WIDTH // 2, 170)
+        )  # 180 ou moins pour le monter
         screen.blit(title_img, title_rect)
 
         # Afficher les boutons Pacman et Fantômes
         color_disabled = (100, 100, 100)
         color_active = CYAN
-        draw_button("Pacman", 250, 400, 200, 50,
-                    color_disabled if "pacman" in taken_roles else BLUE,
-                    color_disabled if "pacman" in taken_roles else color_active,
-                    screen, font)
+        draw_button(
+            "Pacman",
+            250,
+            400,
+            200,
+            50,
+            color_disabled if "pacman" in taken_roles else BLUE,
+            color_disabled if "pacman" in taken_roles else color_active,
+            screen,
+            font,
+        )
         if "pacman" in taken_roles:
-            taken_roles_text = font.render(f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0))
+            taken_roles_text = font.render(
+                f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0)
+            )
             screen.blit(taken_roles_text, (250, 470))
 
-        draw_button("Fantôme 1", 800, 250, 200, 50,
-                    color_disabled if "fantome_1" in taken_roles else BLUE,
-                    color_disabled if "fantome_1" in taken_roles else color_active,
-                    screen, font)
+        draw_button(
+            "Fantôme 1",
+            800,
+            250,
+            200,
+            50,
+            color_disabled if "fantome_1" in taken_roles else BLUE,
+            color_disabled if "fantome_1" in taken_roles else color_active,
+            screen,
+            font,
+        )
         if "fantome_1" in taken_roles:
-            taken_roles_text = font.render(f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0))
+            taken_roles_text = font.render(
+                f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0)
+            )
             screen.blit(taken_roles_text, (1020, 260))
-        draw_button("Fantôme2 ", 800, 350, 200, 50,
-                    color_disabled if "fantome_2" in taken_roles else BLUE,
-                    color_disabled if "fantome_2" in taken_roles else color_active,
-                    screen, font)
+        draw_button(
+            "Fantôme2 ",
+            800,
+            350,
+            200,
+            50,
+            color_disabled if "fantome_2" in taken_roles else BLUE,
+            color_disabled if "fantome_2" in taken_roles else color_active,
+            screen,
+            font,
+        )
         if "fantome_2" in taken_roles:
-            taken_roles_text = font.render(f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0))
+            taken_roles_text = font.render(
+                f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0)
+            )
             screen.blit(taken_roles_text, (1020, 360))
-        draw_button("Fantôme 3", 800, 450, 200, 50,
-                    color_disabled if "fantome_3" in taken_roles else BLUE,
-                    color_disabled if "fantome_3" in taken_roles else color_active,
-                    screen, font)
+        draw_button(
+            "Fantôme 3",
+            800,
+            450,
+            200,
+            50,
+            color_disabled if "fantome_3" in taken_roles else BLUE,
+            color_disabled if "fantome_3" in taken_roles else color_active,
+            screen,
+            font,
+        )
         if "fantome_3" in taken_roles:
-            taken_roles_text = font.render(f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0))
+            taken_roles_text = font.render(
+                f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0)
+            )
             screen.blit(taken_roles_text, (1020, 460))
-        draw_button("Fantôme 4", 800, 550, 200, 50,
-                    color_disabled if "fantome_4" in taken_roles else BLUE,
-                    color_disabled if "fantome_4" in taken_roles else color_active,
-                    screen, font)
+        draw_button(
+            "Fantôme 4",
+            800,
+            550,
+            200,
+            50,
+            color_disabled if "fantome_4" in taken_roles else BLUE,
+            color_disabled if "fantome_4" in taken_roles else color_active,
+            screen,
+            font,
+        )
         if "famtome_4" in taken_roles:
-            taken_roles_text = font.render(f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0))
+            taken_roles_text = font.render(
+                f"Trop tard :(  Rôle déjà pris", True, (255, 255, 0)
+            )
             screen.blit(taken_roles_text, (1020, 560))
         draw_button("Retour", 520, 650, 200, 50, BLUE, CYAN, screen, font)
 
@@ -142,11 +198,9 @@ def select_online_role(screen, font, taken_roles = None):
         pygame.display.flip()
 
 
-
-
 def main_menu(screen, image, font):
     """Menu principal du jeu"""
-    
+
     run = True
     while run:
         screen.blit(image, (0, 0))
@@ -163,18 +217,17 @@ def main_menu(screen, image, font):
 
         # Affichage du titre
         screen.blit(title_image, title_rect)
-        
-        draw_button("Mode Hors Ligne", 250, 600, 200, 50, BLUE, CYAN, screen, font)  
+
+        draw_button("Mode Hors Ligne", 250, 600, 200, 50, BLUE, CYAN, screen, font)
         draw_button("Mode En Ligne", 550, 600, 200, 50, BLUE, CYAN, screen, font)
         draw_button("Quitter", 850, 600, 200, 50, BLUE, PURPLE, screen, font)
-        
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
                 sys.exit()
-                
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 # Vérifier les boutons principaux en bas de l'écran
@@ -188,7 +241,7 @@ def main_menu(screen, image, font):
                         run = False
                         pygame.quit()
                         sys.exit()
-                        
+
         pygame.display.flip()
-    
+
     return None, None

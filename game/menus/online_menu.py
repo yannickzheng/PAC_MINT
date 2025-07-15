@@ -5,14 +5,14 @@ from common.global_variable import WIDTH, HEIGHT, BLUE, CYAN, PURPLE
 from game.ui.components import draw_button
 from game.menus.main_menu import select_online_role
 
+
 def create_game(screen, image, font):
     """Menu de création de partie"""
     game_code = None
     run = True
     # Charger et préparer le bandeau "Mode En Ligne"
     header_img = pygame.transform.scale(
-        pygame.image.load("images/mode-en-ligne.png").convert_alpha(),
-        (400, 80)
+        pygame.image.load("images/mode-en-ligne.png").convert_alpha(), (400, 80)
     )
     header_rect = header_img.get_rect(center=(WIDTH // 2, 70))
     while run:
@@ -20,13 +20,13 @@ def create_game(screen, image, font):
         screen.blit(header_img, header_rect)
         draw_button("Lancer la partie", 550, 600, 200, 50, BLUE, CYAN, screen, font)
         draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen, font)
-        
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                
+
                 # Vérifier si le bouton musique est cliqué
 
                 # Vérifier les boutons en bas de l'écran
@@ -35,25 +35,26 @@ def create_game(screen, image, font):
                         return "start"
                     elif 850 <= x <= 1050:  # Retour
                         return "back"
-                        
+
         pygame.display.flip()
-    
+
     return None
+
 
 def join_game(screen, image, font):
     """Menu pour rejoindre une partie"""
     from common.global_variable import WHITE
+
     header_img = pygame.transform.scale(
-        pygame.image.load("images/mode-en-ligne.png").convert_alpha(),
-        (400, 80)
+        pygame.image.load("images/mode-en-ligne.png").convert_alpha(), (400, 80)
     )
     header_rect = header_img.get_rect(center=(WIDTH // 2, 70))
     run = True
     game_code = ""
     input_active = False
     input_box = pygame.Rect(250, 600, 200, 50)
-    color_inactive = pygame.Color('lightskyblue3')
-    color_active = pygame.Color('dodgerblue2')
+    color_inactive = pygame.Color("lightskyblue3")
+    color_active = pygame.Color("dodgerblue2")
     color = BLUE
 
     while run:
@@ -95,16 +96,16 @@ def join_game(screen, image, font):
                     game_code += event.unicode
 
         pygame.display.flip()
-    
+
     return None
+
 
 def online_menu(screen, image, font):
     """Page de sélection pour le mode en ligne (créer ou rejoindre une partie)"""
 
     # Titre
     header_img = pygame.transform.scale(
-        pygame.image.load("images/mode-en-ligne.png").convert_alpha(),
-        (400, 80)
+        pygame.image.load("images/mode-en-ligne.png").convert_alpha(), (400, 80)
     )
     header_rect = header_img.get_rect(center=(WIDTH // 2, 70))
     run = True
@@ -116,14 +117,13 @@ def online_menu(screen, image, font):
         draw_button("Créer une partie", 250, 600, 200, 50, BLUE, CYAN, screen, font)
         draw_button("Rejoindre une partie", 550, 600, 200, 50, BLUE, CYAN, screen, font)
         draw_button("Retour", 850, 600, 200, 50, BLUE, PURPLE, screen, font)
-        
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
                 sys.exit()
-                
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
 
@@ -135,7 +135,7 @@ def online_menu(screen, image, font):
                         return "join"
                     elif 850 <= x <= 1050:  # Retour
                         return "back"
-                        
+
         pygame.display.flip()
-    
+
     return None
